@@ -1,0 +1,37 @@
+# Secrets: never commit them
+.env
+.env.*
+!.env.example
+*.key
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local data: recordings, logs, caches, models
+/data/
+/recordings/
+*.ld
+*.ldx
+*.ibt
+/logs/
+*.log
+/models/
+/.cache/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
