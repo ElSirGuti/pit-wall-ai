@@ -93,3 +93,22 @@ def test_setup_logging_is_idempotent_and_writes_json_to_a_file(tmp_path):
     assert len(lines) == 1 and json.loads(lines[0])["k"] == 1
     setup_logging("WARNING", console=False)
     assert logging.getLogger().level == logging.WARNING
+
+
+def test_shipped_default_yaml_equals_the_builtin_defaults():
+    """config/default.yaml documents the defaults: it must never drift from the code."""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    assert load_config(root / "config" / "default.yaml", env={}) == AppConfig()
+
+
+def test_secrets_and_local_files_are_git_ignored():
+    import subprocess
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    for name in (".env", ".env.local", "config/local.yaml", "session.ld", "data/x.json"):
+        r = subprocess.run(["git", "check-ignore", "-q", name], cwd=root)
+        assert r.returncode == 0, f"{name} must be ignored"
+    assert subprocess.run(["git", "check-ignore", "-q", ".env.example"], cwd=root).returncode == 1

@@ -1,0 +1,39 @@
+# Defaults of pit-wall-ai (these are also the built-in values). Copy to config/local.yaml to change them;
+# local.yaml is git-ignored. Secrets do NOT go here: put GEMINI_API_KEY in .env.
+# Valores por defecto (también son los incorporados). Copia a config/local.yaml para cambiarlos.
+# Los secretos NO van aquí: pon GEMINI_API_KEY en .env.
+
+telemetry:
+  source: ac            # ac = the running game | replay = a recorded log
+  hz: 60                # polling rate (the loop never waits for network or audio)
+  buffer_seconds: 30    # seconds of history kept in memory
+  retry_s: 1.0          # how often to retry when the game is not running
+  replay:
+    file: null          # .ld (ACTI / MoTeC) or MoTeC .csv
+    speed: 1.0
+    start_s: 0
+    loop: false
+    session: practice   # the log has no session type: practice | qualify | race | hotlap ...
+
+logging:
+  level: INFO           # DEBUG | INFO | WARNING | ERROR
+  json_logs: false      # true = one JSON object per line
+  file: null            # also write JSON lines to this file
+
+llm:                    # used from phase 5; the provider is swappable
+  provider: mock        # mock (offline) | gemini (phase 5)
+  model: gemini-2.5-flash
+  api_key_env: GEMINI_API_KEY
+  timeout_s: 8
+  max_output_tokens: 300
+  cache_ttl_s: 20
+  rate_limit:           # adaptive: backs off on HTTP 429, creeps up while calls succeed
+    adaptive: true
+    initial_rpm: 6
+    min_rpm: 1
+    max_rpm: 10
+    increase_every_ok: 10
+    increase_step_rpm: 0.5
+    decrease_factor: 0.5
+    cooldown_after_429_s: 15
+    daily_budget: null  # hard cap of requests per day, or null
