@@ -79,6 +79,9 @@ def _parser() -> argparse.ArgumentParser:
     )
     dump.add_argument("--json", metavar="PATH", help="write the report to a JSON file")
     dump.add_argument(
+        "--any-status", action="store_true", help="also count samples while the game is not live"
+    )
+    dump.add_argument(
         "--include-player", action="store_true", help="keep the driver name in the output"
     )
     dump.add_argument(
@@ -159,6 +162,8 @@ def _cmd_dump(cfg: AppConfig, a: argparse.Namespace) -> int:
         while True:
             snap = sub.get(timeout=0.25)
             now = time.monotonic() - t0
+            if snap is not None and snap.status != int(S.GameStatus.LIVE) and not a.any_status:
+                snap = None  # menu / pause / replay: not driving values
             if snap is not None:
                 last = snap
                 tracker.add(snap)
@@ -168,7 +173,7 @@ def _cmd_dump(cfg: AppConfig, a: argparse.Namespace) -> int:
                 break
             if last is None and now > a.wait:
                 print(
-                    f"no telemetry after {a.wait:.0f} s: is Assetto Corsa running and on track?",
+                    f"no live telemetry after {a.wait:.0f} s: is Assetto Corsa running with the car on track?",
                     file=sys.stderr,
                 )
                 return 1

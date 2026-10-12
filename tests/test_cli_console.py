@@ -255,3 +255,28 @@ def test_cli_dump_reports_a_missing_game_with_exit_1(monkeypatch, capsys):
     monkeypatch.setattr(cli, "ACSharedMemorySource", NoGame)
     assert cli.main(["dump-shm", "--wait", "0.6", "--log-level", "ERROR"]) == 1
     assert "is Assetto Corsa running" in capsys.readouterr().err
+
+
+def test_cli_dump_ignores_samples_while_the_game_is_not_live(monkeypatch, capsys):
+    from pit_wall_ai.telemetry import shm_structs as S
+
+    class Menu:
+        name = "ac"
+
+        def __init__(self):
+            self.n = 0
+
+        def open(self):
+            pass
+
+        def read(self):
+            self.n += 1
+            return snap(t=float(self.n), packet_id=self.n, status=int(S.GameStatus.OFF))
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(cli, "ACSharedMemorySource", Menu)
+    assert cli.main(["dump-shm", "--wait", "0.6", "--log-level", "ERROR"]) == 1
+    assert "no live telemetry" in capsys.readouterr().err
+    assert cli.main(["dump-shm", "--wait", "0.6", "--any-status", "--log-level", "ERROR"]) == 0
