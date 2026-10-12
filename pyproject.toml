@@ -48,3 +48,5 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "W"]
+# Prose in docstrings and comments may run long; the formatter keeps the code itself at 100.
+ignore = ["E501"]
