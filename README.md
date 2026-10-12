@@ -98,34 +98,41 @@ per project in Google AI Studio, so the limiter learns instead of trusting a fix
 
 ## Units of the game's fields
 
-The game publishes its values in its own units and there is **no official Kunos reference for the original
-Assetto Corsa pages** (the PDF that circulates is for ACC, a different game). So units are confirmed against the
-game itself, and this table says honestly where each one stands. Full detail and the procedure:
-[`docs/AC_SHARED_MEMORY.md`](docs/AC_SHARED_MEMORY.md).
+The game publishes its values in its own units and there is **no official Kunos reference for the original Assetto Corsa pages** (the PDF that circulates is for ACC, a different game). So every unit is confirmed against the game itself. Detail and the procedure: [`docs/AC_SHARED_MEMORY.md`](docs/AC_SHARED_MEMORY.md).
 
-Status: **observed** = a real value was read from the live game · **pending** = needs a car on track ·
-nothing is marked *verified* until it has been compared with the in-game HUD.
+Status: **verified** = confirmed by an independent relationship inside a real capture (wall clock, speed vs wheel speed and tyre radius, distance vs mean speed); **plausible** = the range fits the unit but nothing independent has checked it yet (compare with the HUD); **undetermined** = not understood yet; **unreliable** = the game does not provide a usable value for this car.
 
-| Field | Expected unit (hypothesis) | Status |
-|---|---|---|
-| `steer_angle` | degrees *or* radians, unknown | pending |
-| `fuel` | litres | pending (`static.max_fuel` observed: 100.0) |
-| `tyre_wear` | percent *or* fraction; which end means "new" is unknown | pending |
-| `tyre_pressure` | psi | pending |
-| `tyre_core_temp`, `tyre_temp_inner/middle/outer`, `brake_temp` | °C | pending |
-| `gas`, `brake`, `clutch` | 0..1 | pending |
-| `speed_kmh` | km/h | pending |
-| `gear` | raw index (0 = reverse, 1 = neutral is common) | pending |
-| `normalized_pos` | 0..1 around the lap | pending |
-| `current/last/best_time_ms` | milliseconds | pending |
-| `static.track_length_m` | metres | observed: 2367.68 (plausible) |
-| `static.tyre_radius` | metres | observed: 0.326 (plausible) |
-| `static.max_power` | watts | observed: 237648 (plausible as W) |
-| `static.max_torque` | N·m | observed: 115.0, **not understood** |
-| per-wheel order | FL, FR, RL, RR | pending |
+| Field | Unit | Status | Evidence |
+|---|---|---|---|
+| `speed_kmh` | km/h | verified | equals the norm of `local_velocity` × 3.6 to 7 digits |
+| `velocity, local_velocity` | m/s; in the car frame z = forward, x = lateral, y = vertical | verified | norm × 3.6 = `speed_kmh`; z dominates |
+| `wheel_angular_speed` | rad/s | verified | ω × tyre radius ≈ speed (front −0.4 %…−1.9 %, driven rear +4.7 % under wheelspin) |
+| `static.tyre_radius` | metres | verified | same check (0.34 m front, 0.3525 m rear) |
+| `distance_traveled` | metres | verified | 2256.9 m vs mean speed × 60 s = 2257.6 m |
+| `current_time_ms, session_time_left` | milliseconds | verified | Δ = 59 993 ms over a 60 s capture (20 002 ms over 20 s) |
+| `gas, brake` | 0..1 | verified | observed 0.0 … 1.0 (brake held at 1.0 in the pit) |
+| `heading` | radians, −π..π | verified | observed −3.134 … 3.135 over one lap |
+| `normalized_pos` | 0..1 around the lap | verified | 0.18 … 0.68, rising with `distance_traveled` |
+| `acc_g` | g; x = lateral, y = vertical (gravity excluded), z = longitudinal | plausible | peaks ±2 g; braking (−1.9) stronger than acceleration (+1.1) on z; HUD pending for signs |
+| `wheel_load` | newtons | plausible | pit total 14.56 kN ≈ 1 484 kg·g for a GT4 with fuel and driver |
+| `fuel` | litres | plausible | 45.0 loaded, tank 110.0; burn 0.73 L/km (3.3 L per 4.5 km lap) |
+| `tyre_pressure` | psi | plausible | 25.7 … 28.9 (a bar value would be ≈ 1.9) |
+| `tyre_core_temp, tyre_temp_inner/middle/outer` | °C | plausible | 55 … 89 °C; 80 °C at the pit box |
+| `tyre_wear` | percent; 100 = new | plausible | 100.0 on new tyres and unchanged for ~1.7 laps |
+| `camber` | radians | plausible | −0.056 rad = −3.2° front left, mirrored on the right |
+| `suspension_travel` | metres | plausible | 0.011 … 0.080 |
+| `brake_bias` | fraction front | plausible | 0.74 constant |
+| `static.track_length_m` | metres | plausible | 4537.19 for the Hockenheim GP layout used |
+| `clutch` | 1.0 looks like pedal released (inverted) | undetermined | 1.0 constant while driving, 0.0 in the pit with the pedal held |
+| `gear` | raw index; 1 = neutral and 2… = gears is the likely reading | undetermined | observed 1…7, 1 at idle stopped; compare with the HUD gear |
+| `steer_angle` | not degrees of the wheel; radians of the road wheels or a normalised fraction? | undetermined | observed −0.445 … +0.509 over a lap with a hairpin; needs the HUD wheel angle in a known corner |
+| `tc, abs` | activity or a setting? | undetermined | `tc` 1.0 in the pit, 0.065 … 1.0 on track; `abs` constant 0.12 |
+| `wheel_slip` | definition unknown | undetermined | 0 … 977.7 with outliers; not a bounded ratio |
+| `wind_speed` | unit unknown | undetermined | 2.0 constant (m/s or km/h) |
+| `brake_temp` | °C in principle | unreliable | 26 in the pit, 15.0 constant on track (= air temperature) while braking at 244 km/h: not simulated for this car; do not build brake rules on it |
+| `static.max_power, max_torque` | — | unreliable | Supra GT4: 151 kW / 240 N·m; Audi TCR: 237.6 kW / 115 N·m: far from the real cars |
 
-The `static` page was read from a running game (AC 1.16.4, shared-memory version 1.7, in the menu) and decodes
-correctly end to end. `physics` and `graphics` are confirmed with `pit-wall dump-shm --watch 60` on track.
+Capture used: Assetto Corsa 1.16.4, shared-memory 1.7, LFM practice server, Toyota Supra GT4 at Hockenheim (GP, no DRS), 20 s in the pit box + 60 s on track (1 199 + 3 600 samples). The two reports are in `tests/fixtures/` and `tests/test_live_reports.py` re-checks every *verified* row on each run.
 
 ## Roadmap
 

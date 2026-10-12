@@ -38,3 +38,8 @@ desktop.ini
 
 # Local config
 config/local.yaml
+
+# Local dump-shm reports (copy the ones you want to keep into tests/fixtures)
+/pit.json
+/pista.json
+/report*.json

@@ -101,34 +101,41 @@ proyecto en Google AI Studio, así que el limitador aprende en vez de fiarse de 
 
 ## Unidades de los campos del juego
 
-El juego publica sus valores en sus propias unidades y **no hay una referencia oficial de Kunos para las páginas del
-Assetto Corsa original** (el PDF que circula es de ACC, otro juego). Por eso las unidades se confirman contra el
-propio juego, y esta tabla dice con honestidad en qué punto está cada una. Detalle y procedimiento:
-[`docs/AC_SHARED_MEMORY.md`](docs/AC_SHARED_MEMORY.md).
+El juego publica sus valores en sus propias unidades y **no hay una referencia oficial de Kunos para las páginas del Assetto Corsa original** (el PDF que circula es de ACC, otro juego). Por eso cada unidad se confirma contra el propio juego. Detalle y procedimiento: [`docs/AC_SHARED_MEMORY.md`](docs/AC_SHARED_MEMORY.md).
 
-Estado: **observado** = se leyó un valor real del juego en vivo · **pendiente** = hace falta un coche en pista ·
-ninguna se marca como *verificada* hasta compararla con el HUD del juego.
+Estado: **verificada** = confirmada por una relación independiente dentro de una captura real (reloj, velocidad frente a velocidad de rueda y radio, distancia frente a velocidad media); **plausible** = el rango encaja con la unidad pero nada independiente la ha comprobado todavía (comparar con el HUD); **sin determinar** = aún no se entiende; **no fiable** = el juego no da un valor utilizable en este coche.
 
-| Campo | Unidad esperada (hipótesis) | Estado |
-|---|---|---|
-| `steer_angle` | grados *o* radianes, se desconoce | pendiente |
-| `fuel` | litros | pendiente (`static.max_fuel` observado: 100,0) |
-| `tyre_wear` | porcentaje *o* fracción; no se sabe qué extremo es "nuevo" | pendiente |
-| `tyre_pressure` | psi | pendiente |
-| `tyre_core_temp`, `tyre_temp_inner/middle/outer`, `brake_temp` | °C | pendiente |
-| `gas`, `brake`, `clutch` | 0..1 | pendiente |
-| `speed_kmh` | km/h | pendiente |
-| `gear` | índice crudo (0 = marcha atrás, 1 = punto muerto es lo habitual) | pendiente |
-| `normalized_pos` | 0..1 a lo largo de la vuelta | pendiente |
-| `current/last/best_time_ms` | milisegundos | pendiente |
-| `static.track_length_m` | metros | observado: 2367,68 (plausible) |
-| `static.tyre_radius` | metros | observado: 0,326 (plausible) |
-| `static.max_power` | vatios | observado: 237648 (plausible como W) |
-| `static.max_torque` | N·m | observado: 115,0, **no se entiende** |
-| orden de ruedas | FL, FR, RL, RR | pendiente |
+| Campo | Unidad | Estado | Evidencia |
+|---|---|---|---|
+| `speed_kmh` | km/h | verificada | igual a la norma de `local_velocity` × 3,6 con 7 cifras |
+| `velocity, local_velocity` | m/s; en ejes del coche z = adelante, x = lateral, y = vertical | verificada | norma × 3,6 = `speed_kmh`; domina z |
+| `wheel_angular_speed` | rad/s | verificada | ω × radio ≈ velocidad (delanteras −0,4 %…−1,9 %, trasera motriz +4,7 % con patinaje) |
+| `static.tyre_radius` | metros | verificada | misma comprobación (0,34 m delante, 0,3525 m detrás) |
+| `distance_traveled` | metros | verificada | 2256,9 m frente a velocidad media × 60 s = 2257,6 m |
+| `current_time_ms, session_time_left` | milisegundos | verificada | Δ = 59 993 ms en una captura de 60 s (20 002 ms en 20 s) |
+| `gas, brake` | 0..1 | verificada | observado 0,0 … 1,0 (freno a 1,0 en el pit) |
+| `heading` | radianes, −π..π | verificada | observado −3,134 … 3,135 en una vuelta |
+| `normalized_pos` | 0..1 a lo largo de la vuelta | verificada | 0,18 … 0,68, creciendo con `distance_traveled` |
+| `acc_g` | g; x = lateral, y = vertical (sin gravedad), z = longitudinal | plausible | picos de ±2 g; frenada (−1,9) mayor que aceleración (+1,1) en z; faltan los signos con el HUD |
+| `wheel_load` | newtons | plausible | total en pit 14,56 kN ≈ 1 484 kg·g para un GT4 con combustible y piloto |
+| `fuel` | litros | plausible | 45,0 cargados, depósito 110,0; consumo 0,73 L/km (3,3 L por vuelta de 4,5 km) |
+| `tyre_pressure` | psi | plausible | 25,7 … 28,9 (en bar serían ≈ 1,9) |
+| `tyre_core_temp, tyre_temp_inner/middle/outer` | °C | plausible | 55 … 89 °C; 80 °C en el box |
+| `tyre_wear` | porcentaje; 100 = nuevo | plausible | 100,0 con neumáticos nuevos y sin cambio en ~1,7 vueltas |
+| `camber` | radianes | plausible | −0,056 rad = −3,2° delante izquierda, simétrico a la derecha |
+| `suspension_travel` | metros | plausible | 0,011 … 0,080 |
+| `brake_bias` | fracción delantera | plausible | 0,74 constante |
+| `static.track_length_m` | metros | plausible | 4537,19 para el trazado GP de Hockenheim usado |
+| `clutch` | 1,0 parece pedal suelto (invertido) | sin determinar | 1,0 constante conduciendo, 0,0 en el pit con el pedal pisado |
+| `gear` | índice crudo; lo probable es 1 = punto muerto y 2… = marchas | sin determinar | observado 1…7, 1 en ralentí parado; comparar con la marcha del HUD |
+| `steer_angle` | no son grados del volante; ¿radianes de las ruedas o fracción normalizada? | sin determinar | observado −0,445 … +0,509 en una vuelta con una horquilla; falta el ángulo del HUD en una curva conocida |
+| `tc, abs` | ¿actividad o ajuste? | sin determinar | `tc` 1,0 en el pit, 0,065 … 1,0 en pista; `abs` constante 0,12 |
+| `wheel_slip` | definición desconocida | sin determinar | 0 … 977,7 con valores atípicos; no es una razón acotada |
+| `wind_speed` | unidad desconocida | sin determinar | 2,0 constante (m/s o km/h) |
+| `brake_temp` | °C en principio | no fiable | 26 en el pit, 15,0 constante en pista (= temperatura del aire) frenando a 244 km/h: no se simula en este coche; no basar reglas de frenos en ello |
+| `static.max_power, max_torque` | — | no fiable | Supra GT4: 151 kW / 240 N·m; Audi TCR: 237,6 kW / 115 N·m: lejos de los coches reales |
 
-La página `static` se leyó de un juego en marcha (AC 1.16.4, memoria compartida v1.7, en el menú) y se decodifica
-correctamente de principio a fin. `physics` y `graphics` se confirman con `pit-wall dump-shm --watch 60` en pista.
+Captura usada: Assetto Corsa 1.16.4, memoria compartida 1.7, servidor de práctica de LFM, Toyota Supra GT4 en Hockenheim (GP, sin DRS), 20 s en el box + 60 s en pista (1 199 + 3 600 muestras). Los dos informes están en `tests/fixtures/` y `tests/test_live_reports.py` vuelve a comprobar cada fila *verificada* en cada ejecución.
 
 ## Hoja de ruta
 
