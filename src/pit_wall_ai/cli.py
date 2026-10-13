@@ -12,11 +12,13 @@ from pathlib import Path
 from . import __version__
 from .config import AppConfig, ConfigError, load_config
 from .logging_setup import setup_logging
+from .session.engine import SessionEngine
 from .telemetry import shm_structs as S
 from .telemetry.ac_shared_memory import ACSharedMemorySource
 from .telemetry.console import run_dashboard
 from .telemetry.dump import RangeTracker, format_dump, report_json
 from .telemetry.poller import TelemetryPoller
+from .telemetry.recorder import NativeReplaySource, Recorder, is_native, record_from_poller
 from .telemetry.replay import ReplaySource
 from .telemetry.source import TelemetrySource
 
@@ -30,6 +32,10 @@ def build_source(cfg: AppConfig) -> TelemetrySource:
             raise ConfigError("telemetry.source is 'replay' but no file was given (--file)")
         if not Path(t.replay.file).is_file():
             raise ConfigError(f"replay file not found: {t.replay.file}")
+        if is_native(t.replay.file):
+            return NativeReplaySource(
+                t.replay.file, speed=t.replay.speed, start_s=t.replay.start_s, loop=t.replay.loop
+            )
         return ReplaySource(
             t.replay.file,
             speed=t.replay.speed,
@@ -52,7 +58,7 @@ def _parser() -> argparse.ArgumentParser:
             "--config", help="YAML config (default: PIT_WALL_CONFIG or config/local.yaml)"
         )
         sp.add_argument("--source", choices=["ac", "replay"], help="live game or a recorded log")
-        sp.add_argument("--file", help="recording to replay (.ld or MoTeC .csv)")
+        sp.add_argument("--file", help="recording to replay (.pwrec.gz, MoTeC .ld or .csv)")
         sp.add_argument("--speed", type=float, help="replay speed multiplier")
         sp.add_argument("--start", type=float, help="replay start offset in seconds")
         sp.add_argument("--loop", action="store_true", help="loop the recording")
@@ -65,6 +71,14 @@ def _parser() -> argparse.ArgumentParser:
         "--plain", action="store_true", help="one status line per second instead of the dashboard"
     )
     run.add_argument("--duration", type=float, help="exit after this many seconds")
+
+    rec = sub.add_parser("record", help="record the live session to a .pwrec.gz file")
+    common(rec)
+    rec.add_argument("--out", required=True, help="output file, e.g. race.pwrec.gz")
+    rec.add_argument(
+        "--rate", type=float, default=20.0, help="samples per second to store (default 20)"
+    )
+    rec.add_argument("--duration", type=float, help="stop after this many seconds")
 
     dump = sub.add_parser(
         "dump-shm", help="print every field and the observed ranges (confirm units)"
@@ -115,6 +129,21 @@ def _apply_overrides(cfg: AppConfig, a: argparse.Namespace) -> AppConfig:
     return AppConfig.model_validate(data)
 
 
+def _plain_line(poller, engine) -> str:
+    s, st = poller.buffer.latest(), poller.stats
+    if s is None:
+        return f"[{st.status}] waiting for telemetry... {st.last_error}"
+    v = engine.view()
+    cur = v.current
+    delta = f" delta {cur.delta_ms / 1000:+.3f}s" if cur and cur.delta_ms is not None else ""
+    best = f" best {v.best.time_ms / 1000:.3f}s" if v.best else ""
+    return (
+        f"[{st.status}] {v.state.session}/{v.state.phase} {s.speed_kmh:6.1f} km/h gear {s.gear} "
+        f"lap {cur.number if cur else s.completed_laps + 1} pos {s.normalized_pos:.3f}"
+        f"{delta}{best} {st.measured_hz:5.1f} Hz drop {st.dropped}"
+    )
+
+
 def _cmd_run(cfg: AppConfig, a: argparse.Namespace) -> int:
     source = build_source(cfg)
     poller = TelemetryPoller(
@@ -123,31 +152,50 @@ def _cmd_run(cfg: AppConfig, a: argparse.Namespace) -> int:
         buffer_seconds=cfg.telemetry.buffer_seconds,
         retry_s=cfg.telemetry.retry_s,
     )
+    engine = SessionEngine()
+    engine.attach(poller)
     poller.start()
     stop = threading.Event()
     try:
         if a.plain:
             t0 = time.monotonic()
             while not stop.is_set():
-                s, st = poller.buffer.latest(), poller.stats
-                if s is None:
-                    print(f"[{st.status}] waiting for telemetry... {st.last_error}", flush=True)
-                else:
-                    print(
-                        f"[{st.status}] {s.speed_kmh:6.1f} km/h gear {s.gear} lap {s.completed_laps} "
-                        f"pos {s.normalized_pos:.3f} {st.measured_hz:5.1f} Hz drop {st.dropped}",
-                        flush=True,
-                    )
-                if st.status == "ended" or (a.duration and time.monotonic() - t0 >= a.duration):
+                print(_plain_line(poller, engine), flush=True)
+                if poller.stats.status == "ended" or (
+                    a.duration and time.monotonic() - t0 >= a.duration
+                ):
                     break
                 stop.wait(1.0)
         else:
-            run_dashboard(poller, stop=stop, duration_s=a.duration)
+            run_dashboard(poller, stop=stop, duration_s=a.duration, engine=engine)
     except KeyboardInterrupt:
         pass
     finally:
         poller.stop()
+        engine.detach()
+        engine.flush()
     return 0
+
+
+def _cmd_record(cfg: AppConfig, a: argparse.Namespace) -> int:
+    source = build_source(cfg)
+    poller = TelemetryPoller(
+        source, hz=cfg.telemetry.hz, buffer_seconds=5, retry_s=cfg.telemetry.retry_s
+    )
+    recorder = Recorder(a.out, hz=a.rate)
+    poller.start()
+    stop = threading.Event()
+    print(f"recording to {a.out} at {a.rate:g} Hz; Ctrl+C to stop", flush=True)
+    n = 0
+    try:
+        n = record_from_poller(poller, recorder, stop, duration_s=a.duration)
+    except KeyboardInterrupt:
+        n = recorder.samples
+    finally:
+        poller.stop()
+        recorder.close()
+    print(f"{n} samples written to {a.out}")
+    return 0 if n else 1
 
 
 def _cmd_dump(cfg: AppConfig, a: argparse.Namespace) -> int:
@@ -206,7 +254,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             file=cfg.logging.file,
             console=cfg.logging.level == "DEBUG" or args.cmd != "run" or args.plain,
         )
-        return _cmd_run(cfg, args) if args.cmd == "run" else _cmd_dump(cfg, args)
+        handler = {"run": _cmd_run, "record": _cmd_record, "dump-shm": _cmd_dump}[args.cmd]
+        return handler(cfg, args)
     except ConfigError as exc:
         print(f"configuration error: {exc}", file=sys.stderr)
         return 2

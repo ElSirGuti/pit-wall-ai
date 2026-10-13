@@ -7,9 +7,9 @@ lenguaje (la API gratuita de Gemini, intercambiable) se usa solo para la convers
 
 *English: [README.md](README.md)*
 
-> **Estado: fase 1 de 7**: lector de telemetría en vivo, replay de sesiones grabadas y panel en terminal. Las
-> alertas, el análisis de vueltas, el chat con Gemini y la voz llegan en las siguientes fases (ver
-> [hoja de ruta](#hoja-de-ruta)).
+> **Estado: fase 2 de 7**: telemetría en vivo, detección de sesión y fase, tracker de vueltas y sectores con mejor
+> vuelta, vuelta de referencia y delta en vivo, grabación y replay de sesiones, y panel en terminal. Las alertas, el
+> análisis de frenadas, el chat con Gemini y la voz llegan después (ver [hoja de ruta](#hoja-de-ruta)).
 
 <!-- DEMO: añade aquí un GIF o vídeo (panel de terminal ahora, demo de voz más adelante) -->
 <p align="center"><em>Espacio para la demo: aquí irá un GIF del panel.</em></p>
@@ -84,6 +84,10 @@ pit-wall run --source replay --file C:\ruta\sesion.ld --speed 4 --start 100
 # Una línea de estado por segundo (sin panel)
 pit-wall run --plain
 
+# Graba una sesión real (los campos del propio juego) y reprodúcela después
+pit-wall record --out carrera.pwrec.gz
+pit-wall run --file carrera.pwrec.gz --speed 4
+
 # Muestra todos los campos que publica el juego (y, con --watch, el rango de cada uno)
 pit-wall dump-shm
 pit-wall dump-shm --watch 60 --json report.json
@@ -141,8 +145,8 @@ Captura usada: Assetto Corsa 1.16.4, memoria compartida 1.7, servidor de prácti
 
 | Fase | Contenido | Estado |
 |---|---|---|
-| 1 | Lector de telemetría, mock/replay, vista de consola, base del LLM | **esta versión** |
-| 2 | Detector de sesión (práctica / clasificación / carrera), tracker de vueltas y sectores | prevista |
+| 1 | Lector de telemetría, mock/replay, vista de consola, base del LLM | hecha |
+| 2 | Detector de sesión (práctica / clasificación / carrera), tracker de vueltas y sectores, `pit-wall record` | **esta versión** ([docs](docs/SESSION_AND_LAPS.md)) |
 | 3 | Motor de alertas por reglas con TTS local | prevista |
 | 4 | Análisis de frenadas por curva contra la mejor vuelta (geometría de pista generada en local) | prevista |
 | 5 | Chat de texto con Gemini usando un resumen compacto de telemetría | prevista |

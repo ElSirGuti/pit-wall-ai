@@ -7,8 +7,9 @@ only used for the conversation.
 
 *Español: [README.es.md](README.es.md)*
 
-> **Status: phase 1 of 7** — live telemetry reader, replay of recorded sessions, terminal dashboard. Alerts,
-> lap analysis, the Gemini chat and voice come in the next phases (see the [roadmap](#roadmap)).
+> **Status: phase 2 of 7** — live telemetry, session and phase detection, lap/sector tracker with best lap,
+> reference lap and live delta, session recording and replay, terminal dashboard. Alerts, braking analysis, the
+> Gemini chat and voice come next (see the [roadmap](#roadmap)).
 
 <!-- DEMO: add a GIF or video here (terminal dashboard now, voice demo later) -->
 <p align="center"><em>Demo placeholder: a GIF of the dashboard will go here.</em></p>
@@ -81,6 +82,10 @@ pit-wall run --source replay --file C:\path\to\session.ld --speed 4 --start 100
 # One status line per second (no dashboard)
 pit-wall run --plain
 
+# Record a real session (the game's own fields) and replay it later
+pit-wall record --out race.pwrec.gz
+pit-wall run --file race.pwrec.gz --speed 4
+
 # Show every field the game publishes (and, with --watch, the range of each one)
 pit-wall dump-shm
 pit-wall dump-shm --watch 60 --json report.json
@@ -138,8 +143,8 @@ Capture used: Assetto Corsa 1.16.4, shared-memory 1.7, LFM practice server, Toyo
 
 | Phase | Content | Status |
 |---|---|---|
-| 1 | Telemetry reader, mock/replay, console view, LLM foundations | **this release** |
-| 2 | Session detector (practice / qualify / race), lap and sector tracker | planned |
+| 1 | Telemetry reader, mock/replay, console view, LLM foundations | done |
+| 2 | Session detector (practice / qualify / race), lap and sector tracker, `pit-wall record` | **this release** ([docs](docs/SESSION_AND_LAPS.md)) |
 | 3 | Rule-based alert engine with local TTS | planned |
 | 4 | Braking analysis per corner vs the best lap (track geometry generated locally) | planned |
 | 5 | Text chat with Gemini using a compact telemetry summary | planned |

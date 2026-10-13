@@ -114,8 +114,75 @@ def _footer(stats: PollerStats, source: str, s: Snapshot | None) -> Text:
     return text
 
 
+def _ms(ms: float | None, signed: bool = False) -> str:
+    if ms is None:
+        return "-"
+    sign = "+" if signed and ms >= 0 else "-" if ms < 0 else ""
+    return f"{sign}{abs(ms) / 1000:.3f}" if signed else fmt_time(int(ms))
+
+
+def _session_panel(view) -> Panel:
+    st = view.state
+    t = Table.grid(padding=(0, 1))
+    t.add_column(style="bold", justify="right")
+    t.add_column()
+    kind = st.session + ("" if st.kind_verified_live else " (code not verified live)")
+    t.add_row("Session", f"{kind}  ·  {st.phase}")
+    t.add_row("Track / car", f"{st.track or '?'} / {st.car or '?'}")
+    cur = view.current
+    if cur is not None:
+        delta = _ms(cur.delta_ms, signed=True) if cur.delta_ms is not None else "-"
+        style = "red" if cur.delta_ms and cur.delta_ms > 0 else "green"
+        t.add_row(
+            "Lap",
+            f"{cur.number}  sector {cur.sector}  {fmt_time(cur.elapsed_ms)}"
+            + ("  (out lap)" if cur.out_lap else ""),
+        )
+        t.add_row(
+            "Delta",
+            Text(f"{delta} s vs lap {cur.reference_number}", style=style)
+            if cur.reference_number
+            else "no reference yet",
+        )
+    best = view.best
+    t.add_row("Best", f"{fmt_time(best.time_ms)} (lap {best.number})" if best else "-")
+    if st.session_time_left_s is not None:
+        m, sec = divmod(int(st.session_time_left_s), 60)
+        t.add_row("Time left", f"{m}:{sec:02d}")
+    return Panel(t, title="Session")
+
+
+def _laps_table(view, rows: int = 6) -> Table:
+    t = Table(title="Laps", show_edge=False, pad_edge=False)
+    for col in ("#", "Time", "vs best", "S1", "S2", "S3", "Fuel", "Notes"):
+        t.add_column(col, justify="right")
+    best = view.best.time_ms if view.best else None
+    for lap in view.laps[-rows:]:
+        secs = [f"{x / 1000:.3f}" for x in lap.sectors_ms] + ["-"] * (3 - len(lap.sectors_ms))
+        notes = ",".join(
+            n
+            for n, on in (
+                ("out", lap.out_lap),
+                ("in", lap.in_lap),
+                ("cut?", lap.suspect),
+                ("est", lap.time_source == "estimated"),
+            )
+            if on
+        )
+        mark = "★" if view.best is lap else ""
+        t.add_row(
+            f"{lap.number}{mark}",
+            fmt_time(lap.time_ms),
+            _ms(lap.time_ms - best, signed=True) if best else "-",
+            *secs[:3],
+            f"{lap.fuel_used:.2f}",
+            notes,
+        )
+    return t
+
+
 def render_dashboard(
-    snap: Snapshot | None, stats: PollerStats, *, source: str = "?"
+    snap: Snapshot | None, stats: PollerStats, *, source: str = "?", view=None
 ) -> RenderableType:
     if snap is None:
         msg = (
@@ -129,6 +196,13 @@ def render_dashboard(
     top = Table.grid(expand=True, padding=(0, 3))
     top.add_column()
     top.add_column()
+    if view is not None:
+        top.add_row(Panel(_driving(snap), title="Driving"), _session_panel(view))
+        parts = [top, _tyres(snap)]
+        if view.laps:
+            parts.append(_laps_table(view))
+        parts.append(_footer(stats, source, snap))
+        return Panel(Group(*parts), title="pit-wall-ai")
     top.add_row(Panel(_driving(snap), title="Driving"), Panel(_timing(snap), title="Timing"))
     return Panel(Group(top, _tyres(snap), _footer(stats, source, snap)), title="pit-wall-ai")
 
@@ -140,6 +214,7 @@ def run_dashboard(
     console: Console | None = None,
     stop: threading.Event | None = None,
     duration_s: float | None = None,
+    engine=None,
 ) -> None:
     """Show the dashboard until Ctrl+C, ``stop`` is set, the source ends or ``duration_s`` passes."""
     stop = stop or threading.Event()
@@ -149,7 +224,12 @@ def run_dashboard(
     with Live(console=console, refresh_per_second=refresh_hz, transient=False) as live:
         while not stop.is_set():
             live.update(
-                render_dashboard(poller.buffer.latest(), poller.stats, source=poller.source.name)
+                render_dashboard(
+                    poller.buffer.latest(),
+                    poller.stats,
+                    source=poller.source.name,
+                    view=engine.view() if engine is not None else None,
+                )
             )
             if poller.stats.status == "ended" or (duration_s is not None and elapsed >= duration_s):
                 break
