@@ -106,6 +106,15 @@ def _parser() -> argparse.ArgumentParser:
     )
     cor.add_argument("--file", help="a .pwrec.gz recording: track, layout and length come from it")
     cor.add_argument("--ac-dir", action="append", default=[], help="extra AC folder to search")
+    cor.add_argument(
+        "--laps", action="store_true", help="also compare every lap of --file against the best lap"
+    )
+    cor.add_argument(
+        "--session",
+        choices=["practice", "qualify", "race", "hotlap"],
+        default="practice",
+        help="session kind for .ld/.csv logs, which do not say (default practice)",
+    )
 
     rec = sub.add_parser("record", help="record the live session to a .pwrec.gz file")
     common(rec)
@@ -361,17 +370,71 @@ def _cmd_dump(cfg: AppConfig, a: argparse.Namespace) -> int:
     return 0
 
 
+def _print_lap_comparison(g, names, result, cfg) -> None:
+    from .analysis.braking import compare_lap, reference_lap
+
+    b = cfg.analysis.braking
+    laps = [lap for lap in result.laps if lap.trace is not None]
+    if not laps:
+        print("\nno laps with a usable trace in the file")
+        return
+    print(
+        f"\nlaps: {len(laps)}; reference = best valid lap with the same compound;"
+        f" a corner is flagged (*) with |braking point| >= {b.min_distance_m:g} m and"
+        f" a loss >= {b.min_time_s:g} s"
+    )
+    for lap in laps:
+        tag = f"lap {lap.number}  {lap.time_ms / 1000:.3f} s"
+        notes = [
+            n
+            for n, on in (("out", lap.out_lap), ("in", lap.in_lap), ("suspect", lap.suspect))
+            if on
+        ]
+        if lap.out_lap or lap.in_lap or lap.coverage < 0.9:
+            print(f"\n{tag}  [{', '.join(notes) or 'incomplete'}]  not compared")
+            continue
+        if notes:
+            tag += f"  [{', '.join(notes)}: off track at some point, read its corners with care]"
+        ref = reference_lap(result.laps, lap)
+        if ref is None:
+            print(f"\n{tag}  best valid lap of its compound: nothing to compare with")
+            continue
+        print(
+            f"\n{tag}  vs lap {ref.number} ({ref.time_ms / 1000:.3f} s, {lap.time_ms - ref.time_ms:+d} ms)"
+        )
+        print("  #  braking-point m   earlier  d.time s  d.min km/h  d.throttle m  name")
+        for c in compare_lap(g, lap, ref, b):
+            bp = c.lap_metrics.brake_point_m
+            rp = c.ref_metrics.brake_point_m
+            fmt = lambda v, f: "   -   " if v is None else format(v, f)  # noqa: E731
+            flag = "*" if c.significant(b) else " "
+            print(
+                f"{flag}{c.corner:2d}  {fmt(bp, '7.0f')} /{fmt(rp, '7.0f')}"
+                f"  {fmt(c.brake_earlier_m, '+7.1f')}  {fmt(c.time_diff_s, '+7.2f')}"
+                f"  {fmt(c.min_speed_delta_kmh, '+8.1f')}  {fmt(c.throttle_later_m, '+9.1f')}"
+                f"  {names.get(c.corner, '')}"
+            )
+
+
 def _cmd_corners(cfg: AppConfig, a: argparse.Namespace) -> int:
     from .analysis.tracks import resolve
 
     track, layout, length = a.track, (None if a.any_layout else (a.layout or "")), a.length
+    result = None
     if a.file:
-        from .telemetry.recorder import is_native, load_native
+        from .analysis.offline import analyse_file
 
-        if not is_native(a.file):
-            print("--file must be a .pwrec.gz recording", file=sys.stderr)
+        try:
+            result = analyse_file(a.file, session=a.session) if a.laps else None
+            if result is None:
+                from .analysis.offline import iter_snapshots
+
+                st, _ = iter_snapshots(a.file, session=a.session)
+            else:
+                st = result.static
+        except (OSError, ValueError) as exc:
+            print(f"cannot read {a.file}: {exc}", file=sys.stderr)
             return 2
-        st = load_native(a.file).statics[0]
         track = track or st.track
         if a.layout is None and not a.any_layout:
             layout = st.track_configuration
@@ -403,6 +466,8 @@ def _cmd_corners(cfg: AppConfig, a: argparse.Namespace) -> int:
         )
     if not names:
         print("(no names for this circuit: numbered by the geometry only, numbering not verified)")
+    if result is not None:
+        _print_lap_comparison(g, names, result, cfg)
     return 0
 
 

@@ -131,3 +131,11 @@ analysis:               # phase 4: track geometry and braking analysis
   ac_dirs: []           # folders to search for the game's tracks: the game folder, a Steam library or its
                         # content/tracks. Empty = look in the usual Steam locations and in $AC_PATH.
                         # e.g. ["E:/SteamLibrary", "D:/SteamLibrary"]
+  braking:              # braking per corner vs the best valid lap of the session (same compound)
+    brake_on: 0.10      # pedal above this = braking
+    min_peak: 0.30      # an event must reach this to count as the braking of a corner
+    lookback_m: 350     # how far before the corner entry the braking is searched
+    merge_gap_m: 20     # braking events closer than this are one
+    throttle_on: 0.50   # throttle above this after the slowest point = back on power
+    min_distance_m: 10  # a braking-point difference smaller than this is never said
+    min_time_s: 0.10    # a time loss in the corner smaller than this is never said

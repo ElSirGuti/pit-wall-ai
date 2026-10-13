@@ -55,3 +55,25 @@ double apex counts once. That is not necessarily the circuit's official numberin
 (`src/pit_wall_ai/data/circuits.json`) and are attached only where a table corner falls inside a geometric
 one; a corner without a name keeps its number alone. Until you confirm a circuit's numbering, the voice
 will not say corner numbers for it.
+
+## Braking per corner (phase 4, step 2)
+
+```bash
+pit-wall corners --file race.pwrec.gz --laps      # every lap against the best valid lap, per corner
+pit-wall corners --file "spa_..._stint_1.ld" --laps --session practice
+```
+
+For each corner of the geometry and each lap: where the brake went on (last braking event before the corner
+entry that reaches 0.30), its peak, the speed at that point, the slowest point, where the throttle came
+back (≥ 0.5) and the time through the corner. A lap is compared with the **best valid lap of the session
+with the same tyre compound**; a lap that is itself that best lap has nothing to be compared with.
+
+* Time is measured over the whole corner: from 10 m before the *reference* braking point (20 m before the
+  corner start if the reference did not brake) to the end of the corner, the same span for both laps.
+* A difference is only reported as significant with a braking-point difference of at least **10 m** *and* a
+  loss of at least **0.1 s** (`analysis.braking.min_distance_m` / `min_time_s`).
+* No distance is reported when the pedal was already down at the start of the search window (the braking of
+  the previous corner runs into this one) or when a lap did not brake at all there; the time still is.
+* Precision follows the sampling: `.ld` logs are 20 Hz (3.5 m per sample at 250 km/h), live data 60 Hz
+  (1.2 m). Laps are stored at 4000 points (1.7 m at Spa).
+* The table is measured fact. It does not say why a corner was slower.

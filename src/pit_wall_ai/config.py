@@ -237,12 +237,33 @@ class EngineerConfig(_Model):
     startup_quiet_s: float = Field(5.0, ge=0)  # silence right after a session starts
 
 
+class BrakingConfig(_Model):
+    """How braking is measured per corner and when a difference is worth saying."""
+
+    brake_on: float = Field(0.10, gt=0, lt=1)  # pedal above this = braking
+    min_peak: float = Field(
+        0.30, gt=0, le=1
+    )  # an event must reach this to count as the corner's braking
+    lookback_m: float = Field(
+        350.0, gt=0
+    )  # how far before the corner entry the braking is searched
+    merge_gap_m: float = Field(20.0, ge=0)  # events closer than this are one braking
+    throttle_on: float = Field(
+        0.50, gt=0, le=1
+    )  # throttle above this after the slowest point = back on power
+    min_distance_m: float = Field(
+        10.0, gt=0
+    )  # a braking-point difference smaller than this is not said
+    min_time_s: float = Field(0.10, gt=0)  # a time loss in the corner smaller than this is not said
+
+
 class AnalysisConfig(_Model):
     """Track geometry and braking analysis (phase 4). The geometry is generated locally from the game."""
 
     ac_dirs: list[str] = Field(
         default_factory=list
     )  # game / Steam library / tracks folders to search
+    braking: BrakingConfig = BrakingConfig()
 
 
 class AppConfig(_Model):

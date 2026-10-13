@@ -24,7 +24,9 @@ import numpy as np
 from ..events import Event, LapCompleted, SectorCompleted
 from ..telemetry.snapshot import Snapshot
 
-TRACE_BINS = 400
+TRACE_BINS = (
+    4000  # ~1.7 m at Spa, ~0.6 m at Magione: finer than the 10 m the braking analysis reports
+)
 CONFIRM_WAIT_S = 1.5  # wait this long for the game's last-lap time after a crossing
 WRAP_GRACE_S = 3.0  # wait this long for completed_laps after a position wrap
 MIN_LAP_MS = 15_000  # shorter than this is not a lap (a glitch or a pit-lane crossing)
@@ -70,6 +72,7 @@ class LapRecord:
     avg_speed_kmh: float = 0.0
     tyres_out_max: int = 0
     coverage: float = 0.0
+    compound: str = ""  # tyre compound at the start of the lap ("" = not reported)
     trace: LapTrace | None = field(default=None, repr=False)
 
     @property
@@ -104,6 +107,7 @@ class _Draft:
         self.number = number
         self.started_in_pit = started_in_pit
         self.fuel_start = snap.fuel
+        self.compound = snap.tyre_compound
         self.pos: list[float] = []
         self.elapsed: list[float] = []
         self.speed: list[float] = []
@@ -279,6 +283,7 @@ class LapTracker:
                 max_speed_kmh=max(d.speed) if d.speed else 0.0,
                 avg_speed_kmh=float(np.mean(d.speed)) if d.speed else 0.0,
                 tyres_out_max=d.tyres_out_max,
+                compound=d.compound,
             )
             trace = _trace(d)
             lap.trace = trace
