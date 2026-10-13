@@ -168,7 +168,7 @@ Captura usada: Assetto Corsa 1.16.4, memoria compartida 1.7, servidor de prácti
 | 3 | Motor de alertas por reglas con TTS local | hecha ([docs](docs/ENGINEER.md)); umbrales conservadores, por calibrar |
 | 4 | Análisis de frenadas por curva contra la mejor vuelta (geometría de pista generada en local) | **en curso** ([docs](docs/TRACK_GEOMETRY.md)): geometría, numeración, comparación por curva y aviso hablado hechos; falta comprobarlos en vivo y contra la numeración real de los circuitos |
 | 5 | Chat de texto con Gemini usando un resumen compacto de telemetría | prevista |
-| 6 | Voz completa: push-to-talk (teclado y botón del Logitech G29), STT, respuestas habladas | prevista |
+| 6 | Voz completa: push-to-talk asignable a cualquier botón de cualquier dispositivo (teclado, ratón, mando, volante, botonera; [plan](docs/INPUT_BINDINGS.md)), STT, respuestas habladas | prevista |
 | 7 | Debrief post-sesión con Gemini | prevista |
 | 8 | Preparación de carrera: plan de estrategia con checklist de práctica editable, resumen de rivales, sugerencias de setup y de estilo de conducción | prevista, ver [docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md) |
 

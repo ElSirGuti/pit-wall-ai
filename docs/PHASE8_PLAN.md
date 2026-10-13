@@ -227,8 +227,8 @@ suggestion = { id, created, car, track, layout, conditions {air, road, compound,
 5. Which providers and quotas are acceptable for a multi-turn strategy chat on the free tier?
 6. How many comparable laps does a setup A/B need on real data before a verdict is trustworthy, and how much does
    the lap-to-lap spread of the author vary by track? (calibrate the minimum of section 3.3 on recorded stints)
-7. What is the simplest feedback capture that the driver will actually use mid-session (voice after the stint,
-   a button on the wheel)?
+7. What is the simplest feedback capture that the driver will actually use mid-session? Decided: voice after the
+   stint **and** buttons bindable to any input device (see [INPUT_BINDINGS.md](INPUT_BINDINGS.md)).
 
 ## 5. Decisions taken (2026-10-13)
 
