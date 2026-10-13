@@ -144,7 +144,7 @@ Capture used: Assetto Corsa 1.16.4, shared-memory 1.7, LFM practice server, Toyo
 | Phase | Content | Status |
 |---|---|---|
 | 1 | Telemetry reader, mock/replay, console view, LLM foundations | done |
-| 2 | Session detector (practice / qualify / race), lap and sector tracker, `pit-wall record` | **this release** ([docs](docs/SESSION_AND_LAPS.md)) |
+| 2 | Session detector (practice / qualify / race), lap and sector tracker, `pit-wall record` | **this release**, checked on a real qualifying + race ([docs](docs/SESSION_AND_LAPS.md)) |
 | 3 | Rule-based alert engine with local TTS | planned |
 | 4 | Braking analysis per corner vs the best lap (track geometry generated locally) | planned |
 | 5 | Text chat with Gemini using a compact telemetry summary | planned |

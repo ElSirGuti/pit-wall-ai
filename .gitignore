@@ -46,3 +46,7 @@ config/local.yaml
 /lock.json
 /steer.json
 /vuelta.json
+
+# Local recordings (copy the ones worth keeping into tests/fixtures)
+/*.pwrec.gz
+/*.pwrec

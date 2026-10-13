@@ -58,7 +58,7 @@ class Recorder:
         self._writer: csv.writer | None = None
         self._header: list[str] | None = None
         self._static_json = ""
-        self._last_t = -1e9
+        self._next_t = -1e9
         self._last_flush = 0.0
         self.samples = 0
 
@@ -72,9 +72,13 @@ class Recorder:
         """Append a sample unless it is closer than the period to the previous one. True if written."""
         if self._fh is None or self._writer is None:
             raise RuntimeError("recorder not open")
-        if s.t - self._last_t < self.period * 0.999:
+        if s.t < self._next_t:
             return False
-        self._last_t = s.t
+        # Scheduled, not "a period since the last one": with a ~15.6 ms timer tick a fixed gap fell to a
+        # third of the requested rate (measured on a real race: 10 Hz recorded when 20 Hz was asked).
+        if self._next_t < -1e8 or s.t - self._next_t > 5 * self.period:
+            self._next_t = s.t
+        self._next_t += self.period
         static = {k: v for k, v in dataclasses.asdict(s.static).items() if k not in PRIVATE_FIELDS}
         static_json = json.dumps(static, ensure_ascii=False, sort_keys=True)
         if static_json != self._static_json:

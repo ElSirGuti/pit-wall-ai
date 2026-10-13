@@ -22,12 +22,17 @@
 | `normalized_pos` wraps (end -> start) | fallback when the counter never moves; ignored if the lap in progress covers < 60 % (leaving the pits crosses the line without being a lap) | tested on synthetic data |
 | `flush()` | at the end of a recording, closes a lap still waiting for its time | |
 
-**Validation against real data.** The ACTI logs in the author's machine (36 files, 12 circuits, 15 cars) were
-replayed: the 173 laps finished during the recordings were detected with the game's own lap time to within
-2 ms, with none counted twice and none invented. 6 more laps in 4 logs ended before the recording began and
-have no samples, so they are correctly not reported. Note that this validates the logic on the *ACTI
-export*; the live game has been observed across no start/finish line yet (the three live captures were taken
-before the first crossing). `pit-wall record` on the first lap of the next session settles it.
+**Validation against real data.**
+
+* **ACTI logs** (36 files, 12 circuits, 15 cars): the 173 laps finished during the recordings were detected
+  with the game's own lap time to within 2 ms, none counted twice and none invented.
+* **A live session recorded with `pit-wall record`** (Mazda MX-5 Cup at Magione: qualifying, a race against AI
+  with a pause and a restart): 6 laps, every time equal to the game's own (`tests/test_live_lfm_session.py`).
+
+What the live game does at a line crossing (observed): the position wraps first; a few samples later the lap
+timer (`current_time_ms`) drops to ~0, `completed_laps` increases and `last_time_ms` / `best_time_ms` /
+`last_sector_time_ms` update in the same sample. This is why a timer drop away from the line, with a position
+jump, is read as a *restart* and a timer drop with a continuous position as a crossing.
 
 ## What a lap is worth
 
@@ -43,9 +48,22 @@ wheels off the track for 0.5 s marks the lap.
 
 ## Session type
 
-`practice` has been seen live (LFM practice server). `qualify`, `race`, `hotlap`, `time_attack`, `drift` and
-`drag` are the codes of the shared-memory enum and are **not verified yet**; the dashboard says so
-(`race (code not verified live)`). To verify: `pit-wall record` a short stretch of a qualifying and of a race.
+Verified on a real game: **`practice` = 0, `qualify` = 1, `race` = 2** (`kind_verified_live`).
+`hotlap`, `time_attack`, `drift` and `drag` are the codes of the shared-memory enum and are **not verified
+yet**; the dashboard says so (`hotlap (code not verified live)`).
+
+Other things observed live and handled:
+
+* **The menu** publishes session 0 and zeros with `status` 0: it is the phase `menu`, never a new session
+  and never a reason to clear the laps of the session just played.
+* **Start or restart** of a session: `session_time_left` reads **+inf** for one sample. The detector reports
+  `SessionChanged(reason="restart")` and the tracker drops the lap in progress (a restart moves the car to the
+  grid: the timer drops and the position jumps).
+* **A race without a time limit** counts `session_time_left` negative (elapsed time): it is exposed as
+  `session_elapsed_s`, and `session_time_left_s` is `None`.
+* **Pause** (`status` 3) freezes the values; samples that are not `live` do not feed the lap tracker.
+* **Circuits with 2 sectors** (Magione) report `sector_count` 2 and `sector_index` 0..1: sectors follow the
+  game's count.
 
 ## Live delta
 
@@ -59,6 +77,9 @@ slower). It needs a reference lap and is not computed on the out lap.
   `sector_index` (the sector time is the only trigger then).
 * After a race restart the session clock may not jump up; the lap counter going back to 0 is also used.
 * Out laps and in laps are excluded from the best sector times as well.
+* A race standing start is **not** an out lap (it is a lap that starts on the grid); an out lap is a lap
+  that started in the pit lane.
+* The first time a session is joined mid-lap, that lap has partial coverage and is not eligible for best.
 
 ## Recording format
 
@@ -75,10 +96,15 @@ vuelta lanzada, parado); `analysis/laps.py` registra vueltas y sectores, la mejo
 referencia y el delta en vivo; `session/engine.py` los ejecuta en su propio hilo; y `pit-wall record` graba los
 campos reales del juego en `.pwrec.gz` para reproducirlos después con su tiempo original.
 
-**Validación con datos reales.** Se reprodujeron tus 36 logs de ACTI (12 circuitos, 15 coches): las 173 vueltas
-terminadas durante las grabaciones salieron con el tiempo oficial del juego a ±2 ms, ninguna duplicada ni
-inventada. Esto valida la lógica con la *exportación de ACTI*; en el juego en vivo todavía no se ha observado
-ningún cruce de meta. Con `pit-wall record` en la primera vuelta de tu próxima sesión se confirma.
+**Validación con datos reales.** Tus 36 logs de ACTI: las 173 vueltas terminadas salieron con el tiempo oficial
+a ±2 ms. Y una sesión en vivo grabada con `pit-wall record` (MX-5 Cup en Magione: clasificación y carrera contra
+IA con pausa y reinicio): 6 vueltas, todas con el tiempo del propio juego (`tests/test_live_lfm_session.py`).
 
-**Lo que no está verificado:** los códigos de sesión distintos de `practice` (clasificación, carrera...), y la
-validez de vuelta, que la memoria compartida no publica: `suspect` es solo una pista.
+**Verificado en vivo:** `practice` = 0, `qualify` = 1, `race` = 2. En el cruce de meta la posición da la vuelta
+primero y unas muestras después el cronómetro de vuelta cae a ~0, `completed_laps` sube y `last_time_ms` se
+actualiza. El menú publica sesión 0 con ceros (no es una sesión nueva y no borra las vueltas); al empezar o
+reiniciar, `session_time_left` vale `+inf` una muestra; una carrera sin límite de tiempo lo cuenta en negativo
+(tiempo transcurrido); circuitos de 2 sectores (Magione) dan `sector_count` 2.
+
+**Lo que sigue sin verificar:** los códigos de `hotlap`, `time_attack`, `drift` y `drag`, y la validez de vuelta,
+que la memoria compartida no publica: `suspect` es solo una pista.

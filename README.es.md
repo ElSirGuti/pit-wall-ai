@@ -146,7 +146,7 @@ Captura usada: Assetto Corsa 1.16.4, memoria compartida 1.7, servidor de prácti
 | Fase | Contenido | Estado |
 |---|---|---|
 | 1 | Lector de telemetría, mock/replay, vista de consola, base del LLM | hecha |
-| 2 | Detector de sesión (práctica / clasificación / carrera), tracker de vueltas y sectores, `pit-wall record` | **esta versión** ([docs](docs/SESSION_AND_LAPS.md)) |
+| 2 | Detector de sesión (práctica / clasificación / carrera), tracker de vueltas y sectores, `pit-wall record` | **esta versión**, comprobada con una clasificación y carrera reales ([docs](docs/SESSION_AND_LAPS.md)) |
 | 3 | Motor de alertas por reglas con TTS local | prevista |
 | 4 | Análisis de frenadas por curva contra la mejor vuelta (geometría de pista generada en local) | prevista |
 | 5 | Chat de texto con Gemini usando un resumen compacto de telemetría | prevista |

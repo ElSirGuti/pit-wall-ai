@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from ..analysis.laps import CurrentLap, LapRecord, LapTracker
 from ..events import Event, LapCompleted, SessionChanged
 from ..telemetry.poller import Subscription, TelemetryPoller
+from ..telemetry.shm_structs import GameStatus
 from ..telemetry.snapshot import Snapshot
 from .detector import SessionDetector, SessionState
 
@@ -59,7 +60,8 @@ class SessionEngine:
             events = self.detector.update(snap)
             if any(isinstance(e, SessionChanged) and e.reason != "first_sample" for e in events):
                 self.tracker.reset()
-            events += self.tracker.update(snap)
+            if snap.status == int(GameStatus.LIVE):  # menu / pause / replay samples are not laps
+                events += self.tracker.update(snap)
             self._last = snap
             self._recent.extend(events)
         for e in events:

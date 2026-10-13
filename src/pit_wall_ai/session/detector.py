@@ -17,7 +17,8 @@ detected: a race start shows up as ``stopped`` and then ``flying``.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import math
+from dataclasses import dataclass, replace
 
 from ..events import Event, PhaseChanged, PitEntered, PitExited, SessionChanged
 from ..telemetry import shm_structs as S
@@ -42,13 +43,15 @@ class SessionState:
     completed_laps: int = 0
     laps_since_pit_exit: int | None = None  # None until the car has left the pits once
     session_time_left_s: float | None = None
+    session_elapsed_s: float | None = None  # races without a time limit count the clock negative
     position: int = 0
     kind_verified_live: bool = (
         False  # True only for the codes seen on a real game (practice so far)
     )
 
 
-_VERIFIED_LIVE = {int(S.SessionKind.PRACTICE)}
+# Seen on a real game: practice (0), qualify (1) and race (2) on the LFM server / single player.
+_VERIFIED_LIVE = {int(S.SessionKind.PRACTICE), int(S.SessionKind.QUALIFY), int(S.SessionKind.RACE)}
 
 
 class SessionDetector:
@@ -67,9 +70,22 @@ class SessionDetector:
         prev = self._prev
         st = s.static
 
+        if prev is not None and S.status_name(s.status) == "off":
+            # The menu publishes zeros and session 0: keep what the session was, only the phase changes.
+            old_phase = self.state.phase
+            self.state = replace(self.state, status="off", phase="menu", in_pit=False)
+            if old_phase != "menu":
+                events.append(PhaseChanged(s.t, old_phase, "menu"))
+            return events
+
         reason = None
+        menu = (
+            S.status_name(s.status) == "off"
+        )  # the menu publishes session 0 and zeros: not a session
         if prev is None:
             reason = "first_sample"
+        elif menu:
+            reason = None
         elif s.session != prev.session:
             reason = "kind"
         elif (
@@ -81,8 +97,12 @@ class SessionDetector:
             reason = "car"
         elif s.completed_laps < prev.completed_laps:
             reason = "laps_reset"
+        elif math.isinf(s.session_time_left) and not math.isinf(prev.session_time_left):
+            reason = "restart"  # observed: the clock reads +inf for a sample on (re)start
         elif (
-            s.session_time_left - prev.session_time_left > TIME_JUMP_MS
+            math.isfinite(s.session_time_left)
+            and math.isfinite(prev.session_time_left)
+            and s.session_time_left - prev.session_time_left > TIME_JUMP_MS
             and prev.session_time_left > 0
         ):
             reason = "time_reset"
@@ -94,7 +114,7 @@ class SessionDetector:
                 SessionChanged(s.t, reason, S.session_name(s.session), st.track, st.car_model)
             )
         in_pit = s.is_in_pit_lane or s.is_in_pit
-        if prev is not None:
+        if prev is not None and reason is None:
             was_in_pit = prev.is_in_pit_lane or prev.is_in_pit
             if in_pit and not was_in_pit:
                 events.append(PitEntered(s.t))
@@ -117,7 +137,16 @@ class SessionDetector:
             in_pit=in_pit,
             completed_laps=s.completed_laps,
             laps_since_pit_exit=self._since_pit_exit,
-            session_time_left_s=s.session_time_left / 1000.0 if s.session_time_left > 0 else None,
+            session_time_left_s=(
+                s.session_time_left / 1000.0
+                if math.isfinite(s.session_time_left) and s.session_time_left > 0
+                else None
+            ),
+            session_elapsed_s=(
+                -s.session_time_left / 1000.0
+                if math.isfinite(s.session_time_left) and s.session_time_left < 0
+                else None
+            ),
             position=s.position,
             kind_verified_live=s.session in _VERIFIED_LIVE,
         )

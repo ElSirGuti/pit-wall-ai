@@ -239,10 +239,10 @@ def test_dashboard_shows_session_phase_laps_and_delta():
         assert expected in out, expected
     assert "(code not verified live)" not in out  # practice has been seen live
     race = SessionEngine()
-    for s in make_session([20.0, 90.0], session=2)[:60]:
+    for s in make_session([20.0, 90.0], session=3)[:60]:
         race.process(s)
     out = text_of(render_dashboard(snap(t=0.0), PollerStats(status="running"), view=race.view()))
-    assert "race (code not verified live)" in out
+    assert "hotlap (code not verified live)" in out
 
 
 # ── CLI ──────────────────────────────────────────────────────────────────────────────────────────────

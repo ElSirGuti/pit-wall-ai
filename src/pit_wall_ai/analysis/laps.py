@@ -29,6 +29,7 @@ CONFIRM_WAIT_S = 1.5  # wait this long for the game's last-lap time after a cros
 WRAP_GRACE_S = 3.0  # wait this long for completed_laps after a position wrap
 MIN_LAP_MS = 15_000  # shorter than this is not a lap (a glitch or a pit-lane crossing)
 MIN_COVERAGE = 0.9  # share of the lap length the samples must cover to count as complete
+RESTART_DROP_MS = 2000  # a lap timer going back by more than this, away from the line, is a restart
 SUSPECT_OFFTRACK_S = 0.5  # all wheels off for this long marks a lap as suspect
 
 
@@ -193,8 +194,17 @@ class LapTracker:
         events += self._maybe_confirm(s)
 
         if prev is not None:
-            if s.completed_laps < prev.completed_laps:
-                self.reset()  # a new session (the caller reports it too)
+            wrapped_line = prev.normalized_pos > 0.85 and s.normalized_pos < 0.15
+            # A restart puts the car somewhere else: the lap timer drops AND the position jumps. At a
+            # normal line crossing the position is continuous (the timer resets a few samples after it).
+            restarted = (
+                s.completed_laps == prev.completed_laps
+                and prev.current_time_ms - s.current_time_ms > RESTART_DROP_MS
+                and abs(s.normalized_pos - prev.normalized_pos) > 0.1
+                and not wrapped_line
+            )
+            if s.completed_laps < prev.completed_laps or restarted:
+                self.reset()  # a new session or a race restart (the caller reports it too)
                 self._draft = _Draft(s.completed_laps + 1, s, started_in_pit=in_pit)
             elif s.completed_laps > prev.completed_laps:
                 events += self._cross_by_counter(prev, s, in_pit)
@@ -232,10 +242,10 @@ class LapTracker:
             d = self._draft
             span = (max(d.pos) - min(d.pos)) if d is not None and d.pos else 0.0
             if span < MIN_COVERAGE * 0.66:
-                # the line crossed while leaving the pits is not a lap: the lap in progress (an out
+                # the line crossed on the grid or leaving the pits is not a lap: the lap in progress (an out
                 # lap) starts here, without the samples taken before the line
                 self._last_cross_t = s.t
-                self._draft = _Draft(d.number, s, started_in_pit=True)
+                self._draft = _Draft(d.number, s, started_in_pit=d.started_in_pit)
                 return events
             if self._wrap_mode:
                 self._last_cross_t = s.t
@@ -261,7 +271,7 @@ class LapTracker:
         if d is not None and len(d.pos) >= 2:
             lap = LapRecord(
                 number=d.number,
-                out_lap=d.started_in_pit or d.number == 1,
+                out_lap=d.started_in_pit,
                 in_lap=in_pit,
                 suspect=d.suspect,
                 fuel_start=d.fuel_start,
@@ -326,7 +336,7 @@ class LapTracker:
                 d.sector_start_elapsed = s.current_time_ms
                 n = len(d.sectors)
                 best = self.best_sectors_ms.get(n)
-                flying = not (d.started_in_pit or d.number == 1)
+                flying = not d.started_in_pit
                 is_best = flying and (best is None or ms < best)
                 if is_best:
                     self.best_sectors_ms[n] = ms
@@ -380,7 +390,7 @@ class LapTracker:
             return
         ref = self.reference
         delta = None
-        if ref is not None and ref.trace is not None and not (d.started_in_pit or d.number == 1):
+        if ref is not None and ref.trace is not None and not d.started_in_pit:
             at = ref.trace.time_at(s.normalized_pos)
             if math.isfinite(at):
                 delta = float(s.current_time_ms) - at
@@ -388,7 +398,7 @@ class LapTracker:
             number=d.number,
             elapsed_ms=int(s.current_time_ms),
             sector=len(d.sectors) + 1,
-            out_lap=d.started_in_pit or d.number == 1,
+            out_lap=d.started_in_pit,
             delta_ms=delta,
             reference_number=ref.number if ref else None,
         )
