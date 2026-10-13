@@ -234,7 +234,6 @@ class FuelRule(Rule):
         if use is None or use <= 0 or s.fuel <= 0:
             return []
         remaining = s.fuel / use
-        n = max(1, int(remaining))
         if remaining <= c.critical_laps:
             level, prio, key = "fuel_critical", Priority.CRITICAL, "critical"
         elif remaining <= c.warn_laps:
@@ -244,7 +243,7 @@ class FuelRule(Rule):
         a = self._fire(
             ctx,
             key,
-            M.say(ctx.lang, level, laps=n, laps_word=M.laps_word(ctx.lang, n)),
+            M.say(ctx.lang, level, amount=M.laps_phrase(ctx.lang, remaining)),
             priority=prio,
             fuel=round(s.fuel, 1),
             per_lap=round(use, 2),

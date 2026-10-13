@@ -148,7 +148,10 @@ def tracker_with_fuel(per_lap, n=3):
 def test_fuel_warns_below_two_laps_and_is_critical_below_one():
     tr = tracker_with_fuel(2.0)
     warn = run_rule("fuel_low", [S(fuel=3.5)], tracker=tr)
-    assert warn[0].priority == Priority.HIGH and warn[0].text == "Gasolina para 1 vuelta, ahorra"
+    assert (
+        warn[0].priority == Priority.HIGH
+        and warn[0].text == "Gasolina para casi dos vueltas, ahorra"
+    )
     assert warn[0].values["laps_left"] == 1.8 and warn[0].values["per_lap"] == 2.0
     crit = run_rule("fuel_low", [S(fuel=1.4)], tracker=tr)
     assert crit[0].priority == Priority.CRITICAL and "box" in crit[0].text
@@ -159,9 +162,9 @@ def test_fuel_warns_below_two_laps_and_is_critical_below_one():
     plural = run_rule(
         "fuel_low", [S(fuel=5.5)], tracker=tracker_with_fuel(3.0)
     )  # 1.83 laps -> "1 vuelta"
-    assert plural[0].text.startswith("Gasolina para 1 vuelta")
+    assert plural[0].text.startswith("Gasolina para casi dos vueltas")
     two = run_rule("fuel_low", [S(fuel=6.0)], tracker=tracker_with_fuel(3.0))  # exactly 2.0
-    assert two[0].text.startswith("Gasolina para 2 vueltas")
+    assert two[0].text.startswith("Gasolina para dos vueltas")
 
 
 def test_tyre_temperature_hysteresis_and_axle_naming():
@@ -540,3 +543,21 @@ def test_the_real_race_window_speaks_the_spin_and_the_laps_and_nothing_else(capl
     assert {"spin", "lap_summary"} <= fired
     dropped = [r for r in caplog.records if r.getMessage() == "alert dropped"]
     assert any(r.rule == "offtrack" and r.reason == "policy:race" for r in dropped)
+
+
+def test_laps_of_fuel_are_said_the_way_a_person_says_them():
+    es = lambda r: M.laps_phrase("es", r)  # noqa: E731
+    assert (
+        es(0.1) == "menos de media vuelta"
+        and es(0.5) == "media vuelta"
+        and es(0.8) == "casi una vuelta"
+    )
+    assert es(1.0) == "una vuelta" and es(1.5) == "vuelta y media" and es(1.9) == "casi dos vueltas"
+    assert (
+        es(2.0) == "dos vueltas" and es(2.4) == "dos vueltas" and es(2.6) == "dos vueltas y media"
+    )
+    assert es(12.3) == "12 vueltas"
+    assert (
+        M.laps_phrase("en", 1.9) == "almost two laps"
+        and M.laps_phrase("en", 1.5) == "a lap and a half"
+    )

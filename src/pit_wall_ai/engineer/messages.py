@@ -26,8 +26,8 @@ TEXTS: dict[str, dict[str, str]] = {
         "wheelspin": "Patinaje {axle}, suaviza gas",
         "spin": "Trompo, embrague y freno",
         "offtrack": "Fuera de pista, vuelve despacio",
-        "fuel_warn": "Gasolina para {laps} {laps_word}, ahorra",
-        "fuel_critical": "Gasolina para {laps} {laps_word}, box",
+        "fuel_warn": "Gasolina para {amount}, ahorra",
+        "fuel_critical": "Gasolina para {amount}, box",
         "tyre_hot": "{axle} calientes, levanta",
         "pressure_high": "Presión alta {where}, ajusta",
         "puncture": "Pinchazo {where}, box",
@@ -52,8 +52,8 @@ TEXTS: dict[str, dict[str, str]] = {
         "wheelspin": "{axle} wheelspin, smooth throttle",
         "spin": "Spin, clutch and brake",
         "offtrack": "Off track, rejoin carefully",
-        "fuel_warn": "Fuel for {laps} {laps_word}, save",
-        "fuel_critical": "Fuel for {laps} {laps_word}, box",
+        "fuel_warn": "Fuel for {amount}, save",
+        "fuel_critical": "Fuel for {amount}, box",
         "tyre_hot": "{axle} tyres hot, lift",
         "pressure_high": "High pressure {where}, adjust",
         "puncture": "Puncture {where}, box",
@@ -100,8 +100,48 @@ def say(lang: str, key: str, **values) -> str:
     return TEXTS[lang][key].format(**values)
 
 
-def laps_word(lang: str, n: int) -> str:
-    return {"es": ("vuelta", "vueltas"), "en": ("lap", "laps")}[lang][0 if n == 1 else 1]
+_NUM = {
+    "es": [
+        "cero",
+        "una",
+        "dos",
+        "tres",
+        "cuatro",
+        "cinco",
+        "seis",
+        "siete",
+        "ocho",
+        "nueve",
+        "diez",
+    ],
+    "en": ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"],
+}
+
+
+def laps_phrase(lang: str, remaining: float) -> str:
+    """Laps of fuel as a person says it: "casi dos vueltas", "vuelta y media", "3 vueltas".
+
+    Half-lap bins, never more generous than the number: 1.9 is "almost two", 1.5 is "a lap and a half".
+    """
+    n, frac = int(remaining), remaining - int(remaining)
+    num = lambda k: _NUM[lang][k] if k < len(_NUM[lang]) else str(k)  # noqa: E731
+    es = lang == "es"
+    if frac >= 0.75:  # almost the next whole number
+        k = n + 1
+        if es:
+            return f"casi {num(k)} vueltas" if k > 1 else "casi una vuelta"
+        return f"almost {num(k)} laps" if k > 1 else "almost a lap"
+    if frac >= 0.5:  # and a half
+        if n == 0:
+            return "media vuelta" if es else "half a lap"
+        if n == 1:
+            return "vuelta y media" if es else "a lap and a half"
+        return f"{num(n)} vueltas y media" if es else f"{num(n)} and a half laps"
+    if n == 0:
+        return "menos de media vuelta" if es else "less than half a lap"
+    if n == 1:
+        return "una vuelta" if es else "one lap"
+    return f"{num(n)} vueltas" if es else f"{num(n)} laps"
 
 
 def lap_time_words(ms: int) -> str:
