@@ -259,6 +259,8 @@ def test_lap_summary_texts():
     assert say(lap_event(4, 85444, delta=-531 + 531)) == "Vuelta 4, 1 25 4, mismo ritmo"
     assert say(lap_event(4, 86400, delta=900)) == "Vuelta 4, 1 26 4, más 9 décimas"
     assert say(lap_event(4, 95000, delta=10_100)) == "Vuelta 4, 1 35 0, más 10 segundos"
+    assert say(lap_event(4, 94700, delta=9_900)) == "Vuelta 4, 1 34 7, más 10 segundos"
+    assert say(lap_event(4, 86700, delta=1_900)) == "Vuelta 4, 1 26 7, más 19 décimas"
     assert say(lap_event(4, 85000, delta=-1300)) == "Vuelta 4, 1 25 0, menos 13 décimas"
     assert say(lap_event(2, 90000, delta=None)) == "Vuelta 2, 1 30 0"
     assert say(lap_event(4, 86400, delta=900), "en") == "Lap 4, 1 26 4, 9 tenths down"

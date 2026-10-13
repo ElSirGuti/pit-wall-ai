@@ -504,7 +504,7 @@ class LapSummaryRule(Rule):
             return M.say(lang, "delta_same")
         if delta_ms < 0:
             return M.say(lang, "delta_faster", tenths=tenths)
-        if tenths >= 100:
+        if tenths >= 20:  # two seconds or more: "99 tenths" is not how anyone says 9.9 s
             return M.say(lang, "delta_slower_s", seconds=round(tenths / 10))
         return M.say(lang, "delta_slower", tenths=tenths)
 

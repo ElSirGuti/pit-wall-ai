@@ -378,3 +378,17 @@ def test_a_lap_much_slower_than_the_reference_is_not_representative():
     assert representative(with_time(lap(3, {500: 400}), 112_000), ref)
     assert not representative(with_time(lap(4, {500: 400}), 113_000), ref)
     assert not representative(with_time(lap(5, {500: 400}), 0), ref)
+
+
+def test_braking_for_a_corner_can_begin_inside_the_previous_corners_extent():
+    # corner 1 is long (ends at 700) but its last apex is at 500; the driver brakes for corner 2 at 690,
+    # before the geometric end of corner 1: that is corner 2's braking, not an event that runs on
+    long_first = corner(1, 400, 500, 700)
+    g = geometry(long_first, corner(2, 780, 800, 860))
+    two = lap(1, {500: 420, 800: 690})
+    got = lap_corner_metrics(g, two, CFG)
+    assert not got[2].clipped
+    assert got[2].brake_point_m == pytest.approx(690, abs=2)
+    ref = lap(2, {500: 420, 800: 705})
+    comp = {c.corner: c for c in compare_lap(g, two, ref, CFG)}[2]
+    assert comp.brake_earlier_m == pytest.approx(15.0, abs=2.5)

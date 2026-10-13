@@ -9,7 +9,7 @@ Definitions (the thresholds are in ``analysis.braking`` of the config):
 
 * **Braking point**: where the brake pedal first goes above ``brake_on`` in the last braking event before
   the corner whose peak reaches ``min_peak``. Events separated by less than ``merge_gap_m`` are one event.
-  The search starts at the end of the previous corner (at most ``lookback_m`` before the corner entry).
+  The search starts at the last apex of the previous corner (at most ``lookback_m`` before the corner entry).
   A corner that is taken without that braking (flat out or a lift) has no braking point.
 * **Span** of a corner, used for the time: from ``10 m`` before the *reference* braking point (or
   ``20 m`` before the corner start if the reference did not brake) to the end of the corner. The same span
@@ -107,7 +107,7 @@ def corner_metrics(
     trace: LapTrace,
     length_m: float,
     corner: Corner,
-    prev_end_m: float,
+    prev_apex_m: float,
     cfg: BrakingConfig,
 ) -> CornerMetrics:
     d = _dist(trace, length_m)
@@ -116,7 +116,9 @@ def corner_metrics(
     steer = np.nan_to_num(trace.steer, nan=0.0)
     speed = trace.speed
     target = entry_m(corner)
-    lo = max(prev_end_m, target - cfg.lookback_m, 0.0)
+    # the search starts at the last apex of the previous corner: braking for this one can begin inside the
+    # previous corner's extent (before its geometric end), but never before its own last apex
+    lo = max(prev_apex_m, target - cfg.lookback_m, 0.0)
     hi = corner.apex_m
     window = (d >= lo) & (d <= hi)
     best: tuple[int, int] | None = None
@@ -188,12 +190,12 @@ def lap_corner_metrics(
     if lap.trace is None:
         return {}
     out: dict[int, CornerMetrics] = {}
-    prev_end = 0.0
+    prev_apex = 0.0
     for c in geometry.corners:
         if not usable(c):
             continue
-        out[c.number] = corner_metrics(lap.trace, geometry.length_m, c, prev_end, cfg)
-        prev_end = max(prev_end, c.end_m)
+        out[c.number] = corner_metrics(lap.trace, geometry.length_m, c, prev_apex, cfg)
+        prev_apex = max(prev_apex, *(sa.distance_m for sa in c.sub_apexes), c.apex_m)
     return out
 
 
