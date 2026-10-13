@@ -125,7 +125,7 @@ Status: **verified** = confirmed by an independent relationship inside a real ca
 | `static.track_length_m` | metres | plausible | 4537.19 for the Hockenheim GP layout used |
 | `clutch` | looks like the clutch engagement (1.0 = engaged), not the pedal | undetermined | 0.0 in neutral (Supra in the pit, Alfa 4C at idle) and 1.0 in gear in every capture; the driver's controls also have the pedal axis inverted. Do not build rules on it |
 | `gear` | raw index = gear number + 1: 1 = neutral, 2…7 = 1st…6th (reverse presumably 0, not seen) | verified | driver's HUD: raw 7 = 6th gear, raw 1 = neutral (also seen at 131 km/h mid-shift) |
-| `steer_angle` | fraction of the steering lock, −1..1 (full lock = ±1.0; degrees need the car's lock) | verified | lock-to-lock test in the pit: min −1.0000, max +1.0000 exactly; a hairpin lap peaks at ≈ 0.5. Which sign is left is not confirmed yet |
+| `steer_angle` | fraction of the steering lock, −1..1 (full lock = ±1.0; degrees need the car's lock) | verified | lock-to-lock test: min −1.0000, max +1.0000 exactly. One full turn (360°) of a 900° wheel read −0.827 (×450° = 372°): linear with the wheel's ±450°. A hairpin lap peaks at ≈ 0.5. Which sign is left is not confirmed yet |
 | `tc`, `abs` | `tc` looks like a setting-derived value, `abs` a constant | undetermined | `tc` 1.0 in the pit and 0.065 … 1.0 in the first capture, constant 0.082 in the second with TC set to 4/8 (driver); `abs` constant 0.12 |
 | `wheel_slip` | definition unknown | undetermined | 0 … 977.7 with outliers; not a bounded ratio |
 | `wind_speed` | unit unknown | undetermined | 2.0 constant (m/s or km/h) |

@@ -163,3 +163,13 @@ def test_clutch_reads_zero_in_neutral_in_every_capture(pit):
     lock = json.loads((FIX / "live_ac_alfa4c_lock.json").read_text(encoding="utf-8"))
     for rep in (pit, lock):
         assert rep["ranges"]["gear"]["max"] == 1 and rep["ranges"]["clutch"]["max"] == 0.0
+
+
+def test_one_full_wheel_turn_reads_a_linear_fraction_of_the_lock():
+    """A 900-degree wheel (+-450) turned exactly once (360 deg) reads ~0.8: linear, not saturated."""
+    rep = json.loads((FIX / "live_ac_alfa4c_turn.json").read_text(encoding="utf-8"))
+    r = rep["ranges"]["steer_angle"]
+    assert -1.0 < r["min"] < -0.6 and r["max"] < 0.1  # one direction only, below full lock
+    degrees = abs(r["min"]) * 450.0
+    assert degrees == pytest.approx(360.0, abs=30.0)  # one turn, hand-aligned
+    assert rep["last_sample"]["speed_kmh"] < 1.0

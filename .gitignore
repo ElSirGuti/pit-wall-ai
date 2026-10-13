@@ -45,3 +45,4 @@ config/local.yaml
 /report*.json
 /lock.json
 /steer.json
+/vuelta.json
