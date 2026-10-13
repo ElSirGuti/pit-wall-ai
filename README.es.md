@@ -170,6 +170,7 @@ Captura usada: Assetto Corsa 1.16.4, memoria compartida 1.7, servidor de prácti
 | 5 | Chat de texto con Gemini usando un resumen compacto de telemetría | prevista |
 | 6 | Voz completa: push-to-talk (teclado y botón del Logitech G29), STT, respuestas habladas | prevista |
 | 7 | Debrief post-sesión con Gemini | prevista |
+| 8 | Preparación de carrera: plan de estrategia con checklist de práctica editable, resumen de rivales, sugerencias de setup y de estilo de conducción | prevista, ver [docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md) |
 
 ## Procedencia y licencia
 

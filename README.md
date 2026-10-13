@@ -168,6 +168,7 @@ Capture used: Assetto Corsa 1.16.4, shared-memory 1.7, LFM practice server, Toyo
 | 5 | Text chat with Gemini using a compact telemetry summary | planned |
 | 6 | Full voice: push-to-talk (keyboard and Logitech G29 button), STT, spoken answers | planned |
 | 7 | Post-session debrief with Gemini | planned |
+| 8 | Race preparation: strategy plan with an editable practice checklist, rivals brief, setup and driving-style suggestions | planned, see [docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md) |
 
 ## Provenance and licence
 
