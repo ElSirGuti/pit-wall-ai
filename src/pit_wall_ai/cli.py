@@ -11,6 +11,8 @@ from pathlib import Path
 
 from . import __version__
 from .config import AppConfig, ConfigError, load_config
+from .engineer import messages as M
+from .engineer.engine import Engineer
 from .logging_setup import setup_logging
 from .session.engine import SessionEngine
 from .telemetry import shm_structs as S
@@ -21,6 +23,8 @@ from .telemetry.poller import TelemetryPoller
 from .telemetry.recorder import NativeReplaySource, Recorder, is_native, record_from_poller
 from .telemetry.replay import ReplaySource
 from .telemetry.source import TelemetrySource
+from .voice.speech import SpeechOutput
+from .voice.tts import ConsoleTts, create_backend
 
 _SESSIONS = {kind.name.lower(): int(kind) for kind in S.SessionKind}
 
@@ -71,6 +75,22 @@ def _parser() -> argparse.ArgumentParser:
         "--plain", action="store_true", help="one status line per second instead of the dashboard"
     )
     run.add_argument("--duration", type=float, help="exit after this many seconds")
+    run.add_argument("--voice", action="store_true", help="turn the engineer's voice on")
+    run.add_argument(
+        "--mute", action="store_true", help="evaluate the alerts but print them instead of speaking"
+    )
+    run.add_argument("--language", choices=["es", "en"], help="language of the spoken alerts")
+
+    say = sub.add_parser(
+        "say", help="speak a phrase with the configured voice and measure the latency"
+    )
+    common(say)
+    say.add_argument("text", nargs="?", help="what to say (default: a test phrase)")
+    say.add_argument("--language", choices=["es", "en"], help="language / voice")
+
+    sub.add_parser(
+        "rules", help="list the alert rules, their thresholds and the session policies"
+    ).add_argument("--config", help="YAML config")
 
     rec = sub.add_parser("record", help="record the live session to a .pwrec.gz file")
     common(rec)
@@ -111,21 +131,25 @@ def _parser() -> argparse.ArgumentParser:
 def _apply_overrides(cfg: AppConfig, a: argparse.Namespace) -> AppConfig:
     data = cfg.model_dump()
     t = data["telemetry"]
-    if a.source:
-        t["source"] = a.source
-    if a.file:
-        t["replay"]["file"] = a.file
-        t["source"] = "replay" if not a.source else a.source
-    if a.speed is not None:
-        t["replay"]["speed"] = a.speed
-    if a.start is not None:
-        t["replay"]["start_s"] = a.start
-    if a.loop:
+    if getattr(a, "source", None):
+        t["source"] = getattr(a, "source", None)
+    if getattr(a, "file", None):
+        t["replay"]["file"] = getattr(a, "file", None)
+        t["source"] = "replay" if not getattr(a, "source", None) else getattr(a, "source", None)
+    if getattr(a, "speed", None) is not None:
+        t["replay"]["speed"] = getattr(a, "speed", None)
+    if getattr(a, "start", None) is not None:
+        t["replay"]["start_s"] = getattr(a, "start", None)
+    if getattr(a, "loop", None):
         t["replay"]["loop"] = True
-    if a.hz is not None:
-        t["hz"] = a.hz
-    if a.log_level:
-        data["logging"]["level"] = a.log_level
+    if getattr(a, "hz", None) is not None:
+        t["hz"] = getattr(a, "hz", None)
+    if getattr(a, "log_level", None):
+        data["logging"]["level"] = getattr(a, "log_level", None)
+    if getattr(a, "language", None):
+        data["engineer"]["language"] = a.language
+    if getattr(a, "voice", False):
+        data["engineer"]["enabled"] = True
     return AppConfig.model_validate(data)
 
 
@@ -144,6 +168,81 @@ def _plain_line(poller, engine) -> str:
     )
 
 
+def _make_speech(cfg: AppConfig, *, mute: bool = False) -> SpeechOutput:
+    v = cfg.engineer.voice
+    if mute:
+        return SpeechOutput(lambda: ConsoleTts())
+    return SpeechOutput(
+        lambda: create_backend(
+            v.backend,
+            language=cfg.engineer.language,
+            voice_name=v.name,
+            rate=v.rate,
+            volume=v.volume,
+        )
+    )
+
+
+def _start_engineer(
+    cfg: AppConfig, a: argparse.Namespace, engine: SessionEngine
+) -> SpeechOutput | None:
+    if not (cfg.engineer.enabled or a.voice or a.mute):
+        return None
+    speech = _make_speech(cfg, mute=a.mute)
+    if not speech.start():
+        print(
+            f"voice unavailable ({speech.error}); the alerts are printed instead", file=sys.stderr
+        )
+        speech = SpeechOutput(lambda: ConsoleTts())
+        speech.start()
+    eng = Engineer(cfg.engineer, speech)
+    engine.add_sample_hook(
+        lambda snap, state, tracker, events: eng.on_sample(snap, state, tracker, events)
+    )
+    return speech
+
+
+def _cmd_say(cfg: AppConfig, a: argparse.Namespace) -> int:
+    lang = cfg.engineer.language
+    text = a.text or M.say(lang, "test")
+    speech = _make_speech(cfg)
+    if not speech.start():
+        print(f"voice unavailable: {speech.error}", file=sys.stderr)
+        return 1
+    rec = speech.say(text, meta={"rule": "say"})
+    deadline = time.perf_counter() + 20
+    while time.perf_counter() < deadline and (rec.ended_t is None):
+        time.sleep(0.02)
+    speech.stop()
+    start = f"{rec.start_ms:.0f} ms" if rec.start_ms is not None else "not reported"
+    print(f"said: {text!r}")
+    print(
+        f"voice: {cfg.engineer.voice.backend}  call: {rec.queue_ms:.1f} ms after the request  "
+        f"first audio: {start} after the request"
+    )
+    return 0
+
+
+def _cmd_rules(cfg: AppConfig, a: argparse.Namespace) -> int:
+    e = cfg.engineer
+    print(f"language: {e.language}  voice: {e.voice.backend}  enabled: {e.enabled}")
+    print(
+        f"calm: brake < {e.calm.brake_below}, steering < {e.calm.steer_below} for {e.calm.hold_s} s"
+    )
+    print("\npolicies (what may speak):")
+    for name in ("practice", "qualify", "race", "other"):
+        pol = getattr(e.policies, name)
+        extra = f"  + always: {', '.join(pol.allow_rules)}" if pol.allow_rules else ""
+        print(f"  {name:9s} >= {pol.min_priority}{extra}")
+    print("\nrules:")
+    for name, rule in e.rules:
+        data = rule.model_dump()
+        on = data.pop("enabled")
+        vals = ", ".join(f"{k}={v}" for k, v in data.items())
+        print(f"  {'on ' if on else 'off'} {name:14s} {vals}")
+    return 0
+
+
 def _cmd_run(cfg: AppConfig, a: argparse.Namespace) -> int:
     source = build_source(cfg)
     poller = TelemetryPoller(
@@ -153,6 +252,7 @@ def _cmd_run(cfg: AppConfig, a: argparse.Namespace) -> int:
         retry_s=cfg.telemetry.retry_s,
     )
     engine = SessionEngine()
+    speech = _start_engineer(cfg, a, engine)
     engine.attach(poller)
     poller.start()
     stop = threading.Event()
@@ -174,6 +274,8 @@ def _cmd_run(cfg: AppConfig, a: argparse.Namespace) -> int:
         poller.stop()
         engine.detach()
         engine.flush()
+        if speech is not None:
+            speech.stop()
     return 0
 
 
@@ -254,7 +356,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             file=cfg.logging.file,
             console=cfg.logging.level == "DEBUG" or args.cmd != "run" or args.plain,
         )
-        handler = {"run": _cmd_run, "record": _cmd_record, "dump-shm": _cmd_dump}[args.cmd]
+        handler = {
+            "run": _cmd_run,
+            "record": _cmd_record,
+            "dump-shm": _cmd_dump,
+            "say": _cmd_say,
+            "rules": _cmd_rules,
+        }[args.cmd]
         return handler(cfg, args)
     except ConfigError as exc:
         print(f"configuration error: {exc}", file=sys.stderr)

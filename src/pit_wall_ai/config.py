@@ -81,10 +81,167 @@ class LLMConfig(_Model):
         return (env if env is not None else os.environ).get(self.api_key_env) or None
 
 
+# ── engineer (rule-based alerts + voice) ─────────────────────────────────────────────────────────────
+class CalmConfig(_Model):
+    """When is the driver free to listen? Low and medium priority messages wait for this."""
+
+    brake_below: float = Field(0.10, ge=0, le=1)  # brake pedal 0..1
+    steer_below: float = Field(0.15, ge=0, le=1)  # fraction of the steering lock, 0..1
+    hold_s: float = Field(0.30, ge=0)  # how long both must hold
+    min_gap_s: float = Field(1.5, ge=0)  # silence between two messages
+
+
+class VoiceConfig(_Model):
+    backend: Literal["sapi", "console", "none"] = (
+        "sapi"  # sapi = Windows voices; console = print only
+    )
+    name: str | None = None  # e.g. "Sabina"; None = first voice of the language
+    rate: int = Field(1, ge=-10, le=10)  # SAPI speed, 0 = normal
+    volume: int = Field(100, ge=0, le=100)
+
+
+class PolicyConfig(_Model):
+    """What may speak in each kind of session. Priorities: low < medium < high < critical."""
+
+    min_priority: Literal["low", "medium", "high", "critical"] = "low"
+    allow_rules: list[str] = Field(default_factory=list)  # spoken even below ``min_priority``
+
+
+class LockUpRule(_Model):
+    enabled: bool = True
+    ratio: float = Field(0.70, gt=0, lt=1)  # wheel speed / car speed below this = locked
+    min_speed_kmh: float = Field(50.0, ge=0)
+    min_brake: float = Field(0.40, ge=0, le=1)  # only while really braking
+    hold_s: float = Field(0.25, ge=0)
+    cooldown_s: float = Field(12.0, ge=0)
+
+
+class WheelspinRule(_Model):
+    enabled: bool = False  # off by default: it is chatty on slow corners
+    ratio: float = Field(1.30, gt=1)
+    min_gas: float = Field(0.70, ge=0, le=1)
+    min_speed_kmh: float = Field(20.0, ge=0)
+    hold_s: float = Field(0.40, ge=0)
+    cooldown_s: float = Field(20.0, ge=0)
+
+
+class SpinRule(_Model):
+    enabled: bool = True
+    slip_angle_deg: float = Field(
+        60.0, gt=0, lt=180
+    )  # angle between the car and its direction of travel
+    min_speed_kmh: float = Field(30.0, ge=0)
+    hold_s: float = Field(0.15, ge=0)
+    cooldown_s: float = Field(10.0, ge=0)
+
+
+class OffTrackRule(_Model):
+    enabled: bool = True
+    wheels_out: int = Field(3, ge=1, le=4)
+    hold_s: float = Field(1.0, ge=0)
+    min_speed_kmh: float = Field(20.0, ge=0)
+    cooldown_s: float = Field(20.0, ge=0)
+
+
+class FuelRule(_Model):
+    enabled: bool = True
+    warn_laps: float = Field(2.0, gt=0)  # "fuel for N laps" at or below this
+    critical_laps: float = Field(0.8, gt=0)  # interrupts at or below this
+    laps_for_estimate: int = Field(2, ge=1)  # timed laps used to average the consumption
+    cooldown_s: float = Field(90.0, ge=0)
+
+
+class TyreTempRule(_Model):
+    enabled: bool = True
+    hot_c: float = Field(115.0, gt=0)  # core temperature. CALIBRATE per compound (see below)
+    rearm_c: float = Field(105.0, gt=0)  # must drop below this before it can warn again
+    hold_s: float = Field(3.0, ge=0)
+    cooldown_s: float = Field(90.0, ge=0)
+
+
+class TyrePressureRule(_Model):
+    enabled: bool = True
+    high_psi: float = Field(40.0, gt=0)
+    puncture_drop_psi: float = Field(
+        4.0, gt=0
+    )  # a drop this fast is a puncture, not a cooling tyre
+    puncture_window_s: float = Field(3.0, gt=0)
+    cooldown_s: float = Field(60.0, ge=0)
+
+
+class BrakeTempRule(_Model):
+    enabled: bool = True
+    hot_c: float = Field(800.0, gt=0)
+    alive_range_c: float = Field(8.0, gt=0)  # the sensor must move this much, else it is ignored
+    cooldown_s: float = Field(90.0, ge=0)
+
+
+class PenaltyRule(_Model):
+    enabled: bool = True
+    cooldown_s: float = Field(5.0, ge=0)
+
+
+class FlagsRule(_Model):
+    enabled: bool = False  # UNVERIFIED: no flag has been seen in a real capture
+    cooldown_s: float = Field(10.0, ge=0)
+
+
+class DamageRule(_Model):
+    enabled: bool = False  # UNVERIFIED: no damage has been seen in a real capture
+    min_increase: float = Field(5.0, gt=0)
+    cooldown_s: float = Field(10.0, ge=0)
+
+
+class LapSummaryRule(_Model):
+    enabled: bool = True
+    include_delta: bool = True
+
+
+class BestSectorRule(_Model):
+    enabled: bool = False  # chatty: one per sector, every lap
+    cooldown_s: float = Field(0.0, ge=0)
+
+
+class RulesConfig(_Model):
+    lockup: LockUpRule = LockUpRule()
+    wheelspin: WheelspinRule = WheelspinRule()
+    spin: SpinRule = SpinRule()
+    offtrack: OffTrackRule = OffTrackRule()
+    fuel: FuelRule = FuelRule()
+    tyre_temp: TyreTempRule = TyreTempRule()
+    tyre_pressure: TyrePressureRule = TyrePressureRule()
+    brake_temp: BrakeTempRule = BrakeTempRule()
+    penalty: PenaltyRule = PenaltyRule()
+    flags: FlagsRule = FlagsRule()
+    damage: DamageRule = DamageRule()
+    lap_summary: LapSummaryRule = LapSummaryRule()
+    best_sector: BestSectorRule = BestSectorRule()
+
+
+class PoliciesConfig(_Model):
+    practice: PolicyConfig = PolicyConfig(min_priority="low")
+    qualify: PolicyConfig = PolicyConfig(min_priority="medium")
+    race: PolicyConfig = PolicyConfig(
+        min_priority="critical", allow_rules=["lap_summary", "fuel_low", "penalty"]
+    )
+    other: PolicyConfig = PolicyConfig(min_priority="medium")
+
+
+class EngineerConfig(_Model):
+    enabled: bool = False  # opt in: `pit-wall run --voice` or enabled: true
+    language: Literal["es", "en"] = "es"
+    voice: VoiceConfig = VoiceConfig()
+    calm: CalmConfig = CalmConfig()
+    policies: PoliciesConfig = PoliciesConfig()
+    rules: RulesConfig = RulesConfig()
+    startup_quiet_s: float = Field(5.0, ge=0)  # silence right after a session starts
+
+
 class AppConfig(_Model):
     telemetry: TelemetryConfig = TelemetryConfig()
     logging: LoggingConfig = LoggingConfig()
     llm: LLMConfig = LLMConfig()
+    engineer: EngineerConfig = EngineerConfig()
 
 
 class ConfigError(ValueError):

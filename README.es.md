@@ -7,7 +7,7 @@ lenguaje (la API gratuita de Gemini, intercambiable) se usa solo para la convers
 
 *English: [README.md](README.md)*
 
-> **Estado: fase 2 de 7**: telemetría en vivo, detección de sesión y fase, tracker de vueltas y sectores con mejor
+> **Estado: fase 3 de 7**: ingeniero de carrera por reglas que habla con una voz local de Windows (bloqueos, trompos, gasolina, neumáticos, resumen de vuelta, ver [docs/ENGINEER.md](docs/ENGINEER.md)); además: telemetría en vivo, detección de sesión y fase, tracker de vueltas y sectores con mejor
 > vuelta, vuelta de referencia y delta en vivo, grabación y replay de sesiones, y panel en terminal. Las alertas, el
 > análisis de frenadas, el chat con Gemini y la voz llegan después (ver [hoja de ruta](#hoja-de-ruta)).
 
@@ -91,6 +91,13 @@ pit-wall run --file carrera.pwrec.gz --speed 4
 # Muestra todos los campos que publica el juego (y, con --watch, el rango de cada uno)
 pit-wall dump-shm
 pit-wall dump-shm --watch 60 --json report.json
+
+# El ingeniero: alertas habladas (voz de Windows; pip install -e ".[voice]")
+pit-wall run --voice                 # español, Sabina si está instalada
+pit-wall run --voice --language en
+pit-wall run --mute                  # mismas reglas, impresas en vez de habladas
+pit-wall say "Box esta vuelta"       # prueba la voz y su latencia
+pit-wall rules                       # reglas activas, umbrales y políticas por sesión
 ```
 
 `pit-wall --help` lista todas las opciones. Las comprobaciones: `pytest` y `ruff check src tests`.
@@ -146,8 +153,8 @@ Captura usada: Assetto Corsa 1.16.4, memoria compartida 1.7, servidor de prácti
 | Fase | Contenido | Estado |
 |---|---|---|
 | 1 | Lector de telemetría, mock/replay, vista de consola, base del LLM | hecha |
-| 2 | Detector de sesión (práctica / clasificación / carrera), tracker de vueltas y sectores, `pit-wall record` | **esta versión**, comprobada con una clasificación y carrera reales ([docs](docs/SESSION_AND_LAPS.md)) |
-| 3 | Motor de alertas por reglas con TTS local | prevista |
+| 2 | Detector de sesión (práctica / clasificación / carrera), tracker de vueltas y sectores, `pit-wall record` | hecha, comprobada con una clasificación y carrera reales ([docs](docs/SESSION_AND_LAPS.md)) |
+| 3 | Motor de alertas por reglas con TTS local | **esta versión** ([docs](docs/ENGINEER.md)); umbrales conservadores, por calibrar |
 | 4 | Análisis de frenadas por curva contra la mejor vuelta (geometría de pista generada en local) | prevista |
 | 5 | Chat de texto con Gemini usando un resumen compacto de telemetría | prevista |
 | 6 | Voz completa: push-to-talk (teclado y botón del Logitech G29), STT, respuestas habladas | prevista |

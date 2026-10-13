@@ -37,3 +37,92 @@ llm:                    # used from phase 5; the provider is swappable
     decrease_factor: 0.5
     cooldown_after_429_s: 15
     daily_budget: null  # hard cap of requests per day, or null
+
+engineer:               # phase 3: rule alerts spoken by the race engineer
+  enabled: false        # opt in: `pit-wall run --voice` (or true here)
+  language: es          # es | en : text AND voice language
+  startup_quiet_s: 5    # silence right after a session starts / restarts
+  voice:
+    backend: sapi       # sapi = Windows voices (pip install -e ".[voice]") | console = print only | none
+    name: null          # e.g. Sabina; null = first installed voice of the language
+    rate: 1             # SAPI speed -10..10, 0 = normal
+    volume: 100
+  calm:                 # non-critical messages wait for these "the driver can listen" moments
+    brake_below: 0.10   # brake pedal 0..1
+    steer_below: 0.15   # fraction of the steering lock 0..1
+    hold_s: 0.3         # both must hold this long
+    min_gap_s: 1.5      # minimum silence between two messages
+  policies:             # what may speak per session; priorities low < medium < high < critical
+    practice: {min_priority: low, allow_rules: []}
+    qualify: {min_priority: medium, allow_rules: []}
+    race: {min_priority: critical, allow_rules: [lap_summary, fuel_low, penalty]}
+    other: {min_priority: medium, allow_rules: []}
+  # Thresholds start CONSERVATIVE on purpose: a chatty engineer gets switched off.
+  # Every alert is logged with its rule and the values that fired it ("alert fired"):
+  # calibrate from that log (run with a replay or record the session). `pit-wall rules` lists all of this.
+  rules:
+    lockup:
+      enabled: true
+      ratio: 0.70         # wheel speed / car speed below this = locked (real MX-5 braking: p1 0.65)
+      min_speed_kmh: 50
+      min_brake: 0.40     # only while really braking
+      hold_s: 0.25
+      cooldown_s: 12
+    wheelspin:
+      enabled: false      # chatty on slow corners
+      ratio: 1.30
+      min_gas: 0.70
+      min_speed_kmh: 20
+      hold_s: 0.4
+      cooldown_s: 20
+    spin:
+      enabled: true
+      slip_angle_deg: 60  # angle between the car heading and its direction of travel
+      min_speed_kmh: 30
+      hold_s: 0.15
+      cooldown_s: 10
+    offtrack:
+      enabled: true
+      wheels_out: 3
+      hold_s: 1.0
+      min_speed_kmh: 20
+      cooldown_s: 20
+    fuel:
+      enabled: true
+      warn_laps: 2.0      # "fuel for N laps" at or below this
+      critical_laps: 0.8  # interrupts at or below this
+      laps_for_estimate: 2
+      cooldown_s: 90
+    tyre_temp:
+      enabled: true
+      hot_c: 115          # core temperature; CALIBRATE per compound (unverified windows)
+      rearm_c: 105        # must drop below this before it can warn again
+      hold_s: 3.0
+      cooldown_s: 90
+    tyre_pressure:
+      enabled: true
+      high_psi: 40
+      puncture_drop_psi: 4   # a drop this fast is a puncture, not a cooling tyre
+      puncture_window_s: 3
+      cooldown_s: 60
+    brake_temp:
+      enabled: true
+      hot_c: 800
+      alive_range_c: 8    # the sensor must move this much, else it is ignored (flat on the Supra GT4)
+      cooldown_s: 90
+    penalty:
+      enabled: true
+      cooldown_s: 5
+    flags:
+      enabled: false      # UNVERIFIED: no flag seen in a real capture
+      cooldown_s: 10
+    damage:
+      enabled: false      # UNVERIFIED: no damage seen in a real capture
+      min_increase: 5
+      cooldown_s: 10
+    lap_summary:
+      enabled: true
+      include_delta: true
+    best_sector:
+      enabled: false      # chatty: one per sector, every lap
+      cooldown_s: 0

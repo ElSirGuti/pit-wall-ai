@@ -20,6 +20,7 @@ from .detector import SessionDetector, SessionState
 
 log = logging.getLogger(__name__)
 EventListener = Callable[[Event], None]
+SampleHook = Callable[[Snapshot, SessionState, LapTracker, list], None]
 
 
 @dataclass(frozen=True)
@@ -42,6 +43,7 @@ class SessionEngine:
         self.tracker = LapTracker()
         self._lock = threading.Lock()
         self._listeners: list[EventListener] = []
+        self._hooks: list[SampleHook] = []
         self._recent: deque[Event] = deque(maxlen=recent_events)
         self._last: Snapshot | None = None
         self._thread: threading.Thread | None = None
@@ -54,6 +56,10 @@ class SessionEngine:
     def on_event(self, listener: EventListener) -> None:
         self._listeners.append(listener)
 
+    def add_sample_hook(self, hook: SampleHook) -> None:
+        """``hook(snapshot, state, tracker, events)`` after every sample, under the engine's lock: keep it fast."""
+        self._hooks.append(hook)
+
     def process(self, snap: Snapshot) -> list[Event]:
         """Synchronous entry point (also what the thread calls); safe to use directly in tests."""
         with self._lock:
@@ -64,6 +70,11 @@ class SessionEngine:
                 events += self.tracker.update(snap)
             self._last = snap
             self._recent.extend(events)
+            for hook in self._hooks:
+                try:
+                    hook(snap, self.detector.state, self.tracker, events)
+                except Exception:  # noqa: BLE001 - a hook must not stop the session engine
+                    log.exception("sample hook failed")
         for e in events:
             for fn in list(self._listeners):
                 try:
