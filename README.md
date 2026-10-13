@@ -86,6 +86,9 @@ pit-wall run --plain
 pit-wall record --out race.pwrec.gz
 pit-wall run --file race.pwrec.gz --speed 4
 
+# Numbered corners of a track from the game's racing line (phase 4, geometry only so far)
+pit-wall corners --file race.pwrec.gz
+
 # Show every field the game publishes (and, with --watch, the range of each one)
 pit-wall dump-shm
 pit-wall dump-shm --watch 60 --json report.json

@@ -10,6 +10,8 @@ De dónde sale cada pieza, para no redistribuir nada por error.
 | `telemetry/recording.py` (`.ld` reader) | Reimplemented from the author's own `motorsport-analytics-pipeline` (`src/io/ld_loader.py`, commit `f47d319`, MIT, same author), simplified | Follows the publicly described MoTeC `.ld` structure |
 | `telemetry/recording.py` (CSV reader) | Written for this project | MoTeC CSV export layout as seen in ACTI exports |
 | `telemetry/replay.py` channel mapping | Written for this project | ACTI channel names as exported by the ACTI app; approximate, see `docs/AC_SHARED_MEMORY.md` |
+| `analysis/track_geometry.py` (corner segmentation) | Reimplemented from the author's own `motorsport-analytics-pipeline` (`src/analytics/ac_track_geometry.py`, MIT, same author) on numpy only | Parameters and method unchanged; no `fast_lane.ai` data is shipped |
+| `data/circuits.json` | Subset (names and apex fractions) of the author's own `src/data/circuits.json` in the same project | Corner names are public facts about circuits; apex fractions were fitted by the author on their own recordings |
 | Everything else (poller, config, LLM layer, dashboard, CLI) | Written for this project | |
 
 ## Not included on purpose / No incluido a propósito

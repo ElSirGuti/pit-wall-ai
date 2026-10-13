@@ -1,0 +1,521 @@
+{
+ "description": "Corner names by circuit (from the sibling project motorsport-analytics-pipeline, see PROVENANCE.md). apex_fraction is a fraction of the lap measured on the game's racing line.",
+ "circuits": [
+  {
+   "id": "imola",
+   "name": "Autodromo Enzo e Dino Ferrari (Imola)",
+   "aliases": [
+    "imola",
+    "fn_imola",
+    "ks_imola",
+    "imola_2020",
+    "autodromo enzo e dino ferrari",
+    "autodromo enzo e dino ferrari grand prix",
+    "imola circuit",
+    "autodromo internazionale enzo e dino ferrari"
+   ],
+   "length_m": 4909,
+   "confidence": "high",
+   "corners": [
+    {
+     "order": 1,
+     "name": "Tamburello",
+     "apex_fraction": 0.148
+    },
+    {
+     "order": 2,
+     "name": "Villeneuve",
+     "apex_fraction": 0.294
+    },
+    {
+     "order": 3,
+     "name": "Tosa",
+     "apex_fraction": 0.352
+    },
+    {
+     "order": 4,
+     "name": "Piratella",
+     "apex_fraction": 0.483
+    },
+    {
+     "order": 5,
+     "name": "Acque Minerali",
+     "apex_fraction": 0.582
+    },
+    {
+     "order": 6,
+     "name": "Variante Alta",
+     "apex_fraction": 0.692
+    },
+    {
+     "order": 7,
+     "name": "Rivazza 1",
+     "apex_fraction": 0.846
+    },
+    {
+     "order": 8,
+     "name": "Rivazza 2",
+     "apex_fraction": 0.872
+    },
+    {
+     "order": 9,
+     "name": "Variante Bassa",
+     "apex_fraction": 0.94,
+     "kind": "flat_out"
+    }
+   ]
+  },
+  {
+   "id": "spa_francorchamps",
+   "name": "Circuit de Spa-Francorchamps",
+   "aliases": [
+    "spa",
+    "ks_spa",
+    "spa francorchamps",
+    "spa_francorchamps",
+    "circuit de spa francorchamps",
+    "circuit de spa-francorchamps",
+    "spa francorchamps grand prix"
+   ],
+   "length_m": 7004,
+   "confidence": "high",
+   "corners": [
+    {
+     "order": 1,
+     "name": "La Source",
+     "apex_fraction": 0.056
+    },
+    {
+     "order": 2,
+     "name": "Eau Rouge / Raidillon",
+     "apex_fraction": 0.165
+    },
+    {
+     "order": 3,
+     "name": "Les Combes",
+     "apex_fraction": 0.353
+    },
+    {
+     "order": 4,
+     "name": "Malmedy",
+     "apex_fraction": 0.378
+    },
+    {
+     "order": 5,
+     "name": "Rivage",
+     "apex_fraction": 0.443
+    },
+    {
+     "order": 6,
+     "name": "Pouhon",
+     "apex_fraction": 0.557
+    },
+    {
+     "order": 7,
+     "name": "Fagnes",
+     "apex_fraction": 0.652
+    },
+    {
+     "order": 8,
+     "name": "Stavelot",
+     "apex_fraction": 0.707
+    },
+    {
+     "order": 9,
+     "name": "Blanchimont",
+     "apex_fraction": 0.906
+    },
+    {
+     "order": 10,
+     "name": "Bus Stop",
+     "apex_fraction": 0.968
+    }
+   ]
+  },
+  {
+   "id": "monza",
+   "name": "Autodromo Nazionale Monza",
+   "aliases": [
+    "monza",
+    "ks_monza",
+    "autodromo nazionale monza",
+    "autodromo nazionale monza grand prix",
+    "monza circuit"
+   ],
+   "length_m": 5793,
+   "confidence": "medium",
+   "corners": []
+  },
+  {
+   "id": "red_bull_ring",
+   "name": "Red Bull Ring",
+   "aliases": [
+    "ks_red_bull_ring",
+    "red_bull_ring",
+    "red bull ring",
+    "red bull ring grand prix",
+    "spielberg"
+   ],
+   "length_m": 4318,
+   "confidence": "medium",
+   "corners": []
+  },
+  {
+   "id": "silverstone",
+   "name": "Silverstone Circuit",
+   "aliases": [
+    "ks_silverstone",
+    "silverstone",
+    "silverstone circuit",
+    "silverstone circuit grand prix",
+    "silverstone grand prix"
+   ],
+   "length_m": 5891,
+   "confidence": "high",
+   "corners": [
+    {
+     "order": 1,
+     "name": "Abbey",
+     "apex_fraction": 0.06
+    },
+    {
+     "order": 2,
+     "name": "Village",
+     "apex_fraction": 0.133
+    },
+    {
+     "order": 3,
+     "name": "The Loop",
+     "apex_fraction": 0.159
+    },
+    {
+     "order": 4,
+     "name": "Aintree",
+     "apex_fraction": 0.191
+    },
+    {
+     "order": 5,
+     "name": "Brooklands",
+     "apex_fraction": 0.321
+    },
+    {
+     "order": 6,
+     "name": "Luffield",
+     "apex_fraction": 0.35
+    },
+    {
+     "order": 7,
+     "name": "Copse",
+     "apex_fraction": 0.509
+    },
+    {
+     "order": 8,
+     "name": "Stowe",
+     "apex_fraction": 0.838
+    },
+    {
+     "order": 9,
+     "name": "Vale",
+     "apex_fraction": 0.921
+    },
+    {
+     "order": 10,
+     "name": "Club",
+     "apex_fraction": 0.955
+    }
+   ]
+  },
+  {
+   "id": "brands_hatch",
+   "name": "Brands Hatch",
+   "aliases": [
+    "ks_brands_hatch",
+    "brands_hatch",
+    "brands hatch",
+    "brands hatch circuit grand prix",
+    "brands hatch grand prix"
+   ],
+   "length_m": 3908,
+   "confidence": "medium",
+   "corners": [
+    {
+     "order": 1,
+     "name": "Paddock Hill Bend",
+     "apex_fraction": 0.072
+    },
+    {
+     "order": 2,
+     "name": "Druids",
+     "apex_fraction": 0.176
+    },
+    {
+     "order": 3,
+     "name": "Graham Hill Bend",
+     "apex_fraction": 0.242
+    }
+   ]
+  },
+  {
+   "id": "mugello",
+   "name": "Autodromo Internazionale del Mugello",
+   "aliases": [
+    "mugello",
+    "ks_mugello",
+    "autodromo internazionale del mugello",
+    "mugello circuit"
+   ],
+   "length_m": 5245,
+   "confidence": "medium",
+   "corners": [
+    {
+     "order": 1,
+     "name": "San Donato",
+     "apex_fraction": 0.14
+    },
+    {
+     "order": 2,
+     "name": "Luco",
+     "apex_fraction": 0.184
+    },
+    {
+     "order": 3,
+     "name": "Poggio Secco",
+     "apex_fraction": 0.21
+    },
+    {
+     "order": 4,
+     "name": "Materassi",
+     "apex_fraction": 0.286
+    },
+    {
+     "order": 5,
+     "name": "Borgo San Lorenzo",
+     "apex_fraction": 0.304
+    },
+    {
+     "order": 6,
+     "name": "Casanova",
+     "apex_fraction": 0.38
+    },
+    {
+     "order": 7,
+     "name": "Savelli",
+     "apex_fraction": 0.4
+    }
+   ]
+  },
+  {
+   "id": "nordschleife",
+   "name": "Nurburgring Nordschleife",
+   "aliases": [
+    "ks_nordschleife",
+    "nordschleife",
+    "nurburgring nordschleife",
+    "nordschleife combined"
+   ],
+   "length_m": 20832,
+   "confidence": "medium",
+   "corners": []
+  },
+  {
+   "id": "barcelona",
+   "name": "Circuit de Barcelona-Catalunya",
+   "aliases": [
+    "ks_barcelona",
+    "barcelona",
+    "circuit de barcelona catalunya",
+    "circuit de barcelona-catalunya",
+    "circuit de barcelona catalunya grand prix"
+   ],
+   "length_m": 4655,
+   "confidence": "medium",
+   "corners": []
+  },
+  {
+   "id": "laguna_seca",
+   "name": "WeatherTech Raceway Laguna Seca",
+   "aliases": [
+    "ks_laguna_seca",
+    "laguna_seca",
+    "laguna seca",
+    "weathertech raceway laguna seca"
+   ],
+   "length_m": 3602,
+   "confidence": "medium",
+   "corners": []
+  },
+  {
+   "id": "zandvoort",
+   "name": "Circuit Zandvoort",
+   "aliases": [
+    "ks_zandvoort",
+    "zandvoort",
+    "circuit zandvoort",
+    "circuit zandvoort grand prix"
+   ],
+   "length_m": 4259,
+   "confidence": "medium",
+   "corners": []
+  },
+  {
+   "id": "vallelunga",
+   "name": "Autodromo Vallelunga Piero Taruffi",
+   "aliases": [
+    "ks_vallelunga",
+    "vallelunga",
+    "autodromo vallelunga",
+    "autodromo vallelunga classic"
+   ],
+   "length_m": 4085,
+   "confidence": "medium",
+   "corners": []
+  },
+  {
+   "id": "magione",
+   "name": "Autodromo dell'Umbria (Magione)",
+   "aliases": [
+    "magione",
+    "ks_magione",
+    "autodromo dell umbria",
+    "autodromo dell'umbria"
+   ],
+   "length_m": 2507,
+   "confidence": "medium",
+   "corners": []
+  },
+  {
+   "id": "monaco",
+   "name": "Circuit de Monaco",
+   "aliases": [
+    "monaco",
+    "monaco_2020",
+    "ks_monaco",
+    "circuit de monaco",
+    "monte carlo"
+   ],
+   "length_m": 3337,
+   "confidence": "high",
+   "corners": [
+    {
+     "order": 1,
+     "name": "Sainte Devote",
+     "apex_fraction": 0.068
+    },
+    {
+     "order": 2,
+     "name": "Grand Hotel Hairpin",
+     "apex_fraction": 0.384
+    },
+    {
+     "order": 3,
+     "name": "Portier",
+     "apex_fraction": 0.435
+    },
+    {
+     "order": 4,
+     "name": "Nouvelle Chicane",
+     "apex_fraction": 0.641
+    },
+    {
+     "order": 5,
+     "name": "Tabac",
+     "apex_fraction": 0.718
+    },
+    {
+     "order": 6,
+     "name": "La Rascasse",
+     "apex_fraction": 0.882
+    }
+   ]
+  },
+  {
+   "id": "le_mans",
+   "name": "Circuit de la Sarthe (Le Mans)",
+   "aliases": [
+    "sx_lemans",
+    "lemans",
+    "le_mans",
+    "le mans",
+    "circuit de la sarthe",
+    "circuit des 24 heures du mans"
+   ],
+   "length_m": 13626,
+   "confidence": "high",
+   "corners": [
+    {
+     "order": 1,
+     "name": "Dunlop Chicane",
+     "apex_fraction": 0.062
+    },
+    {
+     "order": 2,
+     "name": "Mulsanne",
+     "apex_fraction": 0.57
+    },
+    {
+     "order": 3,
+     "name": "Arnage",
+     "apex_fraction": 0.746
+    },
+    {
+     "order": 4,
+     "name": "Ford Chicanes",
+     "apex_fraction": 0.983
+    }
+   ]
+  },
+  {
+   "id": "sepang",
+   "name": "Sepang International Circuit",
+   "aliases": [
+    "acu_sepang",
+    "sepang",
+    "sepang international circuit",
+    "sepang international circuit grand prix"
+   ],
+   "length_m": 5543,
+   "confidence": "medium",
+   "corners": []
+  },
+  {
+   "id": "oran_park_gp",
+   "name": "Oran Park Raceway (Grand Prix)",
+   "aliases": [
+    "oran park raceway grand prix",
+    "oran park grand prix",
+    "oranpark gp",
+    "oran gp"
+   ],
+   "length_m": 2601,
+   "confidence": "medium",
+   "corners": []
+  },
+  {
+   "id": "oran_park_south",
+   "name": "Oran Park Raceway (South)",
+   "aliases": [
+    "oran park raceway south",
+    "oran park south",
+    "oranpark south",
+    "oran south"
+   ],
+   "length_m": 1639,
+   "confidence": "medium",
+   "corners": []
+  },
+  {
+   "id": "lime_rock_gp",
+   "name": "Lime Rock Park (Grand Prix)",
+   "aliases": [
+    "lime rock park grand prix",
+    "lime rock park",
+    "limerock",
+    "limerock 2019 gp",
+    "lime rock grand prix"
+   ],
+   "length_m": 2336,
+   "confidence": "medium",
+   "corners": []
+  }
+ ]
+}

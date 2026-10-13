@@ -88,6 +88,9 @@ pit-wall run --plain
 pit-wall record --out carrera.pwrec.gz
 pit-wall run --file carrera.pwrec.gz --speed 4
 
+# Curvas numeradas de una pista según la línea de carrera del juego (fase 4, solo geometría por ahora)
+pit-wall corners --file carrera.pwrec.gz
+
 # Muestra todos los campos que publica el juego (y, con --watch, el rango de cada uno)
 pit-wall dump-shm
 pit-wall dump-shm --watch 60 --json report.json

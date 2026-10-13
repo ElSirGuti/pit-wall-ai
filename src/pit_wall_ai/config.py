@@ -237,11 +237,20 @@ class EngineerConfig(_Model):
     startup_quiet_s: float = Field(5.0, ge=0)  # silence right after a session starts
 
 
+class AnalysisConfig(_Model):
+    """Track geometry and braking analysis (phase 4). The geometry is generated locally from the game."""
+
+    ac_dirs: list[str] = Field(
+        default_factory=list
+    )  # game / Steam library / tracks folders to search
+
+
 class AppConfig(_Model):
     telemetry: TelemetryConfig = TelemetryConfig()
     logging: LoggingConfig = LoggingConfig()
     llm: LLMConfig = LLMConfig()
     engineer: EngineerConfig = EngineerConfig()
+    analysis: AnalysisConfig = AnalysisConfig()
 
 
 class ConfigError(ValueError):

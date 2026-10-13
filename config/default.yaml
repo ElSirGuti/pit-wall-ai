@@ -126,3 +126,8 @@ engineer:               # phase 3: rule alerts spoken by the race engineer
     best_sector:
       enabled: false      # chatty: one per sector, every lap
       cooldown_s: 0
+
+analysis:               # phase 4: track geometry and braking analysis
+  ac_dirs: []           # folders to search for the game's tracks: the game folder, a Steam library or its
+                        # content/tracks. Empty = look in the usual Steam locations and in $AC_PATH.
+                        # e.g. ["E:/SteamLibrary", "D:/SteamLibrary"]

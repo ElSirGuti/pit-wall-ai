@@ -92,6 +92,21 @@ def _parser() -> argparse.ArgumentParser:
         "rules", help="list the alert rules, their thresholds and the session policies"
     ).add_argument("--config", help="YAML config")
 
+    cor = sub.add_parser(
+        "corners", help="list the numbered corners of a track from the game's racing line"
+    )
+    cor.add_argument("--config", help="YAML config")
+    cor.add_argument("--track", help="track folder name, e.g. magione (default: from --file)")
+    cor.add_argument(
+        "--layout", help="layout folder; omit for 'no layout' (or unknown, with --any-layout)"
+    )
+    cor.add_argument("--any-layout", action="store_true", help="try every layout, pick by length")
+    cor.add_argument(
+        "--length", type=float, help="the game's track length in metres, to pick a line"
+    )
+    cor.add_argument("--file", help="a .pwrec.gz recording: track, layout and length come from it")
+    cor.add_argument("--ac-dir", action="append", default=[], help="extra AC folder to search")
+
     rec = sub.add_parser("record", help="record the live session to a .pwrec.gz file")
     common(rec)
     rec.add_argument("--out", required=True, help="output file, e.g. race.pwrec.gz")
@@ -346,6 +361,51 @@ def _cmd_dump(cfg: AppConfig, a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_corners(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .analysis.tracks import resolve
+
+    track, layout, length = a.track, (None if a.any_layout else (a.layout or "")), a.length
+    if a.file:
+        from .telemetry.recorder import is_native, load_native
+
+        if not is_native(a.file):
+            print("--file must be a .pwrec.gz recording", file=sys.stderr)
+            return 2
+        st = load_native(a.file).statics[0]
+        track = track or st.track
+        if a.layout is None and not a.any_layout:
+            layout = st.track_configuration
+        length = length or st.track_length_m or None
+    if not track:
+        print("give --track or --file", file=sys.stderr)
+        return 2
+    res = resolve(track, layout, length_m=length, configured=[*a.ac_dir, *cfg.analysis.ac_dirs])
+    if not res.ok:
+        print(f"no geometry for {track}: {res.reason}", file=sys.stderr)
+        for c in res.candidates:
+            print(f"  candidate {c.path} {c.length_m or c.error}", file=sys.stderr)
+        return 1
+    g = res.geometry
+    assert g is not None and res.candidate is not None
+    print(
+        f"{track}{'/' + res.layout if res.layout else ''}: line {g.length_m:.0f} m"
+        f"{f' (game {length:.0f} m)' if length else ''}, {len(g.corners)} corners, {res.reason}"
+    )
+    print(f"source: {res.candidate.path}")
+    from .analysis.circuit_names import corner_names
+
+    names = corner_names(g, track)
+    print(" #  dir    kind      sev     Rmin   start    apex     end   (m along the line)  name")
+    for c in g.corners:
+        print(
+            f"{c.number:2d}  {c.direction:5s}  {c.kind:8s}  {c.severity:6s} {c.min_radius_m:5.0f}"
+            f"  {c.start_m:6.0f}  {c.apex_m:6.0f}  {c.end_m:6.0f}   {names.get(c.number, '')}"
+        )
+    if not names:
+        print("(no names for this circuit: numbered by the geometry only, numbering not verified)")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
@@ -362,6 +422,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "dump-shm": _cmd_dump,
             "say": _cmd_say,
             "rules": _cmd_rules,
+            "corners": _cmd_corners,
         }[args.cmd]
         return handler(cfg, args)
     except ConfigError as exc:
