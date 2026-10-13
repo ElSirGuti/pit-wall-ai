@@ -219,7 +219,7 @@ def _start_engineer(
         )
         speech = SpeechOutput(lambda: ConsoleTts())
         speech.start()
-    eng = Engineer(cfg.engineer, speech)
+    eng = Engineer(cfg.engineer, speech, analysis=cfg.analysis)
     engine.add_sample_hook(
         lambda snap, state, tracker, events: eng.on_sample(snap, state, tracker, events)
     )

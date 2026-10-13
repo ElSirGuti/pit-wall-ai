@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from ..analysis.laps import LapTracker
-from ..config import CalmConfig, EngineerConfig, PolicyConfig
+from ..config import AnalysisConfig, CalmConfig, EngineerConfig, PolicyConfig
 from ..events import Event, SessionChanged
 from ..session.detector import SessionState
 from ..telemetry.snapshot import Snapshot
@@ -75,11 +75,12 @@ class Engineer:
         speaker: Speaker,
         *,
         rules: list[Rule] | None = None,
+        analysis: AnalysisConfig | None = None,
         clock: Callable[[], float] = time.perf_counter,
     ) -> None:
         self.cfg = cfg
         self.speaker = speaker
-        self.rules = rules if rules is not None else build_rules(cfg)
+        self.rules = rules if rules is not None else build_rules(cfg, analysis)
         self.calm = CalmDetector(cfg.calm)
         self.pending: dict[str, Alert] = {}
         self.stats = EngineerStats()

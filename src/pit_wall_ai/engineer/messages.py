@@ -150,3 +150,41 @@ def lap_time_words(ms: int) -> str:
     m, rest = divmod(total, 60_000)
     s, milli = divmod(rest, 1000)
     return f"{m} {s} {milli // 100}"
+
+
+def _tenths(lang: str, seconds: float) -> str:
+    """A time loss as it is said: "2 décimas" below a second, "1,3 segundos" above."""
+    if seconds < 0.95:
+        n = max(1, round(seconds * 10))
+        if lang == "es":
+            return f"{n} décima" if n == 1 else f"{n} décimas"
+        return f"{n} tenth" if n == 1 else f"{n} tenths"
+    value = f"{seconds:.1f}"
+    return value.replace(".", " coma ") + " segundos" if lang == "es" else f"{value} seconds"
+
+
+def where_phrase(
+    lang: str, *, name: str | None, number: int | None, direction: str, at_m: float
+) -> str:
+    """How the corner is referred to: its name, its number (only if verified) or the stretch."""
+    if name:
+        return name
+    if number is not None:
+        return f"Curva {number}" if lang == "es" else f"Corner {number}"
+    d = round(at_m / 10.0) * 10
+    if lang == "es":
+        side = "derechas" if direction == "right" else "izquierdas"
+        return f"Curva de {side} a {d} metros de meta"
+    return f"{direction.capitalize()} corner at {d} meters from the line"
+
+
+def braking_hint(lang: str, *, where: str, metres: float, earlier: bool, loss_s: float) -> str:
+    """The measured fact first (braking point against the best lap), then the time it cost. No causes."""
+    m = round(abs(metres))
+    if lang == "es":
+        how = "antes" if earlier else "más tarde"
+        return (
+            f"{where}: frenas {m} metros {how} que tu mejor vuelta, pierdes {_tenths(lang, loss_s)}"
+        )
+    how = "earlier" if earlier else "later"
+    return f"{where}: you brake {m} meters {how} than your best lap, losing {_tenths(lang, loss_s)}"

@@ -108,14 +108,19 @@ def snapshot_from_recording(
         gas=v("Throttle Pos", i) / 100.0,
         brake=v("Brake Pos", i) / 100.0,
         clutch=v("Clutch Pos", i) / 100.0,
-        steer_angle=v("Steering Angle", i),
+        # degrees of the wheel in the log; the shared memory gives a fraction of lock (450 deg each way was
+        # verified live on a 900 deg wheel), so the replay is scaled to match it
+        steer_angle=max(-1.0, min(1.0, v("Steering Angle", i) / 450.0)),
         gear=int(v("Gear", i)),
         rpm=int(v("Engine RPM", i)),
         speed_kmh=v("Ground Speed", i),
         fuel=v("Fuel Level", i),
-        velocity=_vec(rec, i, ("Chassis Velocity X", "Chassis Velocity Y", "Chassis Velocity Z")),
+        # ACTI logs "Chassis Velocity" in the car frame as X = forward, Y = lateral, Z = vertical (the norm
+        # equals Ground Speed to 7 digits, X carries all of it). The shared memory uses x lateral,
+        # y vertical, z forward, so the axes are reordered here.
+        velocity=_vec(rec, i, ("Chassis Velocity Y", "Chassis Velocity Z", "Chassis Velocity X")),
         local_velocity=_vec(
-            rec, i, ("Chassis Velocity X", "Chassis Velocity Y", "Chassis Velocity Z")
+            rec, i, ("Chassis Velocity Y", "Chassis Velocity Z", "Chassis Velocity X")
         ),
         acc_g=_vec(rec, i, ("CG Accel Lateral", "CG Accel Vertical", "CG Accel Longitudinal")),
         heading=0.0,

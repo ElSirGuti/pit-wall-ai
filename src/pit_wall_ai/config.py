@@ -202,6 +202,11 @@ class BestSectorRule(_Model):
     cooldown_s: float = Field(0.0, ge=0)
 
 
+class BrakingHintRule(_Model):
+    enabled: bool = True  # needs the track's racing line in the local game install
+    cooldown_s: float = Field(0.0, ge=0)
+
+
 class RulesConfig(_Model):
     lockup: LockUpRule = LockUpRule()
     wheelspin: WheelspinRule = WheelspinRule()
@@ -216,6 +221,7 @@ class RulesConfig(_Model):
     damage: DamageRule = DamageRule()
     lap_summary: LapSummaryRule = LapSummaryRule()
     best_sector: BestSectorRule = BestSectorRule()
+    braking_hint: BrakingHintRule = BrakingHintRule()
 
 
 class PoliciesConfig(_Model):
@@ -264,6 +270,9 @@ class AnalysisConfig(_Model):
         default_factory=list
     )  # game / Steam library / tracks folders to search
     braking: BrakingConfig = BrakingConfig()
+    # circuits whose corner NUMBERING the user has checked against the real track: only for those does
+    # the voice say "corner N". Without a name or a verified number it describes the stretch.
+    verified_numbering: list[str] = Field(default_factory=list)
 
 
 class AppConfig(_Model):

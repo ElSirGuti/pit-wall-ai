@@ -18,9 +18,12 @@ import math
 from collections import deque
 from dataclasses import dataclass
 
+from ..analysis import braking as B
+from ..analysis.circuit_names import corner_names
 from ..analysis.laps import LapTracker
-from ..config import EngineerConfig
-from ..events import Event, LapCompleted, SectorCompleted
+from ..analysis.tracks import Resolution, resolve
+from ..config import AnalysisConfig, EngineerConfig
+from ..events import Event, LapCompleted, SectorCompleted, SessionChanged
 from ..session.detector import SessionState
 from ..telemetry.snapshot import CORNERS, Snapshot
 from . import messages as M
@@ -528,8 +531,122 @@ class BestSectorRule(Rule):
         return out
 
 
-def build_rules(cfg: EngineerConfig) -> list[Rule]:
+class BrakingHintRule(Rule):
+    """After a lap: the corner where this lap braked differently from the best valid lap AND lost the most.
+
+    One alert per lap at most, never in a race (the policy drops it), only when both thresholds of
+    ``analysis.braking`` are reached. The text states the measured braking-point difference first and does
+    not say why. It needs the racing line of the track in the local game install; without it the rule
+    stays silent and says why once in the log.
+    """
+
+    id = "braking_hint"
+    priority = Priority.MEDIUM
+    ttl_s = 30.0
+
+    def __init__(self, cfg, analysis: AnalysisConfig) -> None:
+        super().__init__(cfg)
+        self.analysis = analysis
+        self._key: tuple | None = None
+        self._res: Resolution | None = None
+        self._names: dict[int, str] = {}
+
+    def _geometry(self, snap: Snapshot):
+        st = snap.static
+        key = (st.track, st.track_configuration, round(st.track_length_m))
+        if key != self._key:
+            self._key = key
+            self._res = resolve(
+                st.track,
+                st.track_configuration,
+                length_m=st.track_length_m or None,
+                configured=self.analysis.ac_dirs,
+            )
+            if self._res.ok:
+                self._names = corner_names(self._res.geometry, st.track)
+                log.info(
+                    "braking analysis ready",
+                    extra={
+                        "track": st.track,
+                        "layout": self._res.layout,
+                        "corners": len(self._res.geometry.corners),
+                        "source": str(self._res.candidate.path),
+                    },
+                )
+            else:
+                self._names = {}
+                log.warning(
+                    "braking analysis off for this track",
+                    extra={
+                        "track": st.track,
+                        "layout": st.track_configuration,
+                        "reason": self._res.reason,
+                    },
+                )
+        return self._res.geometry if self._res and self._res.ok else None
+
+    def evaluate(self, ctx):
+        out = []
+        if any(isinstance(e, SessionChanged) for e in ctx.events):
+            self._key = None  # a new session may be another track
+        for e in ctx.events:
+            if not isinstance(e, LapCompleted) or e.lap is None:
+                continue
+            lap = e.lap
+            if not B.comparable(lap):
+                continue
+            ref = B.reference_lap(ctx.tracker.laps, lap)
+            if ref is None:
+                continue
+            geometry = self._geometry(ctx.snap)
+            if geometry is None:
+                continue
+            b = self.analysis.braking
+            worst = B.worst_corner(B.compare_lap(geometry, lap, ref, b), b)
+            if worst is None:
+                continue
+            corner = next(c for c in geometry.corners if c.number == worst.corner)
+            name = self._names.get(corner.number)
+            verified = ctx.snap.static.track in self.analysis.verified_numbering
+            where = M.where_phrase(
+                ctx.lang,
+                name=name,
+                number=corner.number if verified else None,
+                direction=corner.direction,
+                at_m=corner.apex_m,
+            )
+            a = self._fire(
+                ctx,
+                f"lap{lap.number}",
+                M.braking_hint(
+                    ctx.lang,
+                    where=where,
+                    metres=worst.brake_earlier_m,
+                    earlier=worst.brake_earlier_m > 0,
+                    loss_s=worst.time_diff_s,
+                ),
+                lap=lap.number,
+                reference=ref.number,
+                corner=corner.number,
+                corner_name=name,
+                numbering_verified=verified,
+                brake_point_m=round(worst.lap_metrics.brake_point_m, 1),
+                ref_brake_point_m=round(worst.ref_metrics.brake_point_m, 1),
+                brake_earlier_m=round(worst.brake_earlier_m, 1),
+                time_diff_s=round(worst.time_diff_s, 3),
+                min_speed_delta_kmh=None
+                if worst.min_speed_delta_kmh is None
+                else round(worst.min_speed_delta_kmh, 1),
+                span_m=tuple(round(x) for x in worst.span_m),
+            )
+            if a:
+                out.append(a)
+        return out
+
+
+def build_rules(cfg: EngineerConfig, analysis: AnalysisConfig | None = None) -> list[Rule]:
     r = cfg.rules
+    analysis = analysis or AnalysisConfig()
     table = [
         (r.lockup, LockUpRule),
         (r.wheelspin, WheelspinRule),
@@ -545,4 +662,7 @@ def build_rules(cfg: EngineerConfig) -> list[Rule]:
         (r.lap_summary, LapSummaryRule),
         (r.best_sector, BestSectorRule),
     ]
-    return [cls(rc) for rc, cls in table if rc.enabled]
+    built: list[Rule] = [cls(rc) for rc, cls in table if rc.enabled]
+    if r.braking_hint.enabled:
+        built.append(BrakingHintRule(r.braking_hint, analysis))
+    return built

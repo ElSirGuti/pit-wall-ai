@@ -77,3 +77,24 @@ with the same tyre compound**; a lap that is itself that best lap has nothing to
 * Precision follows the sampling: `.ld` logs are 20 Hz (3.5 m per sample at 250 km/h), live data 60 Hz
   (1.2 m). Laps are stored at 4000 points (1.7 m at Spa).
 * The table is measured fact. It does not say why a corner was slower.
+
+## The spoken hint (rule `braking_hint`)
+
+After each completed lap, only in practice / qualifying / other sessions (the race policy drops it), at most
+one message: the corner where that lap braked differently from the best valid lap of the same compound
+**and** lost the most time, if both minimum thresholds are reached. Wording, fact first and no cause:
+
+* with a known name: `Pouhon: frenas 14 metros antes que tu mejor vuelta, pierdes 2 décimas`
+* with a number you have verified (`analysis.verified_numbering: [magione]`): `Curva 4: frenas ...`
+* otherwise it describes the stretch: `Curva de derechas a 1730 metros de meta: frenas ...`
+
+The log line `alert fired` carries both braking points, the time difference, the span and the speed
+difference. Without the track's racing line (not installed, ambiguous layout) the rule is silent and logs
+the reason once (`braking analysis off for this track`).
+
+## Replay of ACTI logs: mapping fixes found on the way
+
+* `Chassis Velocity` is X forward, Y lateral, Z vertical (its norm equals `Ground Speed`); it is now
+  reordered to the shared memory's convention. Before, every log looked like a permanent spin.
+* `Steering Angle` is in degrees of the wheel; it is scaled by 1/450 to the shared memory's fraction of
+  lock, so the "calm moment" detector works on logs.

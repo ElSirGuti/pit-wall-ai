@@ -66,12 +66,13 @@ def lap(
     out=False,
     suspect=False,
     held=(),
+    length=LENGTH,
 ) -> LapRecord:
     """A lap on a 3000 m track. ``brakes`` maps an apex (m) to the braking point (m); the speed falls
     linearly to ``vmin`` at the apex and recovers over 120 m. ``taps`` are (start, end, level) pedal taps;
     ``held`` are (start, end) intervals with the pedal down (a braking that runs on)."""
     n = 4000
-    d = np.linspace(0.0, LENGTH, n)
+    d = np.linspace(0.0, length, n)
     speed = np.full(n, vmax)
     brake = np.zeros(n)
     gas = np.ones(n)
@@ -91,7 +92,7 @@ def lap(
         brake[m] = np.maximum(brake[m], 0.4)
     dt = np.diff(d, prepend=0.0) / (np.maximum(speed, 5.0) / 3.6)
     t_ms = np.cumsum(dt) * 1000.0
-    trace = LapTrace(d / LENGTH, t_ms, speed, gas, brake, steer)
+    trace = LapTrace(d / length, t_ms, speed, gas, brake, steer)
     return LapRecord(
         number=number,
         time_ms=int(t_ms[-1]),
@@ -244,3 +245,126 @@ def test_offline_analysis_of_the_real_race_window_yields_laps_with_fine_traces()
     assert len(timed) >= 2
     assert all(x.trace is not None and len(x.trace.pos) == TRACE_BINS for x in timed)
     assert all(x.compound == timed[0].compound for x in timed)
+
+
+# -- the spoken hint, through the real rule ---------------------------------------------------------------
+def test_the_braking_hint_rule_speaks_the_measured_fact_once_per_lap(tmp_path, caplog):
+    import logging
+
+    from pit_wall_ai.analysis import tracks as tr
+    from pit_wall_ai.analysis.laps import LapTracker
+    from pit_wall_ai.config import AnalysisConfig, EngineerConfig
+    from pit_wall_ai.engineer.engine import Engineer
+    from pit_wall_ai.events import LapCompleted
+    from pit_wall_ai.telemetry.snapshot import StaticInfo
+
+    from .helpers import snap
+    from .test_track_geometry import put_line
+
+    libs = tmp_path / "tracks"
+    put_line(libs, "stad")
+    res = tr.resolve("stad", "", length_m=1428.0, dirs=[libs])
+    assert res.ok
+    L = res.geometry.length_m
+    c1, c2 = res.geometry.corners
+    ref = lap(1, {c1.apex_m: c1.apex_m - 90, c2.apex_m: c2.apex_m - 90}, length=L)
+    mine = lap(2, {c1.apex_m: c1.apex_m - 105, c2.apex_m: c2.apex_m - 90}, length=L)  # 15 m earlier
+    ref.time_ms, mine.time_ms = 80_000, 81_000
+    tracker = LapTracker()
+    tracker.laps = [ref, mine]
+    tracker.best = ref
+
+    said = []
+
+    class Spk:
+        busy = False
+
+        def say(self, text, *, interrupt=False, meta=None):
+            said.append((text, (meta or {}).get("rule")))
+
+    static = StaticInfo(track="stad", track_configuration="", track_length_m=1428.0)
+    cfg = EngineerConfig(startup_quiet_s=0)
+    analysis = AnalysisConfig(ac_dirs=[str(libs)])
+    eng = Engineer(cfg, Spk(), analysis=analysis)
+    from pit_wall_ai.session.detector import SessionState
+
+    state = SessionState(session="practice", status="live", phase="flying")
+    ev = [LapCompleted(0.0, mine, False, 1000)]
+    with caplog.at_level(logging.INFO, logger="pit_wall_ai.engineer.alerts"):
+        fired = eng.on_sample(
+            snap(t=0.0, static=static, brake=0.0, steer_angle=0.0), state, tracker, ev
+        )
+        for i in range(1, 60):  # then a calm stretch (lap time first, then the hint)
+            eng.on_sample(
+                snap(t=i * 0.1, static=static, brake=0.0, steer_angle=0.0), state, tracker, []
+            )
+    hints = [a for a in fired if a.rule == "braking_hint"]
+    assert len(hints) == 1
+    a = hints[0]
+    assert a.values["corner"] == 1 and a.values["brake_earlier_m"] == pytest.approx(15.0, abs=2.5)
+    assert a.text.startswith(
+        "Curva de derechas a "
+    )  # numbering not verified: it describes the stretch
+    assert "frenas 15 metros antes que tu mejor vuelta" in a.text or "frenas 1" in a.text
+    assert "pierdes" in a.text and "porque" not in a.text  # the fact, no cause
+    assert [r for _, r in said].count("braking_hint") == 1
+    # verified numbering: the number is said
+    analysis2 = AnalysisConfig(ac_dirs=[str(libs)], verified_numbering=["stad"])
+    eng2 = Engineer(cfg, Spk(), analysis=analysis2)
+    fired2 = eng2.on_sample(snap(t=0.0, static=static), state, tracker, ev)
+    assert [x for x in fired2 if x.rule == "braking_hint"][0].text.startswith("Curva 1:")
+
+
+def test_the_braking_hint_is_silent_when_the_track_is_not_installed(tmp_path, caplog):
+    import logging
+
+    from pit_wall_ai.analysis.laps import LapTracker
+    from pit_wall_ai.config import AnalysisConfig, EngineerConfig
+    from pit_wall_ai.engineer.rules import RuleContext, build_rules
+    from pit_wall_ai.events import LapCompleted
+    from pit_wall_ai.session.detector import SessionState
+    from pit_wall_ai.telemetry.snapshot import StaticInfo
+
+    from .helpers import snap
+
+    ref, mine = lap(1, {500: 400}), lap(2, {500: 380})
+    ref.time_ms, mine.time_ms = 80_000, 81_000
+    tracker = LapTracker()
+    tracker.laps = [ref, mine]
+    (tmp_path / "tracks").mkdir()
+    rule = next(
+        r
+        for r in build_rules(EngineerConfig(), AnalysisConfig(ac_dirs=[str(tmp_path / "tracks")]))
+        if r.id == "braking_hint"
+    )
+    ctx = RuleContext(
+        snap(t=0.0, static=StaticInfo(track="ghost", track_length_m=3000.0)),
+        SessionState(session="practice", status="live", phase="flying"),
+        tracker,
+        [LapCompleted(0.0, mine, False, 1000)],
+        "es",
+    )
+    with caplog.at_level(logging.WARNING):
+        assert rule.evaluate(ctx) == []
+        assert rule.evaluate(ctx) == []  # still silent, and the reason is logged only once
+    reasons = [r for r in caplog.records if "braking analysis off" in r.getMessage()]
+    assert len(reasons) == 1 and "ghost" in reasons[0].reason
+
+
+def test_hint_wording_in_both_languages():
+    from pit_wall_ai.engineer import messages as M
+
+    assert (
+        M.braking_hint("es", where="Pouhon", metres=14.2, earlier=True, loss_s=0.24)
+        == "Pouhon: frenas 14 metros antes que tu mejor vuelta, pierdes 2 décimas"
+    )
+    assert M.braking_hint("es", where="Curva 4", metres=-12.0, earlier=False, loss_s=1.34).endswith(
+        "frenas 12 metros más tarde que tu mejor vuelta, pierdes 1 coma 3 segundos"
+    )
+    assert M.braking_hint("en", where="Pouhon", metres=14, earlier=True, loss_s=0.1) == (
+        "Pouhon: you brake 14 meters earlier than your best lap, losing 1 tenth"
+    )
+    assert M.where_phrase("es", name=None, number=None, direction="left", at_m=1734) == (
+        "Curva de izquierdas a 1730 metros de meta"
+    )
+    assert M.where_phrase("es", name="Pouhon", number=6, direction="left", at_m=3850) == "Pouhon"
