@@ -35,8 +35,8 @@ the standard, and nothing is called supported until each simulator has been test
 * The Steam page reportedly says that **official MoTeC telemetry export** arrived in 0.6, written to
   `Saved Games\ACE\MoTeC\<car>\<track>` (reported by a setup-guide post, not verified). That would be a
   second, file-based route, comparable to the `.ld` files this project already reads from ACTI.
-* Not checked on this PC: no `Saved Games\ACE` folder and no Evo install were found in the usual Steam
-  locations, so the game has probably not been started yet, or lives elsewhere. `pit-wall probe` will tell.
+* Not installed on the author's PC for now (uninstalled to save disk space), so none of the above can be
+  checked yet. It is the last step of the order; `pit-wall probe` will answer it once the game is back.
 
 Consequences: the AC Evo adapter would be a *new layout* of the same kind of reader (not a flag on the AC
 one), its fields would be verified one by one like the AC table, and the third-party code is read as
@@ -98,7 +98,7 @@ Availability on 2026-10-13 (author's answers):
 | Automobilista 2 | yes (AMS1 not needed) | yes | the one the author uses most after AC |
 | RaceRoom | yes (free) | yes | |
 | rFactor 2 | yes, never used | yes, after installing the shared memory plugin | the author does not know the plugin yet: setup is part of the work |
-| AC Evo | yes (Steam build, reported as 0.10) | probably | runs at 20-30 fps at 720p; **interface unknown** (see below) |
+| AC Evo | owned, **not installed** (uninstalled to free disk space; runs at 20-30 fps at 720p) | no | install it when this step comes; interface unverified (see 1.1) |
 | iRacing | subscription inactive | when an account is available | a borrowed or reactivated subscription |
 | Le Mans Ultimate | no | when an account is available | not owned |
 | AC Rally | no | not planned | see section 7 |
