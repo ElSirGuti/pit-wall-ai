@@ -50,8 +50,13 @@ class SessionState:
     )
 
 
-# Seen on a real game: practice (0), qualify (1) and race (2) on the LFM server / single player.
-_VERIFIED_LIVE = {int(S.SessionKind.PRACTICE), int(S.SessionKind.QUALIFY), int(S.SessionKind.RACE)}
+# Seen on a real game: practice (0), qualify (1), race (2) and hotlap (3).
+_VERIFIED_LIVE = {
+    int(S.SessionKind.PRACTICE),
+    int(S.SessionKind.QUALIFY),
+    int(S.SessionKind.RACE),
+    int(S.SessionKind.HOTLAP),
+}
 
 
 class SessionDetector:

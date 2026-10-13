@@ -137,7 +137,7 @@ Estado: **verificada** = confirmada por una relación independiente dentro de un
 | `wheel_slip` | definición desconocida | sin determinar | 0 … 977,7 con valores atípicos; no es una razón acotada |
 | `wind_speed` | unidad desconocida | sin determinar | 2,0 constante (m/s o km/h) |
 | `brake_temp` | °C en principio | no fiable | 26 en el pit, 15,0 constante en pista (= temperatura del aire) frenando a 244 km/h: no se simula en este coche; no basar reglas de frenos en ello |
-| `static.max_power, max_torque` | — | no fiable | Supra GT4: 151 kW / 240 N·m; Audi TCR: 237,6 kW / 115 N·m: lejos de los coches reales |
+| `static.max_power, max_torque` | — | no fiable | MX-5 Cup 108,7 kW / 187 N·m es plausible, Supra GT4 y Audi TCR no: depende del coche |
 
 Captura usada: Assetto Corsa 1.16.4, memoria compartida 1.7, servidor de práctica de LFM, Toyota Supra GT4 en Hockenheim (GP, sin DRS), 20 s en el box + 60 s en pista (1 199 + 3 600 muestras). Los dos informes están en `tests/fixtures/` y `tests/test_live_reports.py` vuelve a comprobar cada fila *verificada* en cada ejecución.
 

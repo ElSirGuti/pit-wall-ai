@@ -48,9 +48,9 @@ wheels off the track for 0.5 s marks the lap.
 
 ## Session type
 
-Verified on a real game: **`practice` = 0, `qualify` = 1, `race` = 2** (`kind_verified_live`).
-`hotlap`, `time_attack`, `drift` and `drag` are the codes of the shared-memory enum and are **not verified
-yet**; the dashboard says so (`hotlap (code not verified live)`).
+Verified on a real game: **`practice` = 0, `qualify` = 1, `race` = 2, `hotlap` = 3** (`kind_verified_live`).
+`time_attack`, `drift` and `drag` are the codes of the shared-memory enum and are **not verified
+yet**; the dashboard says so (`time_attack (code not verified live)`).
 
 Other things observed live and handled:
 
@@ -100,11 +100,11 @@ campos reales del juego en `.pwrec.gz` para reproducirlos después con su tiempo
 a ±2 ms. Y una sesión en vivo grabada con `pit-wall record` (MX-5 Cup en Magione: clasificación y carrera contra
 IA con pausa y reinicio): 6 vueltas, todas con el tiempo del propio juego (`tests/test_live_lfm_session.py`).
 
-**Verificado en vivo:** `practice` = 0, `qualify` = 1, `race` = 2. En el cruce de meta la posición da la vuelta
+**Verificado en vivo:** `practice` = 0, `qualify` = 1, `race` = 2, `hotlap` = 3. En el cruce de meta la posición da la vuelta
 primero y unas muestras después el cronómetro de vuelta cae a ~0, `completed_laps` sube y `last_time_ms` se
 actualiza. El menú publica sesión 0 con ceros (no es una sesión nueva y no borra las vueltas); al empezar o
 reiniciar, `session_time_left` vale `+inf` una muestra; una carrera sin límite de tiempo lo cuenta en negativo
 (tiempo transcurrido); circuitos de 2 sectores (Magione) dan `sector_count` 2.
 
-**Lo que sigue sin verificar:** los códigos de `hotlap`, `time_attack`, `drift` y `drag`, y la validez de vuelta,
+**Lo que sigue sin verificar:** los códigos de `time_attack`, `drift` y `drag`, y la validez de vuelta,
 que la memoria compartida no publica: `suspect` es solo una pista.

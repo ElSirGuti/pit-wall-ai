@@ -64,7 +64,7 @@ Capture used: Assetto Corsa 1.16.4, shared-memory 1.7, LFM practice server, Toyo
 | `wheel_slip` | definition unknown | undetermined | 0 … 977.7 with outliers; not a bounded ratio |
 | `wind_speed` | unit unknown | undetermined | 2.0 constant (m/s or km/h) |
 | `brake_temp` | °C in principle | unreliable | 26 in the pit, 15.0 constant on track (= air temperature) while braking at 244 km/h: not simulated for this car; do not build brake rules on it |
-| `static.max_power, max_torque` | — | unreliable | Supra GT4: 151 kW / 240 N·m; Audi TCR: 237.6 kW / 115 N·m: far from the real cars |
+| `static.max_power, max_torque` | — | unreliable | MX-5 Cup 108.7 kW / 187 N·m is plausible, but Supra GT4 151 kW / 240 N·m and Audi TCR 237.6 kW / 115 N·m are far from the real cars: it depends on the car, do not rely on it |
 
 ## Steering lock-to-lock test (done)
 

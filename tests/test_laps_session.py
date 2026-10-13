@@ -176,9 +176,9 @@ def test_detector_reports_kind_phases_and_pit_events():
 
 def test_detector_non_practice_kinds_are_flagged_as_not_verified_live():
     det = SessionDetector()
-    for s in make_session([10.0, 20.0], session=3)[:5]:
+    for s in make_session([10.0, 20.0], session=4)[:5]:
         det.update(s)
-    assert det.state.session == "hotlap" and not det.state.kind_verified_live
+    assert det.state.session == "time_attack" and not det.state.kind_verified_live
 
 
 def test_detector_stopped_menu_and_pause_phases():

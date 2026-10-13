@@ -135,7 +135,7 @@ Status: **verified** = confirmed by an independent relationship inside a real ca
 | `wheel_slip` | definition unknown | undetermined | 0 … 977.7 with outliers; not a bounded ratio |
 | `wind_speed` | unit unknown | undetermined | 2.0 constant (m/s or km/h) |
 | `brake_temp` | °C in principle | unreliable | 26 in the pit, 15.0 constant on track (= air temperature) while braking at 244 km/h: not simulated for this car; do not build brake rules on it |
-| `static.max_power, max_torque` | — | unreliable | Supra GT4: 151 kW / 240 N·m; Audi TCR: 237.6 kW / 115 N·m: far from the real cars |
+| `static.max_power, max_torque` | — | unreliable | MX-5 Cup 108.7 kW / 187 N·m is plausible, Supra GT4 and Audi TCR are not: it depends on the car |
 
 Capture used: Assetto Corsa 1.16.4, shared-memory 1.7, LFM practice server, Toyota Supra GT4 at Hockenheim (GP, no DRS), 20 s in the pit box + 60 s on track (1 199 + 3 600 samples). The two reports are in `tests/fixtures/` and `tests/test_live_reports.py` re-checks every *verified* row on each run.
 
