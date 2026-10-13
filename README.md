@@ -7,9 +7,11 @@ only used for the conversation.
 
 *Español: [README.es.md](README.es.md)*
 
-> **Status: phase 3 of 7** — live telemetry, session and lap tracking, session recording and replay, and now a
-> rule-based race engineer that speaks short alerts with a local Windows voice (lock-ups, spins, fuel, tyres,
-> lap summaries). Braking analysis, the Gemini chat and full voice come next (see the [roadmap](#roadmap)).
+> **Status: phase 4 of 7 (in progress)** — live telemetry, session and lap tracking, recording and replay, a
+> rule-based race engineer with a local Windows voice (lock-ups, spins, fuel, tyres, lap summaries) and, new,
+> per-corner braking analysis against your best lap, built from the racing line of **your own** game install
+> (nothing from the game is shipped). Still to verify live: the spoken braking hint. The Gemini chat and full
+> voice come next (see the [roadmap](#roadmap)).
 
 <!-- DEMO: add a GIF or video here (terminal dashboard now, voice demo later) -->
 <p align="center"><em>Demo placeholder: a GIF of the dashboard will go here.</em></p>
@@ -86,8 +88,10 @@ pit-wall run --plain
 pit-wall record --out race.pwrec.gz
 pit-wall run --file race.pwrec.gz --speed 4
 
-# Numbered corners of a track from the game's racing line (phase 4, geometry only so far)
+# Phase 4: numbered corners of a track from the game's racing line, and every lap against your best lap
 pit-wall corners --file race.pwrec.gz
+pit-wall corners --file race.pwrec.gz --laps
+pit-wall corners --track spa --length 6947
 
 # Show every field the game publishes (and, with --watch, the range of each one)
 pit-wall dump-shm
@@ -101,7 +105,9 @@ pit-wall say "Box this lap"          # test the voice and see its latency
 pit-wall rules                       # active rules, thresholds and per-session policies
 ```
 
-See [docs/ENGINEER.md](docs/ENGINEER.md) for how a message is decided, the rules and the measured latency.
+See [docs/ENGINEER.md](docs/ENGINEER.md) for how a message is decided, the rules and the measured latency, and
+[docs/TRACK_GEOMETRY.md](docs/TRACK_GEOMETRY.md) for the corner geometry, the braking comparison, the spoken hint
+and how the alignment with the game's lap position was verified (error below 0.5 m on Magione, Imola, Spa).
 
 `pit-wall --help` lists every option. Run the checks with `pytest` and `ruff check src tests`.
 
@@ -157,8 +163,8 @@ Capture used: Assetto Corsa 1.16.4, shared-memory 1.7, LFM practice server, Toyo
 |---|---|---|
 | 1 | Telemetry reader, mock/replay, console view, LLM foundations | done |
 | 2 | Session detector (practice / qualify / race), lap and sector tracker, `pit-wall record` | done, checked on a real qualifying + race ([docs](docs/SESSION_AND_LAPS.md)) |
-| 3 | Rule-based alert engine with local TTS | **this release** ([docs](docs/ENGINEER.md)); thresholds conservative, to calibrate |
-| 4 | Braking analysis per corner vs the best lap (track geometry generated locally) | planned |
+| 3 | Rule-based alert engine with local TTS | done ([docs](docs/ENGINEER.md)); thresholds conservative, to calibrate |
+| 4 | Braking analysis per corner vs the best lap (track geometry generated locally) | **in progress** ([docs](docs/TRACK_GEOMETRY.md)): geometry, numbering, per-corner comparison and the spoken hint are in; to be checked live and against the real circuits' numbering |
 | 5 | Text chat with Gemini using a compact telemetry summary | planned |
 | 6 | Full voice: push-to-talk (keyboard and Logitech G29 button), STT, spoken answers | planned |
 | 7 | Post-session debrief with Gemini | planned |

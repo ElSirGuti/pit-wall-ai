@@ -7,9 +7,11 @@ lenguaje (la API gratuita de Gemini, intercambiable) se usa solo para la convers
 
 *English: [README.md](README.md)*
 
-> **Estado: fase 3 de 7**: ingeniero de carrera por reglas que habla con una voz local de Windows (bloqueos, trompos, gasolina, neumáticos, resumen de vuelta, ver [docs/ENGINEER.md](docs/ENGINEER.md)); además: telemetría en vivo, detección de sesión y fase, tracker de vueltas y sectores con mejor
-> vuelta, vuelta de referencia y delta en vivo, grabación y replay de sesiones, y panel en terminal. Las alertas, el
-> análisis de frenadas, el chat con Gemini y la voz llegan después (ver [hoja de ruta](#hoja-de-ruta)).
+> **Estado: fase 4 de 7 (en curso)**: telemetría en vivo, detección de sesión y vueltas, grabación y replay, ingeniero
+> de carrera por reglas con voz local de Windows (bloqueos, trompos, gasolina, neumáticos, resumen de vuelta, ver
+> [docs/ENGINEER.md](docs/ENGINEER.md)) y, novedad, análisis de frenadas por curva contra tu mejor vuelta, construido con la línea
+> de carrera de **tu propia** instalación del juego (no se distribuye nada del juego). Falta comprobar en vivo el
+> aviso hablado de frenadas. El chat con Gemini y la voz completa llegan después (ver [hoja de ruta](#hoja-de-ruta)).
 
 <!-- DEMO: añade aquí un GIF o vídeo (panel de terminal ahora, demo de voz más adelante) -->
 <p align="center"><em>Espacio para la demo: aquí irá un GIF del panel.</em></p>
@@ -88,8 +90,10 @@ pit-wall run --plain
 pit-wall record --out carrera.pwrec.gz
 pit-wall run --file carrera.pwrec.gz --speed 4
 
-# Curvas numeradas de una pista según la línea de carrera del juego (fase 4, solo geometría por ahora)
+# Fase 4: curvas numeradas de una pista según la línea de carrera del juego, y cada vuelta contra tu mejor vuelta
 pit-wall corners --file carrera.pwrec.gz
+pit-wall corners --file carrera.pwrec.gz --laps
+pit-wall corners --track spa --length 6947
 
 # Muestra todos los campos que publica el juego (y, con --watch, el rango de cada uno)
 pit-wall dump-shm
@@ -102,6 +106,10 @@ pit-wall run --mute                  # mismas reglas, impresas en vez de hablada
 pit-wall say "Box esta vuelta"       # prueba la voz y su latencia
 pit-wall rules                       # reglas activas, umbrales y políticas por sesión
 ```
+
+Cómo se decide cada mensaje, las reglas y la latencia medida: [docs/ENGINEER.md](docs/ENGINEER.md). La geometría de
+curvas, la comparación de frenadas, el aviso hablado y cómo se verificó la alineación con la posición del juego
+(error bajo 0,5 m en Magione, Imola y Spa): [docs/TRACK_GEOMETRY.md](docs/TRACK_GEOMETRY.md).
 
 `pit-wall --help` lista todas las opciones. Las comprobaciones: `pytest` y `ruff check src tests`.
 
@@ -157,8 +165,8 @@ Captura usada: Assetto Corsa 1.16.4, memoria compartida 1.7, servidor de prácti
 |---|---|---|
 | 1 | Lector de telemetría, mock/replay, vista de consola, base del LLM | hecha |
 | 2 | Detector de sesión (práctica / clasificación / carrera), tracker de vueltas y sectores, `pit-wall record` | hecha, comprobada con una clasificación y carrera reales ([docs](docs/SESSION_AND_LAPS.md)) |
-| 3 | Motor de alertas por reglas con TTS local | **esta versión** ([docs](docs/ENGINEER.md)); umbrales conservadores, por calibrar |
-| 4 | Análisis de frenadas por curva contra la mejor vuelta (geometría de pista generada en local) | prevista |
+| 3 | Motor de alertas por reglas con TTS local | hecha ([docs](docs/ENGINEER.md)); umbrales conservadores, por calibrar |
+| 4 | Análisis de frenadas por curva contra la mejor vuelta (geometría de pista generada en local) | **en curso** ([docs](docs/TRACK_GEOMETRY.md)): geometría, numeración, comparación por curva y aviso hablado hechos; falta comprobarlos en vivo y contra la numeración real de los circuitos |
 | 5 | Chat de texto con Gemini usando un resumen compacto de telemetría | prevista |
 | 6 | Voz completa: push-to-talk (teclado y botón del Logitech G29), STT, respuestas habladas | prevista |
 | 7 | Debrief post-sesión con Gemini | prevista |
