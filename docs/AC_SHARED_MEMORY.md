@@ -59,7 +59,7 @@ Capture used: Assetto Corsa 1.16.4, shared-memory 1.7, LFM practice server, Toyo
 | `static.track_length_m` | metres | plausible | 4537.19 for the Hockenheim GP layout used |
 | `clutch` | looks like the clutch engagement (1.0 = engaged), not the pedal | undetermined | 0.0 in neutral (Supra in the pit, Alfa 4C at idle) and 1.0 in gear in every capture; the driver's controls also have the pedal axis inverted. Do not build rules on it |
 | `gear` | raw index = gear number + 1: 1 = neutral, 2…7 = 1st…6th (reverse presumably 0, not seen) | verified | driver's HUD: raw 7 = 6th gear, raw 1 = neutral (also seen at 131 km/h mid-shift) |
-| `steer_angle` | fraction of the steering lock, −1..1 (full lock = ±1.0; degrees need the car's lock) | verified | lock-to-lock test: min −1.0000, max +1.0000 exactly. One full turn (360°) of a 900° wheel read −0.827 (×450° = 372°): linear with the wheel's ±450°. A hairpin lap peaks at ≈ 0.5. Which sign is left is not confirmed yet |
+| `steer_angle` | fraction of the steering lock, −1..1 (full lock = ±1.0; degrees need the car's lock) | verified | lock-to-lock test: min −1.0000, max +1.0000 exactly. One full turn (360°) of a 900° wheel read −0.827 (×450° = 372°): linear with the wheel's ±450°. A hairpin lap peaks at ≈ 0.5. Turning left reads negative (driver turned left: −0.827), right is positive |
 | `tc`, `abs` | `tc` looks like a setting-derived value, `abs` a constant | undetermined | `tc` 1.0 in the pit and 0.065 … 1.0 in the first capture, constant 0.082 in the second with TC set to 4/8 (driver); `abs` constant 0.12 |
 | `wheel_slip` | definition unknown | undetermined | 0 … 977.7 with outliers; not a bounded ratio |
 | `wind_speed` | unit unknown | undetermined | 2.0 constant (m/s or km/h) |
@@ -74,8 +74,8 @@ not degrees or radians: ±1.0 is full lock and a hairpin lap peaks at about half
 the car's steering-wheel lock (a property of each car, not published in these pages). A second capture with one full turn (360°) of the driver's 900° wheel read −0.827, i.e. 372° at 450° per unit,
 so the scale is linear with the wheel's range (that factor is the driver's wheel setup, not a property of the
 game: it is `steer_angle × half of the wheel's lock-to-lock`). The captures are
-`tests/fixtures/live_ac_alfa4c_lock.json` and `live_ac_alfa4c_turn.json`. The sign of "left" is not confirmed yet (the capture does not keep the
-order in time); rules that only need the magnitude are not affected.
+`tests/fixtures/live_ac_alfa4c_lock.json` and `live_ac_alfa4c_turn.json`. **Sign: turning left reads negative** (the driver turned the wheel one full turn to the left
+and read −0.827); turning right reads positive.
 
 ## Replay is an approximation
 

@@ -173,3 +173,10 @@ def test_one_full_wheel_turn_reads_a_linear_fraction_of_the_lock():
     degrees = abs(r["min"]) * 450.0
     assert degrees == pytest.approx(360.0, abs=30.0)  # one turn, hand-aligned
     assert rep["last_sample"]["speed_kmh"] < 1.0
+
+
+def test_turning_left_reads_negative():
+    """The driver turned the wheel one full turn to the LEFT and the value was negative (-0.827)."""
+    rep = json.loads((FIX / "live_ac_alfa4c_turn.json").read_text(encoding="utf-8"))
+    r = rep["ranges"]["steer_angle"]
+    assert r["min"] < -0.7 and r["max"] < 0.1
