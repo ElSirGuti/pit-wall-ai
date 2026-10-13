@@ -171,6 +171,7 @@ Captura usada: Assetto Corsa 1.16.4, memoria compartida 1.7, servidor de prácti
 | 6 | Voz completa: push-to-talk asignable a cualquier botón de cualquier dispositivo (teclado, ratón, mando, volante, botonera; [plan](docs/INPUT_BINDINGS.md)), STT, respuestas habladas | prevista |
 | 7 | Debrief post-sesión con Gemini | prevista |
 | 8 | Preparación de carrera: plan de estrategia con checklist de práctica editable, resumen de rivales, sugerencias de setup y de estilo de conducción | prevista, ver [docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md) |
+| 9 | Más simuladores (ACC, iRacing, rFactor 2 / Le Mans Ultimate, Automobilista 2, RaceRoom, AC Evo) con detección automática | prevista, ver [docs/MULTI_SIM_PLAN.md](docs/MULTI_SIM_PLAN.md); hoy solo se soporta el Assetto Corsa original |
 
 ## Procedencia y licencia
 

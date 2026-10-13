@@ -90,12 +90,15 @@ real devices before committing to it.
 
 ## 7. To verify on real hardware (nothing is marked working until it is)
 
-1. The G29 buttons and paddles are seen while the game has the focus, with and without G HUB running.
-2. The author's keyboard and mouse side buttons work as global bindings with the game focused.
-3. The button box (model to be confirmed) appears as a joystick and how many buttons it exposes.
-4. Two devices of the same model are told apart (if the author has them).
-5. Sharing the wheel with the game in non-exclusive mode does not disturb force feedback or the game inputs.
-6. Hot-plug: unplug and replug the wheel during a session.
+Author's devices (2026-10-13): Logitech G29 (G HUB installed), keyboard, mouse; **no button box**, no
+duplicate devices.
+
+1. The G29 buttons and paddles are seen while the game has the focus, **with G HUB running** (it can remap or
+   swallow buttons: check the profile it applies to the game and to the tool).
+2. The keyboard and the mouse side buttons work as global bindings with the game focused.
+3. Sharing the wheel with the game in non-exclusive mode does not disturb force feedback or the game inputs.
+4. Hot-plug: unplug and replug the wheel during a session.
+5. Button boxes and several identical devices are supported by the design but **untested** (the author has none).
 
 ## 8. Tests that do not need hardware
 

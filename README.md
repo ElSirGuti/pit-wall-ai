@@ -169,6 +169,7 @@ Capture used: Assetto Corsa 1.16.4, shared-memory 1.7, LFM practice server, Toyo
 | 6 | Full voice: push-to-talk bindable to any button of any device (keyboard, mouse, gamepad, wheel, button box; [plan](docs/INPUT_BINDINGS.md)), STT, spoken answers | planned |
 | 7 | Post-session debrief with Gemini | planned |
 | 8 | Race preparation: strategy plan with an editable practice checklist, rivals brief, setup and driving-style suggestions | planned, see [docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md) |
+| 9 | More simulators (ACC, iRacing, rFactor 2 / Le Mans Ultimate, Automobilista 2, RaceRoom, AC Evo) with automatic detection | planned, see [docs/MULTI_SIM_PLAN.md](docs/MULTI_SIM_PLAN.md); only the original AC is supported today |
 
 ## Provenance and licence
 
