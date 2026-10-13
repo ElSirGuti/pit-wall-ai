@@ -14,12 +14,33 @@ the standard, and nothing is called supported until each simulator has been test
 |---|---|---|---|
 | Assetto Corsa (original) | shared memory `acpmf_*`, **done** | not exposed (only `num_cars`) | verified here |
 | Assetto Corsa Competizione | shared memory with the same map names but a **different, larger layout**; UDP broadcasting API | all cars in the graphics page and the broadcasting API | has an official document; the `acVersion`/`smVersion` strings tell it apart from AC |
-| AC Evo | unknown; early access, the interface may change | unknown | first thing to check is whether the `acpmf_*` maps exist |
+| AC Evo | shared memory with **different names**, `Localcevo_pmf_*` (three blocks; not `acpmf_*`), per third-party readers; official MoTeC logs since 0.6 | unknown | **layout partially undocumented** and early access: see 1.1 |
 | iRacing | shared memory of the official SDK (memory-mapped file with a variable table and a YAML session string) | per-car arrays (lap distance, position, class, ...) | documented, 60 Hz; licence of the SDK to read before using its headers |
 | RaceRoom Racing Experience | shared memory `$R3E` | all drivers | public SDK; layout versioned |
 | rFactor 2 | **third-party plugin** (rF2 Shared Memory Map) that must be installed and enabled | all vehicles (scoring) | the user has to set it up |
 | Le Mans Ultimate | rFactor 2 engine: the same plugin or a native equivalent | all vehicles | which one the current build uses must be checked |
 | Automobilista 2 | the Project CARS 2 shared memory (`$pcars2$`), enabled in the game options; also UDP | participants array | option in the settings |
+
+### 1.1 AC Evo: what a web search turned up (2026-10-13, third-party, not tested here)
+
+* The open-source overlay *Live Telemetry Evo* (Python, PySide6) reads three named shared-memory blocks,
+  `Localcevo_pmf_*`, attached with `OpenFileMappingW` like the AC reader of this project. Its README says the
+  struct layout "is still partially undocumented" and is seeded from the AC1 structures plus publicly
+  confirmed AC Evo field names, with range clamping. Fields it lists: pedals, steering, g-forces, per-wheel tyre
+  temperatures (core and faces), pressure, load, wear, camber, suspension, brake temperature, compound, damage,
+  fuel and some engine readouts.
+* A Rust crate (`kerb`) also lists AC Evo shared memory (physics and graphics: inputs, tyres, suspension,
+  lap times, position, flags, fuel, pit state).
+* AC1, ACC and AC Rally are reported to share the `acpmf_*` names; **AC Evo does not**.
+* The Steam page reportedly says that **official MoTeC telemetry export** arrived in 0.6, written to
+  `Saved Games\ACE\MoTeC\<car>\<track>` (reported by a setup-guide post, not verified). That would be a
+  second, file-based route, comparable to the `.ld` files this project already reads from ACTI.
+* Not checked on this PC: no `Saved Games\ACE` folder and no Evo install were found in the usual Steam
+  locations, so the game has probably not been started yet, or lives elsewhere. `pit-wall probe` will tell.
+
+Consequences: the AC Evo adapter would be a *new layout* of the same kind of reader (not a flag on the AC
+one), its fields would be verified one by one like the AC table, and the third-party code is read as
+documentation only (licences checked before anything is reused; own structures, as always).
 
 ## 2. What has to change in the code
 
@@ -101,7 +122,7 @@ Proposed order, driven by what can be tested first and what is most valuable:
 | 3 | RaceRoom | owned, public SDK | 1 recorded session |
 | 4 | rFactor 2, then Le Mans Ultimate | one plugin route for both | plugin installed; LMU when an account exists |
 | 5 | iRacing | well documented, large user base | an active account for a test campaign |
-| 6 | AC Evo | interface moving, early access | revisit when it is stable; probe it earlier |
+| 6 | AC Evo | early access, layout partly undocumented; the live route and the MoTeC export route both exist on paper | `pit-wall probe` earlier; implement when the layout is confirmed against the game |
 
 Per simulator the work is the same and ends with the same artefacts: a `docs/<SIM>_TELEMETRY.md` with the
 unit table, recorded sessions replayable with `pit-wall run --file`, the detection evidence, and a regression
