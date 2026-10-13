@@ -368,3 +368,13 @@ def test_hint_wording_in_both_languages():
         "Curva de izquierdas a 1730 metros de meta"
     )
     assert M.where_phrase("es", name="Pouhon", number=6, direction="left", at_m=3850) == "Pouhon"
+
+
+def test_a_lap_much_slower_than_the_reference_is_not_representative():
+    from pit_wall_ai.analysis.braking import representative
+
+    ref = with_time(lap(1, {500: 400}), 90_000)
+    assert representative(with_time(lap(2, {500: 400}), 91_000), ref)
+    assert representative(with_time(lap(3, {500: 400}), 112_000), ref)
+    assert not representative(with_time(lap(4, {500: 400}), 113_000), ref)
+    assert not representative(with_time(lap(5, {500: 400}), 0), ref)

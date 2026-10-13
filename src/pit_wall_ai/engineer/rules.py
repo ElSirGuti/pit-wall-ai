@@ -596,7 +596,7 @@ class BrakingHintRule(Rule):
             if not B.comparable(lap):
                 continue
             ref = B.reference_lap(ctx.tracker.laps, lap)
-            if ref is None:
+            if ref is None or not B.representative(lap, ref):
                 continue
             geometry = self._geometry(ctx.snap)
             if geometry is None:

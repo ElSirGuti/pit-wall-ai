@@ -277,6 +277,15 @@ def comparable(lap: LapRecord) -> bool:
     return lap.trace is not None and not (lap.out_lap or lap.in_lap) and lap.coverage >= 0.9
 
 
+SLOW_LAP_RATIO = 1.25
+
+
+def representative(lap: LapRecord, ref: LapRecord) -> bool:
+    """A lap within 25 % of the reference time. Slower than that it is an incident, a pit stop or a lap
+    the log does not mark as out/in (MoTeC logs carry no pit flag): its corners say nothing about braking."""
+    return lap.time_ms > 0 and lap.time_ms <= ref.time_ms * SLOW_LAP_RATIO
+
+
 def worst_corner(
     comparisons: list[CornerComparison], cfg: BrakingConfig
 ) -> CornerComparison | None:

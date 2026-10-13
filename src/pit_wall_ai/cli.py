@@ -371,7 +371,7 @@ def _cmd_dump(cfg: AppConfig, a: argparse.Namespace) -> int:
 
 
 def _print_lap_comparison(g, names, result, cfg) -> None:
-    from .analysis.braking import compare_lap, reference_lap
+    from .analysis.braking import compare_lap, reference_lap, representative
 
     b = cfg.analysis.braking
     laps = [lap for lap in result.laps if lap.trace is not None]
@@ -398,6 +398,11 @@ def _print_lap_comparison(g, names, result, cfg) -> None:
         ref = reference_lap(result.laps, lap)
         if ref is None:
             print(f"\n{tag}  best valid lap of its compound: nothing to compare with")
+            continue
+        if not representative(lap, ref):
+            print(
+                f"\n{tag}  more than 25 % slower than lap {ref.number}: not a representative lap, not compared"
+            )
             continue
         print(
             f"\n{tag}  vs lap {ref.number} ({ref.time_ms / 1000:.3f} s, {lap.time_ms - ref.time_ms:+d} ms)"
