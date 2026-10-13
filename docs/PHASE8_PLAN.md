@@ -156,6 +156,68 @@ inputs for improvement: the user is told before the first rival-related request.
   (n = 41 corners); try a stiffer rear anti-roll bar" and *not* a sweeping claim from one session.
 * The profile is stored locally and can be wiped.
 
+### 3.3 The learning loop: a ledger of suggestions and what happened
+
+The language model does not learn between sessions (its weights never change). What improves is a **local
+ledger** of everything that was suggested and what came out of it. The ledger does two jobs: it is handed to
+the model as context ("tried before, on this car and track: ..."), and it **re-ranks** the deterministic
+candidates so that what worked is proposed earlier and what failed is not repeated blindly.
+
+**One record per suggestion** (a suggestion is a checklist item of kind `setup_test`, so it is already
+measurable):
+
+```
+suggestion = { id, created, car, track, layout, conditions {air, road, compound, surface},
+               hypothesis, evidence (the numbers that led to it), parameter, change {from, to},
+               test_plan {laps, fuel}, status: proposed | tested | accepted | rejected | inconclusive,
+               measured {lap_time_delta, consistency_delta, balance_delta, tyre_temp_spread_delta, n_laps,
+                         fuel_corrected: true, confidence},
+               feedback {feel: better | same | worse | unsure, comment, asked_at},
+               verdict {agree: measured_and_feel_agree | measured_better_feel_worse | ..., note} }
+```
+
+**Two sources of truth, kept separate.**
+
+* *Measured*: before/after over comparable laps (same compound, fuel-corrected, track evolution and
+  tyre-temperature window noted). Reported with n and an interval; a gain smaller than the lap-to-lap spread
+  is `inconclusive`, never "worked".
+* *Pilot feedback*: asked by voice after the test stint ("¿cómo se siente?"), stored verbatim plus a
+  normalised label. It is **not** averaged into the measurement.
+* **Disagreement is data**: "faster on the clock but felt worse" and "felt better, no faster" are recorded as
+  such. They change what is proposed next (e.g. a change that is quicker but unsettling is offered with that
+  warning, or paired with a counter-measure) and they are shown to the driver, not hidden.
+
+**How the ledger changes later suggestions**
+
+1. **Ranking, deterministic**: candidates for the same symptom are ordered by their record in a matching
+   context (same car; then same class of car; track type and temperature band as weaker matches). An effect
+   estimate shrinks towards zero with few samples, so one lucky stint does not become a rule.
+2. **No blind repeats**: a rejected change is not proposed again in the same context unless the evidence
+   differs materially, and then the text says what happened last time.
+3. **Context for the model**: the few most relevant records, as structured facts, so that the explanation can
+   say "last time, +2 clicks rear ARB at Spa gave -0.21 s, felt more stable". The model may not add
+   outcomes that are not in the ledger.
+4. **Driver profile feeds back**: recurring symptoms (section 3.2) and the changes that addressed them are
+   linked, so the profile can say which kind of change has historically suited this driver.
+
+**Guards**
+
+* Confounders are listed with each result (fuel, tyre warm-up, a new track surface, rain) and an
+  inconclusive verdict is the default whenever the comparison is not like for like.
+* A minimum number of comparable laps before a verdict (initially 5 per side, to be tuned on real data).
+* No transfer between cars of a different class without saying so; same car on another track is a weaker
+  match and is labelled as such.
+* Local only, human-readable (JSON lines), exportable and wipeable by the user. It never leaves the machine
+  except as the few records included in a prompt, and only with the anonymisation rules of section 0.
+* Cold start: with an empty ledger the engineer says it has no history for this car yet.
+
+**Acceptance**
+
+* Replaying a recorded A/B pair produces the same verdict every time and states n and the confidence.
+* A suggestion that was rejected is not proposed again in the same context in a scripted scenario.
+* The disagreement cases (measured better / felt worse and the reverse) are produced and displayed.
+* Deleting the ledger returns the engineer to the cold-start behaviour.
+
 ## 4. Open questions
 
 1. Is the in-game Python app route enough, or does CSP's Lua give materially more? (spike)
@@ -163,6 +225,10 @@ inputs for improvement: the user is told before the first rival-related request.
 3. What does `pit_window_*` / `mandatory_pit_done` look like in an LFM race or a private league that sets it?
 4. How much does fuel per lap vary between practice and a race with traffic? (needs several races)
 5. Which providers and quotas are acceptable for a multi-turn strategy chat on the free tier?
+6. How many comparable laps does a setup A/B need on real data before a verdict is trustworthy, and how much does
+   the lap-to-lap spread of the author vary by track? (calibrate the minimum of section 3.3 on recorded stints)
+7. What is the simplest feedback capture that the driver will actually use mid-session (voice after the stint,
+   a button on the wheel)?
 
 ## 5. Decisions taken (2026-10-13)
 
@@ -170,6 +236,8 @@ inputs for improvement: the user is told before the first rival-related request.
 * Order: phase 7 as planned, then 8a, then 8b after the spike, then 8c.
 * The checklist must be editable by the model through validated operations, with undo.
 * Setup suggestions and style analysis are in scope (8c) with the evidence rules above.
+* The style analysis and the suggestions keep a local ledger of what was suggested, what the telemetry measured
+  and what the pilot felt, including when the two disagree, and use it to rank later suggestions (3.3).
 
 ---
 
@@ -187,4 +255,8 @@ inputs for improvement: the user is told before the first rival-related request.
 * **8c, setup y estilo:** sugerencias como **hipótesis** con evidencia (balance, temperaturas, curvas donde se
   pierde tiempo), solo sobre parámetros que existen en el archivo de setup del coche, convertidas en
   elementos del checklist para probarlas A/B. El análisis de estilo exige muestra suficiente y la nombra.
+* **Aprendizaje entre sesiones:** el modelo no cambia, lo que mejora es un **registro local** de cada
+  sugerencia, lo que midió la telemetría y lo que sentiste tú, incluidos los casos en que no coinciden
+  ("más rápido pero peor sensación"). El registro reordena las sugerencias siguientes y se le entrega al modelo
+  como contexto; si algo falló no se repite a ciegas, y un resultado sin muestra suficiente es "no concluyente".
 * **Orden:** fase 7, luego 8a, 8b tras el spike, 8c.
