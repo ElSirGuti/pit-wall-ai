@@ -57,26 +57,23 @@ Capture used: Assetto Corsa 1.16.4, shared-memory 1.7, LFM practice server, Toyo
 | `suspension_travel` | metres | plausible | 0.011 … 0.080 |
 | `brake_bias` | fraction front | plausible | 0.74 constant |
 | `static.track_length_m` | metres | plausible | 4537.19 for the Hockenheim GP layout used |
-| `clutch` | depends on the controller: 1.0 constant with the pedal axis inverted in the AC controls | undetermined | 1.0 for the whole lap; 0.0 only in the pit with the pedal pressed. Do not build rules on it |
+| `clutch` | looks like the clutch engagement (1.0 = engaged), not the pedal | undetermined | 0.0 in neutral (Supra in the pit, Alfa 4C at idle) and 1.0 in gear in every capture; the driver's controls also have the pedal axis inverted. Do not build rules on it |
 | `gear` | raw index = gear number + 1: 1 = neutral, 2…7 = 1st…6th (reverse presumably 0, not seen) | verified | driver's HUD: raw 7 = 6th gear, raw 1 = neutral (also seen at 131 km/h mid-shift) |
-| `steer_angle` | not degrees of the wheel; a fraction of the lock (−1..1) or radians | undetermined | observed −0.445 … +0.509 (−0.302 … +0.502 in a second lap), half lock at a hairpin if it is a fraction. Resolved by the lock-to-lock test in `docs/AC_SHARED_MEMORY.md` |
+| `steer_angle` | fraction of the steering lock, −1..1 (full lock = ±1.0; degrees need the car's lock) | verified | lock-to-lock test in the pit: min −1.0000, max +1.0000 exactly; a hairpin lap peaks at ≈ 0.5. Which sign is left is not confirmed yet |
 | `tc`, `abs` | `tc` looks like a setting-derived value, `abs` a constant | undetermined | `tc` 1.0 in the pit and 0.065 … 1.0 in the first capture, constant 0.082 in the second with TC set to 4/8 (driver); `abs` constant 0.12 |
 | `wheel_slip` | definition unknown | undetermined | 0 … 977.7 with outliers; not a bounded ratio |
 | `wind_speed` | unit unknown | undetermined | 2.0 constant (m/s or km/h) |
 | `brake_temp` | °C in principle | unreliable | 26 in the pit, 15.0 constant on track (= air temperature) while braking at 244 km/h: not simulated for this car; do not build brake rules on it |
 | `static.max_power, max_torque` | — | unreliable | Supra GT4: 151 kW / 240 N·m; Audi TCR: 237.6 kW / 115 N·m: far from the real cars |
 
-## Steering lock-to-lock test (20 s, in the pit box, no HUD needed)
+## Steering lock-to-lock test (done)
 
-`steer_angle` has been seen between −0.45 and +0.51 on a lap: not degrees of the wheel. To learn its scale
-without any HUD, in the pit box with the engine on:
-
-1. `pit-wall dump-shm --watch 20 --wait 120 --json lock.json`
-2. Wheel centred for 2 s, then turn it **slowly to full left lock** and hold 2 s, then **slowly to full right lock**
-   and hold 2 s, then back to centre.
-3. Read `ranges.steer_angle` in `lock.json`: if it is about ±1.0 the value is a **fraction of the lock**;
-   if it is about ±4.7 (270°) or ±7.9 (450°) it is **radians of the steering wheel**; if it is a few hundred
-   it is degrees. A sample taken with the wheel at a quarter turn gives a second point to confirm linearity.
+Standing in the pit box (Alfa Romeo 4C, 1 194 samples), wheel turned slowly to full left lock and then to full
+right lock: `steer_angle` read **−1.0000 … +1.0000**. So the value is a **fraction of the car's steering lock**,
+not degrees or radians: ±1.0 is full lock and a hairpin lap peaks at about half lock. To get degrees multiply by
+the car's steering-wheel lock (a property of each car, not published in these pages). The capture is
+`tests/fixtures/live_ac_alfa4c_lock.json`. The sign of "left" is not confirmed yet (the capture does not keep the
+order in time); rules that only need the magnitude are not affected.
 
 ## Replay is an approximation
 
@@ -105,7 +102,7 @@ declara "verificada" por un documento; se confirma contra el propio juego.
 `physics` y `graphics` (coche en pista, práctica de LFM, Supra GT4 en Hockenheim, 20 s en el box + 60 s
 conduciendo): se decodifican bien y cumplen relaciones físicas independientes (velocidad frente a velocidad de
 rueda y radio, distancia frente a velocidad media, reloj frente a milisegundos). La tabla de arriba tiene el estado de
-cada campo. La marcha queda verificada con el HUD del piloto; falta la escala del ángulo de volante (prueba de tope a tope de la sección anterior) y la semántica de `tc`/`abs`; el embrague depende del mando; y dos hallazgos
+cada campo. La marcha queda verificada con el HUD del piloto; el ángulo de volante es una fracción del giro de −1 a 1 (prueba de tope a tope hecha); falta el signo de la izquierda y la semántica de `tc`/`abs`; el embrague parece el embrague engranado y depende del mando; y dos hallazgos
 importantes: `brake_temp` no se calienta en este coche y `max_power`/`max_torque` no describen los coches reales.
 
 **Cómo confirmar lo que falta:** con el juego en pista, `pit-wall dump-shm --watch 60 --json report.json`, y

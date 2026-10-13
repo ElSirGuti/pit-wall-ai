@@ -148,3 +148,18 @@ def test_steer_angle_is_not_wheel_degrees_and_is_stable_between_laps(track, lap2
 def test_clutch_is_constant_when_the_pedal_axis_is_inverted_in_the_controls(track, lap2):
     for rep in (track, lap2):
         assert rep["ranges"]["clutch"]["min"] == rep["ranges"]["clutch"]["max"] == 1.0
+
+
+def test_steer_angle_is_a_fraction_of_the_lock_full_lock_reads_plus_minus_one():
+    """Lock-to-lock test in the pit box (Alfa Romeo 4C): the value reaches exactly -1 and +1."""
+    rep = json.loads((FIX / "live_ac_alfa4c_lock.json").read_text(encoding="utf-8"))
+    r = rep["ranges"]["steer_angle"]
+    assert r["min"] == pytest.approx(-1.0, abs=1e-4) and r["max"] == pytest.approx(1.0, abs=1e-4)
+    assert rep["last_sample"]["speed_kmh"] < 1.0  # stationary: only the wheel moved
+    assert rep["ranges"]["gear"]["min"] == rep["ranges"]["gear"]["max"] == 1  # neutral
+
+
+def test_clutch_reads_zero_in_neutral_in_every_capture(pit):
+    lock = json.loads((FIX / "live_ac_alfa4c_lock.json").read_text(encoding="utf-8"))
+    for rep in (pit, lock):
+        assert rep["ranges"]["gear"]["max"] == 1 and rep["ranges"]["clutch"]["max"] == 0.0

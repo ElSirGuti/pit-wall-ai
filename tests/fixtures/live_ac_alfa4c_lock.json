@@ -1,0 +1,869 @@
+{
+  "samples": 1194,
+  "last_sample": {
+    "source": "ac",
+    "packet_id": 23094,
+    "gas": 0.0,
+    "brake": 0.0,
+    "clutch": 0.0,
+    "steer_angle": 0.9995999932289124,
+    "gear": 1,
+    "rpm": 850,
+    "speed_kmh": 0.0015164020005613565,
+    "fuel": 30.0,
+    "velocity.x": 0.0,
+    "velocity.y": 0.0,
+    "velocity.z": 0.0,
+    "local_velocity.x": 0.0,
+    "local_velocity.y": 0.0,
+    "local_velocity.z": -0.0,
+    "acc_g.x": 0.0,
+    "acc_g.y": 0.0,
+    "acc_g.z": -0.0,
+    "heading": 2.596177339553833,
+    "pitch": -0.014239413663744926,
+    "roll": -0.0004397396696731448,
+    "tc": 0.10000000149011612,
+    "abs": 0.10999999940395355,
+    "brake_bias": 0.6399999856948853,
+    "drs": 0.0,
+    "pit_limiter_on": false,
+    "car_damage.0": 0.0,
+    "car_damage.1": 0.0,
+    "car_damage.2": 0.0,
+    "car_damage.3": 0.0,
+    "car_damage.4": 0.0,
+    "wheel_slip.FL": 0.014192640781402588,
+    "wheel_slip.FR": 0.02927779033780098,
+    "wheel_slip.RL": 0.04179824888706207,
+    "wheel_slip.RR": 0.03720429167151451,
+    "wheel_load.FL": 2296.34423828125,
+    "wheel_load.FR": 2301.84912109375,
+    "wheel_load.RL": 3219.408935546875,
+    "wheel_load.RR": 3209.57958984375,
+    "wheel_angular_speed.FL": 0.002052947646006942,
+    "wheel_angular_speed.FR": 0.0012357067316770554,
+    "wheel_angular_speed.RL": 0.003330750623717904,
+    "wheel_angular_speed.RR": -5.374584816308925e-06,
+    "tyre_pressure.FL": 32.25041198730469,
+    "tyre_pressure.FR": 32.25041198730469,
+    "tyre_pressure.RL": 33.43488311767578,
+    "tyre_pressure.RR": 33.43488311767578,
+    "tyre_wear.FL": 100.0,
+    "tyre_wear.FR": 100.0,
+    "tyre_wear.RL": 100.0,
+    "tyre_wear.RR": 100.0,
+    "tyre_dirty_level.FL": 4.8237772716674954e-05,
+    "tyre_dirty_level.FR": 3.703605034388602e-05,
+    "tyre_dirty_level.RL": 2.440088428556919e-05,
+    "tyre_dirty_level.RR": 2.3184185920399614e-05,
+    "tyre_core_temp.FL": 80.0,
+    "tyre_core_temp.FR": 80.0,
+    "tyre_core_temp.RL": 80.0,
+    "tyre_core_temp.RR": 80.0,
+    "tyre_temp_inner.FL": 80.0,
+    "tyre_temp_inner.FR": 80.0,
+    "tyre_temp_inner.RL": 80.0,
+    "tyre_temp_inner.RR": 80.0,
+    "tyre_temp_middle.FL": 80.0,
+    "tyre_temp_middle.FR": 80.0,
+    "tyre_temp_middle.RL": 80.0,
+    "tyre_temp_middle.RR": 80.0,
+    "tyre_temp_outer.FL": 80.0,
+    "tyre_temp_outer.FR": 80.0,
+    "tyre_temp_outer.RL": 80.0,
+    "tyre_temp_outer.RR": 80.0,
+    "brake_temp.FL": 25.0,
+    "brake_temp.FR": 25.0,
+    "brake_temp.RL": 25.0,
+    "brake_temp.RR": 25.0,
+    "suspension_travel.FL": 0.06167540326714516,
+    "suspension_travel.FR": 0.061224017292261124,
+    "suspension_travel.RL": 0.06429469585418701,
+    "suspension_travel.RR": 0.06497997045516968,
+    "camber_rad.FL": -0.01918254978954792,
+    "camber_rad.FR": -0.04221746325492859,
+    "camber_rad.RL": -0.042379748076200485,
+    "camber_rad.RR": 0.041939012706279755,
+    "tyres_out": 0,
+    "air_temp": 25.0,
+    "road_temp": 15.0,
+    "surface_grip": 1.0,
+    "wind_speed": 21.0,
+    "wind_direction": -209.0,
+    "status": 2,
+    "session": 0,
+    "completed_laps": 0,
+    "number_of_laps": 0,
+    "position": 1,
+    "current_time_ms": 70185,
+    "last_time_ms": 0,
+    "best_time_ms": 0,
+    "last_sector_time_ms": 0,
+    "sector_index": 0,
+    "session_time_left": -83155.96875,
+    "distance_traveled": 0.03196677565574646,
+    "normalized_pos": 0.991311252117157,
+    "car_coordinates.x": -71.10553741455078,
+    "car_coordinates.y": 5.501429080963135,
+    "car_coordinates.z": -75.69100952148438,
+    "is_in_pit": true,
+    "is_in_pit_lane": true,
+    "tyre_compound": "Semislicks (SM)",
+    "penalty_time": 0.0,
+    "flags": 0,
+    "ideal_line_on": false,
+    "mandatory_pit_done": false,
+    "static.sm_version": "1.7",
+    "static.ac_version": "1.16.4",
+    "static.car_model": "ks_alfa_romeo_4c",
+    "static.track": "magione",
+    "static.track_configuration": "",
+    "static.num_cars": 1,
+    "static.sector_count": 2,
+    "static.max_rpm": 6750,
+    "static.max_fuel": 40.0,
+    "static.max_power": 164965.3125,
+    "static.max_torque": 160.0,
+    "static.track_length_m": 2455.793701171875,
+    "static.tyre_radius.FL": 0.3208500146865845,
+    "static.tyre_radius.FR": 0.3208500146865845,
+    "static.tyre_radius.RL": 0.32350000739097595,
+    "static.tyre_radius.RR": 0.32350000739097595,
+    "static.pit_window_start": 0,
+    "static.pit_window_end": 0,
+    "static.is_timed_race": false,
+    "static.has_extra_lap": false,
+    "static.aid_fuel_rate": 1.0,
+    "static.aid_tire_rate": 1.0
+  },
+  "ranges": {
+    "abs": {
+      "min": 0.10999999940395355,
+      "max": 0.10999999940395355,
+      "mean": 0.11,
+      "unit_hint": ""
+    },
+    "acc_g.x": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": "g"
+    },
+    "acc_g.y": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": "g"
+    },
+    "acc_g.z": {
+      "min": -0.0,
+      "max": -0.0,
+      "mean": 0.0,
+      "unit_hint": "g"
+    },
+    "air_temp": {
+      "min": 25.0,
+      "max": 25.0,
+      "mean": 25.0,
+      "unit_hint": ""
+    },
+    "best_time_ms": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "brake": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": "0..1"
+    },
+    "brake_bias": {
+      "min": 0.6399999856948853,
+      "max": 0.6399999856948853,
+      "mean": 0.64,
+      "unit_hint": ""
+    },
+    "brake_temp.FL": {
+      "min": 25.0,
+      "max": 25.0,
+      "mean": 25.0,
+      "unit_hint": "degrees C (up to ~1000)"
+    },
+    "brake_temp.FR": {
+      "min": 25.0,
+      "max": 25.0,
+      "mean": 25.0,
+      "unit_hint": "degrees C (up to ~1000)"
+    },
+    "brake_temp.RL": {
+      "min": 25.0,
+      "max": 25.0,
+      "mean": 25.0,
+      "unit_hint": "degrees C (up to ~1000)"
+    },
+    "brake_temp.RR": {
+      "min": 25.0,
+      "max": 25.0,
+      "mean": 25.0,
+      "unit_hint": "degrees C (up to ~1000)"
+    },
+    "camber_rad.FL": {
+      "min": -0.01918254978954792,
+      "max": 0.041950445622205734,
+      "mean": 0.0027,
+      "unit_hint": ""
+    },
+    "camber_rad.FR": {
+      "min": -0.04221746325492859,
+      "max": 0.020570995286107063,
+      "mean": 0.003,
+      "unit_hint": ""
+    },
+    "camber_rad.RL": {
+      "min": -0.04239673912525177,
+      "max": -0.041408389806747437,
+      "mean": -0.0419,
+      "unit_hint": ""
+    },
+    "camber_rad.RR": {
+      "min": 0.04164252430200577,
+      "max": 0.042719703167676926,
+      "mean": 0.0422,
+      "unit_hint": ""
+    },
+    "car_coordinates.x": {
+      "min": -71.11153411865234,
+      "max": -71.10553741455078,
+      "mean": -71.1087,
+      "unit_hint": ""
+    },
+    "car_coordinates.y": {
+      "min": 5.500722885131836,
+      "max": 5.501482009887695,
+      "mean": 5.501,
+      "unit_hint": ""
+    },
+    "car_coordinates.z": {
+      "min": -75.69100952148438,
+      "max": -75.6859359741211,
+      "mean": -75.6879,
+      "unit_hint": ""
+    },
+    "car_damage.0": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "car_damage.1": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "car_damage.2": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "car_damage.3": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "car_damage.4": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "clutch": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": "0..1"
+    },
+    "completed_laps": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "current_time_ms": {
+      "min": 50187.0,
+      "max": 70185.0,
+      "mean": 60182.0352,
+      "unit_hint": ""
+    },
+    "distance_traveled": {
+      "min": 0.013627995736896992,
+      "max": 0.03196677565574646,
+      "mean": 0.0215,
+      "unit_hint": ""
+    },
+    "drs": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "flags": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "fuel": {
+      "min": 30.0,
+      "max": 30.0,
+      "mean": 30.0,
+      "unit_hint": "litres (a few to ~150)"
+    },
+    "gas": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": "0..1"
+    },
+    "gear": {
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "unit_hint": "raw gear index (observed 1..1); confirm 0=R/1=N against the HUD"
+    },
+    "heading": {
+      "min": 2.5873947143554688,
+      "max": 2.596177339553833,
+      "mean": 2.5913,
+      "unit_hint": "see observed range"
+    },
+    "last_sector_time_ms": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "last_time_ms": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "local_velocity.x": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "local_velocity.y": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "local_velocity.z": {
+      "min": -0.0,
+      "max": -0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "normalized_pos": {
+      "min": 0.991311252117157,
+      "max": 0.991311252117157,
+      "mean": 0.9913,
+      "unit_hint": ""
+    },
+    "number_of_laps": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "packet_id": {
+      "min": 16428.0,
+      "max": 23094.0,
+      "mean": 19761.0394,
+      "unit_hint": ""
+    },
+    "penalty_time": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "pitch": {
+      "min": -0.015326572582125664,
+      "max": -0.014212900772690773,
+      "mean": -0.0149,
+      "unit_hint": "see observed range"
+    },
+    "position": {
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "unit_hint": ""
+    },
+    "road_temp": {
+      "min": 15.0,
+      "max": 15.0,
+      "mean": 15.0,
+      "unit_hint": ""
+    },
+    "roll": {
+      "min": -0.0005177195416763425,
+      "max": 0.0011212948011234403,
+      "mean": 0.0003,
+      "unit_hint": "see observed range"
+    },
+    "rpm": {
+      "min": 850.0,
+      "max": 850.0,
+      "mean": 850.0,
+      "unit_hint": ""
+    },
+    "sector_index": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "session": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "session_time_left": {
+      "min": -83155.96875,
+      "max": -63158.87109375,
+      "mean": -73153.9994,
+      "unit_hint": ""
+    },
+    "speed_kmh": {
+      "min": 6.745842983946204e-05,
+      "max": 0.005576395429670811,
+      "mean": 0.0024,
+      "unit_hint": "km/h"
+    },
+    "static.aid_fuel_rate": {
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "unit_hint": ""
+    },
+    "static.aid_tire_rate": {
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "unit_hint": ""
+    },
+    "static.max_fuel": {
+      "min": 40.0,
+      "max": 40.0,
+      "mean": 40.0,
+      "unit_hint": ""
+    },
+    "static.max_power": {
+      "min": 164965.3125,
+      "max": 164965.3125,
+      "mean": 164965.3125,
+      "unit_hint": ""
+    },
+    "static.max_rpm": {
+      "min": 6750.0,
+      "max": 6750.0,
+      "mean": 6750.0,
+      "unit_hint": ""
+    },
+    "static.max_torque": {
+      "min": 160.0,
+      "max": 160.0,
+      "mean": 160.0,
+      "unit_hint": ""
+    },
+    "static.num_cars": {
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "unit_hint": ""
+    },
+    "static.pit_window_end": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "static.pit_window_start": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "static.sector_count": {
+      "min": 2.0,
+      "max": 2.0,
+      "mean": 2.0,
+      "unit_hint": ""
+    },
+    "static.track_length_m": {
+      "min": 2455.793701171875,
+      "max": 2455.793701171875,
+      "mean": 2455.7937,
+      "unit_hint": ""
+    },
+    "static.tyre_radius.FL": {
+      "min": 0.3208500146865845,
+      "max": 0.3208500146865845,
+      "mean": 0.3209,
+      "unit_hint": ""
+    },
+    "static.tyre_radius.FR": {
+      "min": 0.3208500146865845,
+      "max": 0.3208500146865845,
+      "mean": 0.3209,
+      "unit_hint": ""
+    },
+    "static.tyre_radius.RL": {
+      "min": 0.32350000739097595,
+      "max": 0.32350000739097595,
+      "mean": 0.3235,
+      "unit_hint": ""
+    },
+    "static.tyre_radius.RR": {
+      "min": 0.32350000739097595,
+      "max": 0.32350000739097595,
+      "mean": 0.3235,
+      "unit_hint": ""
+    },
+    "status": {
+      "min": 2.0,
+      "max": 2.0,
+      "mean": 2.0,
+      "unit_hint": ""
+    },
+    "steer_angle": {
+      "min": -1.0,
+      "max": 1.0,
+      "mean": -0.0861,
+      "unit_hint": "radians or normalised (range <= 20)"
+    },
+    "surface_grip": {
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "unit_hint": ""
+    },
+    "suspension_travel.FL": {
+      "min": 0.06062169000506401,
+      "max": 0.06425336003303528,
+      "mean": 0.063,
+      "unit_hint": "see observed range"
+    },
+    "suspension_travel.FR": {
+      "min": 0.06083971634507179,
+      "max": 0.06399986147880554,
+      "mean": 0.0627,
+      "unit_hint": "see observed range"
+    },
+    "suspension_travel.RL": {
+      "min": 0.0640529990196228,
+      "max": 0.06519931554794312,
+      "mean": 0.0646,
+      "unit_hint": "see observed range"
+    },
+    "suspension_travel.RR": {
+      "min": 0.06381094455718994,
+      "max": 0.06498181819915771,
+      "mean": 0.0643,
+      "unit_hint": "see observed range"
+    },
+    "tc": {
+      "min": 0.10000000149011612,
+      "max": 0.10000000149011612,
+      "mean": 0.1,
+      "unit_hint": ""
+    },
+    "tyre_core_temp.FL": {
+      "min": 80.0,
+      "max": 80.0,
+      "mean": 80.0,
+      "unit_hint": "degrees C (20-150)"
+    },
+    "tyre_core_temp.FR": {
+      "min": 80.0,
+      "max": 80.0,
+      "mean": 80.0,
+      "unit_hint": "degrees C (20-150)"
+    },
+    "tyre_core_temp.RL": {
+      "min": 80.0,
+      "max": 80.0,
+      "mean": 80.0,
+      "unit_hint": "degrees C (20-150)"
+    },
+    "tyre_core_temp.RR": {
+      "min": 80.0,
+      "max": 80.0,
+      "mean": 80.0,
+      "unit_hint": "degrees C (20-150)"
+    },
+    "tyre_dirty_level.FL": {
+      "min": 1.8169268514611758e-05,
+      "max": 4.8237772716674954e-05,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "tyre_dirty_level.FR": {
+      "min": 1.4629667020926718e-05,
+      "max": 3.703605034388602e-05,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "tyre_dirty_level.RL": {
+      "min": 9.146289812633768e-06,
+      "max": 2.440088428556919e-05,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "tyre_dirty_level.RR": {
+      "min": 7.427418950101128e-06,
+      "max": 2.3184185920399614e-05,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "tyre_pressure.FL": {
+      "min": 32.25041198730469,
+      "max": 32.25041198730469,
+      "mean": 32.2504,
+      "unit_hint": "psi (15-45)"
+    },
+    "tyre_pressure.FR": {
+      "min": 32.25041198730469,
+      "max": 32.25041198730469,
+      "mean": 32.2504,
+      "unit_hint": "psi (15-45)"
+    },
+    "tyre_pressure.RL": {
+      "min": 33.43488311767578,
+      "max": 33.43488311767578,
+      "mean": 33.4349,
+      "unit_hint": "psi (15-45)"
+    },
+    "tyre_pressure.RR": {
+      "min": 33.43488311767578,
+      "max": 33.43488311767578,
+      "mean": 33.4349,
+      "unit_hint": "psi (15-45)"
+    },
+    "tyre_temp_inner.FL": {
+      "min": 80.0,
+      "max": 80.0,
+      "mean": 80.0,
+      "unit_hint": "degrees C (20-150)"
+    },
+    "tyre_temp_inner.FR": {
+      "min": 80.0,
+      "max": 80.0,
+      "mean": 80.0,
+      "unit_hint": "degrees C (20-150)"
+    },
+    "tyre_temp_inner.RL": {
+      "min": 80.0,
+      "max": 80.0,
+      "mean": 80.0,
+      "unit_hint": "degrees C (20-150)"
+    },
+    "tyre_temp_inner.RR": {
+      "min": 80.0,
+      "max": 80.0,
+      "mean": 80.0,
+      "unit_hint": "degrees C (20-150)"
+    },
+    "tyre_temp_middle.FL": {
+      "min": 80.0,
+      "max": 80.0,
+      "mean": 80.0,
+      "unit_hint": "degrees C (20-150)"
+    },
+    "tyre_temp_middle.FR": {
+      "min": 80.0,
+      "max": 80.0,
+      "mean": 80.0,
+      "unit_hint": "degrees C (20-150)"
+    },
+    "tyre_temp_middle.RL": {
+      "min": 80.0,
+      "max": 80.0,
+      "mean": 80.0,
+      "unit_hint": "degrees C (20-150)"
+    },
+    "tyre_temp_middle.RR": {
+      "min": 80.0,
+      "max": 80.0,
+      "mean": 80.0,
+      "unit_hint": "degrees C (20-150)"
+    },
+    "tyre_temp_outer.FL": {
+      "min": 80.0,
+      "max": 80.0,
+      "mean": 80.0,
+      "unit_hint": "degrees C (20-150)"
+    },
+    "tyre_temp_outer.FR": {
+      "min": 80.0,
+      "max": 80.0,
+      "mean": 80.0,
+      "unit_hint": "degrees C (20-150)"
+    },
+    "tyre_temp_outer.RL": {
+      "min": 80.0,
+      "max": 80.0,
+      "mean": 80.0,
+      "unit_hint": "degrees C (20-150)"
+    },
+    "tyre_temp_outer.RR": {
+      "min": 80.0,
+      "max": 80.0,
+      "mean": 80.0,
+      "unit_hint": "degrees C (20-150)"
+    },
+    "tyre_wear.FL": {
+      "min": 100.0,
+      "max": 100.0,
+      "mean": 100.0,
+      "unit_hint": "percent 0-100 (100 = new?)"
+    },
+    "tyre_wear.FR": {
+      "min": 100.0,
+      "max": 100.0,
+      "mean": 100.0,
+      "unit_hint": "percent 0-100 (100 = new?)"
+    },
+    "tyre_wear.RL": {
+      "min": 100.0,
+      "max": 100.0,
+      "mean": 100.0,
+      "unit_hint": "percent 0-100 (100 = new?)"
+    },
+    "tyre_wear.RR": {
+      "min": 100.0,
+      "max": 100.0,
+      "mean": 100.0,
+      "unit_hint": "percent 0-100 (100 = new?)"
+    },
+    "tyres_out": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "velocity.x": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "velocity.y": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "velocity.z": {
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "unit_hint": ""
+    },
+    "wheel_angular_speed.FL": {
+      "min": -0.007862419821321964,
+      "max": 0.01425369456410408,
+      "mean": 0.0002,
+      "unit_hint": "see observed range"
+    },
+    "wheel_angular_speed.FR": {
+      "min": -0.005342650692909956,
+      "max": 0.010754454880952835,
+      "mean": 0.0016,
+      "unit_hint": "see observed range"
+    },
+    "wheel_angular_speed.RL": {
+      "min": -0.005974048748612404,
+      "max": 0.009771859273314476,
+      "mean": 0.0007,
+      "unit_hint": "see observed range"
+    },
+    "wheel_angular_speed.RR": {
+      "min": -0.0055025783367455006,
+      "max": 0.012161838822066784,
+      "mean": -0.0002,
+      "unit_hint": "see observed range"
+    },
+    "wheel_load.FL": {
+      "min": 2275.442626953125,
+      "max": 2378.010009765625,
+      "mean": 2321.0548,
+      "unit_hint": "see observed range"
+    },
+    "wheel_load.FR": {
+      "min": 2250.446533203125,
+      "max": 2380.20361328125,
+      "mean": 2305.5647,
+      "unit_hint": "see observed range"
+    },
+    "wheel_load.RL": {
+      "min": 3141.8984375,
+      "max": 3260.758056640625,
+      "mean": 3214.5949,
+      "unit_hint": "see observed range"
+    },
+    "wheel_load.RR": {
+      "min": 3157.301513671875,
+      "max": 3274.111572265625,
+      "mean": 3194.5297,
+      "unit_hint": "see observed range"
+    },
+    "wheel_slip.FL": {
+      "min": 0.000148999213706702,
+      "max": 0.1400410532951355,
+      "mean": 0.0304,
+      "unit_hint": "see observed range"
+    },
+    "wheel_slip.FR": {
+      "min": 0.00037730252370238304,
+      "max": 0.14501698315143585,
+      "mean": 0.0403,
+      "unit_hint": "see observed range"
+    },
+    "wheel_slip.RL": {
+      "min": 0.01913655735552311,
+      "max": 0.05496467277407646,
+      "mean": 0.0406,
+      "unit_hint": "see observed range"
+    },
+    "wheel_slip.RR": {
+      "min": 0.02575777657330036,
+      "max": 0.06219771131873131,
+      "mean": 0.0377,
+      "unit_hint": "see observed range"
+    },
+    "wind_direction": {
+      "min": -209.0,
+      "max": -209.0,
+      "mean": -209.0,
+      "unit_hint": ""
+    },
+    "wind_speed": {
+      "min": 21.0,
+      "max": 21.0,
+      "mean": 21.0,
+      "unit_hint": ""
+    }
+  },
+  "note": "unit_hint is a suggestion from the observed range; verify against the in-game HUD."
+}

@@ -43,3 +43,5 @@ config/local.yaml
 /pit.json
 /pista.json
 /report*.json
+/lock.json
+/steer.json
