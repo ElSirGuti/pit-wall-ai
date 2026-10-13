@@ -126,10 +126,10 @@ Estado: **verificada** = confirmada por una relación independiente dentro de un
 | `suspension_travel` | metros | plausible | 0,011 … 0,080 |
 | `brake_bias` | fracción delantera | plausible | 0,74 constante |
 | `static.track_length_m` | metros | plausible | 4537,19 para el trazado GP de Hockenheim usado |
-| `clutch` | 1,0 parece pedal suelto (invertido) | sin determinar | 1,0 constante conduciendo, 0,0 en el pit con el pedal pisado |
-| `gear` | índice crudo; lo probable es 1 = punto muerto y 2… = marchas | sin determinar | observado 1…7, 1 en ralentí parado; comparar con la marcha del HUD |
-| `steer_angle` | no son grados del volante; ¿radianes de las ruedas o fracción normalizada? | sin determinar | observado −0,445 … +0,509 en una vuelta con una horquilla; falta el ángulo del HUD en una curva conocida |
-| `tc, abs` | ¿actividad o ajuste? | sin determinar | `tc` 1,0 en el pit, 0,065 … 1,0 en pista; `abs` constante 0,12 |
+| `clutch` | depende del mando: 1,0 constante con el eje del pedal invertido en los controles de AC | sin determinar | 1,0 en toda la vuelta; 0,0 solo en el pit con el pedal pisado. No basar reglas en él |
+| `gear` | índice crudo = número de marcha + 1: 1 = punto muerto, 2…7 = 1.ª…6.ª (marcha atrás presumiblemente 0, no vista) | verificada | HUD del piloto: crudo 7 = 6.ª, crudo 1 = punto muerto (también visto a 131 km/h durante un cambio) |
+| `steer_angle` | no son grados del volante; fracción del giro (−1..1) o radianes | sin determinar | observado −0,445 … +0,509 (−0,302 … +0,502 en otra vuelta), medio giro en una horquilla si es una fracción. Se resuelve con la prueba de tope a tope de `docs/AC_SHARED_MEMORY.md` |
+| `tc`, `abs` | `tc` parece derivado del ajuste, `abs` una constante | sin determinar | `tc` 1,0 en el pit y 0,065 … 1,0 en la primera captura, 0,082 constante en la segunda con el TC en 4/8 (piloto); `abs` constante 0,12 |
 | `wheel_slip` | definición desconocida | sin determinar | 0 … 977,7 con valores atípicos; no es una razón acotada |
 | `wind_speed` | unidad desconocida | sin determinar | 2,0 constante (m/s o km/h) |
 | `brake_temp` | °C en principio | no fiable | 26 en el pit, 15,0 constante en pista (= temperatura del aire) frenando a 244 km/h: no se simula en este coche; no basar reglas de frenos en ello |

@@ -120,3 +120,31 @@ def test_known_unreliable_fields_are_flagged_in_the_capture(track):
     assert r["brake"]["max"] == 1.0
     s = track["last_sample"]
     assert s["static.max_torque"] < 400.0  # the Supra GT4 makes far more
+
+
+@pytest.fixture(scope="module")
+def lap2():
+    return json.loads((FIX / "live_ac_hockenheim_lap2.json").read_text(encoding="utf-8"))
+
+
+def test_gear_range_matches_the_drivers_hud(track, lap2):
+    """The driver reported, from the HUD: raw 7 = 6th gear and raw 1 = neutral (gear number = raw - 1)."""
+    for rep in (track, lap2):
+        assert rep["ranges"]["gear"]["max"] == 7 and rep["ranges"]["gear"]["min"] == 1
+    # raw 1 appears at 131 km/h and 6651 rpm: a shift gap, not a stop
+    s = lap2["last_sample"]
+    assert s["gear"] == 1 and s["speed_kmh"] > 100 and s["rpm"] > 5000
+
+
+def test_steer_angle_is_not_wheel_degrees_and_is_stable_between_laps(track, lap2):
+    for rep in (track, lap2):
+        r = rep["ranges"]["steer_angle"]
+        assert -1.0 < r["min"] < 0.0 < r["max"] < 1.0  # far below any degree value
+    assert lap2["ranges"]["steer_angle"]["max"] == pytest.approx(
+        track["ranges"]["steer_angle"]["max"], abs=0.02
+    )  # same corner, same peak
+
+
+def test_clutch_is_constant_when_the_pedal_axis_is_inverted_in_the_controls(track, lap2):
+    for rep in (track, lap2):
+        assert rep["ranges"]["clutch"]["min"] == rep["ranges"]["clutch"]["max"] == 1.0

@@ -123,10 +123,10 @@ Status: **verified** = confirmed by an independent relationship inside a real ca
 | `suspension_travel` | metres | plausible | 0.011 … 0.080 |
 | `brake_bias` | fraction front | plausible | 0.74 constant |
 | `static.track_length_m` | metres | plausible | 4537.19 for the Hockenheim GP layout used |
-| `clutch` | 1.0 looks like pedal released (inverted) | undetermined | 1.0 constant while driving, 0.0 in the pit with the pedal held |
-| `gear` | raw index; 1 = neutral and 2… = gears is the likely reading | undetermined | observed 1…7, 1 at idle stopped; compare with the HUD gear |
-| `steer_angle` | not degrees of the wheel; radians of the road wheels or a normalised fraction? | undetermined | observed −0.445 … +0.509 over a lap with a hairpin; needs the HUD wheel angle in a known corner |
-| `tc, abs` | activity or a setting? | undetermined | `tc` 1.0 in the pit, 0.065 … 1.0 on track; `abs` constant 0.12 |
+| `clutch` | depends on the controller: 1.0 constant with the pedal axis inverted in the AC controls | undetermined | 1.0 for the whole lap; 0.0 only in the pit with the pedal pressed. Do not build rules on it |
+| `gear` | raw index = gear number + 1: 1 = neutral, 2…7 = 1st…6th (reverse presumably 0, not seen) | verified | driver's HUD: raw 7 = 6th gear, raw 1 = neutral (also seen at 131 km/h mid-shift) |
+| `steer_angle` | not degrees of the wheel; a fraction of the lock (−1..1) or radians | undetermined | observed −0.445 … +0.509 (−0.302 … +0.502 in a second lap), half lock at a hairpin if it is a fraction. Resolved by the lock-to-lock test in `docs/AC_SHARED_MEMORY.md` |
+| `tc`, `abs` | `tc` looks like a setting-derived value, `abs` a constant | undetermined | `tc` 1.0 in the pit and 0.065 … 1.0 in the first capture, constant 0.082 in the second with TC set to 4/8 (driver); `abs` constant 0.12 |
 | `wheel_slip` | definition unknown | undetermined | 0 … 977.7 with outliers; not a bounded ratio |
 | `wind_speed` | unit unknown | undetermined | 2.0 constant (m/s or km/h) |
 | `brake_temp` | °C in principle | unreliable | 26 in the pit, 15.0 constant on track (= air temperature) while braking at 244 km/h: not simulated for this car; do not build brake rules on it |
