@@ -67,21 +67,55 @@ The detection result is logged with the evidence that decided it, and `pit-wall 
   adapter says it has, and the degradation method must be validated again per sim.
 * **Voice and chat** are independent of the sim.
 
-## 5. Order (proposal) and what each step needs
+## 5. What the author has, and the resulting order
 
-| Step | Sim | Why this order | Needs from the author |
+Availability on 2026-10-13 (author's answers):
+
+| Sim | Owned | Can be tested now | Constraint |
 |---|---|---|---|
-| 0 | refactor | interface + capabilities + per-sim verification table, AC unchanged | none |
-| 1 | ACC | closest to AC, official documentation, same map names | the game, 1-2 sessions recorded |
-| 2 | iRacing | well documented SDK, large user base | the game and a subscription session |
-| 3 | rFactor 2 / Le Mans Ultimate | one plugin route for both | plugin installed, sessions in both |
-| 4 | Automobilista 2 | shared memory option | the game |
-| 5 | RaceRoom | public SDK | the game |
-| 6 | AC Evo | interface still moving | the game; revisit when it is stable |
+| ACC | yes | yes | runs on the author's PC |
+| Automobilista 2 | yes (AMS1 not needed) | yes | the one the author uses most after AC |
+| RaceRoom | yes (free) | yes | |
+| rFactor 2 | yes, never used | yes, after installing the shared memory plugin | the author does not know the plugin yet: setup is part of the work |
+| AC Evo | yes (Steam build, reported as 0.10) | probably | runs at 20-30 fps at 720p; **interface unknown** (see below) |
+| iRacing | subscription inactive | when an account is available | a borrowed or reactivated subscription |
+| Le Mans Ultimate | no | when an account is available | not owned |
+| AC Rally | no | not planned | see section 7 |
+
+**On a slow PC.** The physics of these sims runs at its own fixed rate, so a low frame rate does not make the
+telemetry wrong; what matters is that a session loads and the car can be driven for a few minutes. A
+minimum-quality, small-window session is enough to record and probe. A second computer is only needed if the
+game does not run at all.
+
+**On borrowing accounts.** For a Steam game such as Le Mans Ultimate the supported way is Steam Family Sharing
+(the friend authorises the library on the author's machine); sharing a password breaks Steam's and
+iRacing's terms of service. For iRacing, a one-month reactivation or the free trial covers a test campaign.
+
+Proposed order, driven by what can be tested first and what is most valuable:
+
+| Step | Sim | Reason | Needs |
+|---|---|---|---|
+| 0 | refactor + `pit-wall probe` | interface, capabilities, per-sim verification table; AC unchanged | none |
+| 1 | ACC | closest to AC, same map names, official documentation | 1-2 recorded sessions |
+| 2 | Automobilista 2 | owned, played, one shared memory option | enable it in the game options |
+| 3 | RaceRoom | owned, public SDK | 1 recorded session |
+| 4 | rFactor 2, then Le Mans Ultimate | one plugin route for both | plugin installed; LMU when an account exists |
+| 5 | iRacing | well documented, large user base | an active account for a test campaign |
+| 6 | AC Evo | interface moving, early access | revisit when it is stable; probe it earlier |
 
 Per simulator the work is the same and ends with the same artefacts: a `docs/<SIM>_TELEMETRY.md` with the
 unit table, recorded sessions replayable with `pit-wall run --file`, the detection evidence, and a regression
 test on a trimmed recording (never redistributing anything from the game itself).
+
+### 5.1 `pit-wall probe`: learn before implementing
+
+A small read-only command to run **with each sim open**, before any adapter exists: it lists the known
+executables that are running, tries to open the known shared-memory objects of every sim (existence, size,
+first bytes, version strings) and prints a report that can be pasted back. It also works as the detection
+evidence of section 3. It writes nothing and never injects into a game.
+
+The AC Evo question (is there telemetry yet, and in which form?) is answered by running this once with the
+game in a session; no implementation guess is made before that.
 
 ## 6. Risks
 
@@ -93,12 +127,17 @@ test on a trimmed recording (never redistributing anything from the game itself)
   field and refuse to run on an unknown one instead of decoding garbage.
 * **Scope creep**: supporting seven sims badly is worse than three well. The order above can stop at any step.
 
-## 7. Questions for the author
+## 7. Questions for the author, and what is not planned
 
-1. Which of these simulators do you own and actually play? (decides the order and what can be tested)
-2. Is AC Evo installed, and on which platform/version?
-3. Do you run rFactor 2 / LMU with the shared memory plugin already?
-4. Any sim you would drop from the list?
+Answered 2026-10-13: owned sims and constraints are in section 5; AC Evo is on Steam (reported as 0.10) and
+its telemetry is unknown; rFactor 2 is installed but never used (no plugin yet); AC Rally is not planned.
+Still open: which sim the author most wants to race with the engineer first (it can move up the order).
+
+Not planned:
+
+* **AC Rally**: a different discipline whose game already includes a co-driver; the value of a circuit
+  engineer is low and its interface is untested. Revisit only if asked.
+* **Automobilista 1**: superseded by AMS2 for the author.
 
 ---
 
@@ -110,6 +149,8 @@ cada sim), una tabla de unidades verificada **por simulador**, estructuras propi
 automática (proceso en ejecución + memoria compartida con cabecera válida; si hay duda, manda la
 configuración). Lo que no se traslada tal cual es la geometría de pista de la Fase 4, que usa `fast_lane.ai`
 (solo AC): en los demás se aprenderá de tus propias vueltas y se medirá su precisión igual que la de AC. Los
-rivales, en cambio, son **más fáciles** en casi todos los demás sims. Orden propuesto: refactor, ACC, iRacing,
-rFactor 2 / LMU, AMS2, RaceRoom y AC Evo al final. Cada sim necesita pruebas con el juego real; hasta
+rivales, en cambio, son **más fáciles** en casi todos los demás sims. Orden propuesto según lo que tienes: refactor y
+`pit-wall probe`, ACC, AMS2, RaceRoom, rFactor 2 (y LMU cuando haya cuenta), iRacing cuando haya cuenta activa y
+AC Evo al final. `pit-wall probe` es un comando de solo lectura que se ejecuta con cada sim abierto para saber
+qué interfaz publica antes de escribir ningún adaptador. AC Rally y Automobilista 1 quedan fuera. Cada sim necesita pruebas con el juego real; hasta
 entonces, un adaptador queda como "implementado, sin probar".
