@@ -133,3 +133,35 @@ Quotas seen on the AI Studio rate-limit page (free tier, per model, requests per
   `thinkingBudget: 0`**, while `gemini-3.5-flash` accepted it. The budget is therefore per model
   (`llm.thinking_budgets`), the global one is off by default, and a 400 on a request that carried a thinking
   budget is retried once without it and remembered for that model.
+
+## Chat evaluation on the real model (2026-10-14/15)
+
+`pit-wall eval --file tests/fixtures/live_lfm_magione_race_window.pwrec.gz --session race` asks 34 questions
+about a recorded session: 13 the code answers by itself, 7 open questions, 8 the context cannot answer
+(weather, rivals, oil temperature...: the right answer is "no tengo ese dato") and 6 traps with the router off
+(the right number on the right wheel or lap). Default model `gemini-flash-lite-latest`, reserve
+`gemini-3.1-flash-lite`, paced at one call per 5 s.
+
+| Pass | Passed | What it showed |
+|---|---|---|
+| 1 | 26 / 34 | a "fase 8" in a local answer (a number the context does not hold); the judge punished a refusal that also quoted a true fact; two transient service errors cascaded into four degraded answers |
+| 2 | 31 / 34 | three false positives of **my** checks: a number read in the wrong clause, "la 2" not understood as lap 2, a paraphrase of an alert judged as wrong |
+| 3 | 33 / 34 | one **over-refusal**: "no tengo ese dato" to a question about the front/rear axle difference |
+| 4 | **34 / 34** | after giving axle and side averages and differences as facts |
+
+Final run: 21 answers from the model, **0 claims removed** by the grounding check, latency median **1.06 s**,
+p95 **3.9 s** (the slowest were a 5.2 s and a 3.9 s call; the 3 s target is met by the median, not by every
+call). Traps: 6 / 6 in every pass. Impossible questions: every answer the model gave was a clean refusal.
+
+**How to read this honestly**
+
+* Three of the four improvements were to *my evaluator and my heuristics*, not to the model: the model's
+  answers were right when my checks said they were wrong. A passing grade here also means "the checks no
+  longer produce false alarms on these 34 questions", not "the model is perfect".
+* One session (a 6-minute race window of one car on one track), 34 questions, one language: it is a
+  regression set and a smoke test, not a benchmark. Temperature is 0.2, so a re-run can differ (the
+  over-refusal appeared in one run of three).
+* The grounding check is necessary and not sufficient: it catches a number that is absent or on the wrong
+  wheel/lap/corner/unit, not a wrong *interpretation* of a correct number.
+* The free tier was overloaded now and then (503, read timeouts): the reserve model answered, and a
+  degraded answer is retried once in the evaluation.

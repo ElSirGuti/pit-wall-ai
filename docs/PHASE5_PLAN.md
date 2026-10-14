@@ -1,6 +1,6 @@
 # Phase 5 plan: text chat with Gemini
 
-Status: **approved 2026-10-14; steps 1 to 6 implemented** (sections 11 to 13). Step 7 (evaluation set, latency report) is not. Statements about Gemini's API and quotas come from a web search
+Status: **approved 2026-10-14; all seven steps implemented** (sections 11 to 14). Phase 5 is complete; what remains are the open items of section 14. Statements about Gemini's API and quotas come from a web search
 (2026-10-14) and from the author's earlier notes; they are marked *to verify* and are checked by the
 `llm-check` command of step 1 before anything depends on them.
 
@@ -138,7 +138,7 @@ Everything else is an open question for the model, with the context attached.
 | 4 | `IntentRouter` + local answers | **done** (chat/local.py): table of questions passes; every local answer passes its own grounding check |
 | 5 | `GroundingCheck` | **done** (chat/grounding.py): formats, roundings, wrong wheel / corner / lap / unit are caught in tests |
 | 6 | `ChatSession` + `pit-wall chat` / `pit-wall ask` (live or `--file`) | **done** (chat/session.py, runtime.py, cli_chat.py): end-to-end on a replayed race with the offline provider; **not yet run against the real model** |
-| 7 | evaluation set, latency report, docs (README ES/EN, `docs/CHAT.md`) | numbers reported to the author |
+| 7 | evaluation set, latency report, docs (README ES/EN, `docs/CHAT.md`) | **done**: `pit-wall eval`, 34 cases, 34 / 34 on the real model (see docs/LLM.md); the evaluation also fixed four weaknesses of the checks |
 
 ## 9. Risks
 
@@ -247,6 +247,20 @@ Every reply carries a tag in the terminal: `[local, 4 ms]`, `[model, gemini..., 
 
 **Not measured yet**: the latency of a model answer with a real ~1 500-token context, and how often the real
 model attaches a number to the wrong place. That is the evaluation set of step 7, which needs the key.
+
+## 14. Status of step 7 and what is left
+
+* **Evaluation set** (`chat/evalset.py`, `pit-wall eval`): 34 cases in four categories, expectations written as
+  *facts of the session* (never hard-coded numbers), a runner that paces itself under the quota and retries a
+  degraded answer, a Markdown report with the model's raw replies. Run against the real model: 34 / 34.
+* **Latency** with a real ~1 500-token context: median 1.06 s, p95 3.9 s over 21 model answers.
+* **Left open**
+  * a second session and another car in the evaluation set (one race window is a thin base);
+  * "¿cuánto tiempo queda?" in a race without a time limit still answers with the session summary;
+  * the model occasionally over-refuses (once in three passes): watch it, and tune the prompt only with
+    evidence from the set;
+  * English prompts are tested for wording, not evaluated against the model;
+  * other providers (docs/PROVIDERS_PLAN.md) have not been tried.
 
 ---
 
