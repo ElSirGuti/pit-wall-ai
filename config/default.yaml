@@ -158,3 +158,8 @@ analysis:               # phase 4: track geometry and braking analysis
 chat:                   # phase 5: the text conversation (`pit-wall ask`, `pit-wall chat`)
   history_turns: 6      # previous question/answer pairs sent along with a question
   stale_after_s: 5      # telemetry older than this is announced as such in a model answer
+
+input:                  # phase 6: buttons bound to actions (see docs/INPUT_BINDINGS.md)
+  poll_hz: 200          # joystick polling; keyboard and mouse are event driven
+  bindings: {}          # use `pit-wall bind push_to_talk` (writes config/bindings.yaml); or by hand, e.g.
+                        #   push_to_talk: [{kind: joy, device: "046d:c24f", button: 7}, {kind: key, key: F9}]

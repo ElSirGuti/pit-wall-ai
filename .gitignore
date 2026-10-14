@@ -51,3 +51,4 @@ config/local.yaml
 /*.pwrec.gz
 /*.pwrec
 /eval_report*.md
+config/bindings.yaml

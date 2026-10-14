@@ -58,7 +58,25 @@ La clave que me pasaste quedó escrita en la conversación. Aunque ya la quité 
 2. Crea una nueva **solo** para el proyecto (proyecto de AI Studio aparte, sin facturación).
 3. Ponla en `E:\Documents\pit-wall-ai\.env` como `GEMINI_API_KEY=...` cuando vayas a repetir pruebas.
 
-### 3. Probar el chat con el juego en vivo (opcional, 10 min)
+### 3. Probar el botón de push-to-talk con tu volante  ·  5 min
+
+Es lo único del paso 1 de la Fase 6 que no he podido comprobar sin ti (necesita que pulses un botón). Con el
+G HUB abierto, como cuando juegas:
+
+```
+.venv\Scripts\pit-wall input-test --seconds 30
+```
+
+pulsa y suelta botones y paletas del G29, una tecla (por ejemplo F9) y un botón lateral del ratón. Debe salir
+una línea `press` y otra `release` por cada pulsación, con el nombre del dispositivo. Si algún botón del volante
+no sale, dímelo (puede ser el G HUB). Cuando salgan todos, asigna el tuyo:
+
+```
+.venv\Scripts\pit-wall bind push_to_talk
+.venv\Scripts\pit-wall bindings
+```
+
+### 4. Probar el chat con el juego en vivo (opcional, 10 min)
 
 ```
 .venv\Scripts\pit-wall chat
@@ -68,11 +86,12 @@ con una práctica abierta, y preguntar tras una vuelta: `¿cuánta gasolina qued
 `¿cuál es la curvone?`, `¿qué fue eso?`. Interesa sobre todo `¿dónde pierdo tiempo?` en vivo (en las pruebas
 solo se ha probado sobre grabaciones).
 
-## Para la Fase 6 (voz), cuando la apruebes
+## Para la Fase 6 (voz)
 
 Ver `docs/PHASE6_PLAN.md`, sección "Preguntas para el autor". Lo que necesitaré de ti:
 
-* decidir qué botón será el push-to-talk y con qué micrófono hablas;
+* ~~decidir qué botón será el push-to-talk y con qué micrófono hablas~~ (respondido: configurable; el botón lo asignas tú con `pit-wall bind`);
+* decidir cómo quieres que se comporte un aviso medio mientras te contesta el ingeniero (ver el ejemplo en el plan);
 * grabar unas **30 a 40 frases habladas** (preguntas típicas, con números y nombres de curvas) para medir el
   reconocimiento de voz con tu voz y tu micrófono; idealmente algunas con el coche sonando de fondo.
 

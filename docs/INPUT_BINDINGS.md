@@ -1,10 +1,27 @@
 # Input bindings (plan for phase 6, used by phase 8)
 
-Status: **plan only.** Decision of 2026-10-13: any action can be bound to **any button of any input device on
+Status: **step 1 of phase 6 implemented (2026-10-15)**: bindings, hold/tap/chords, `pit-wall bind`,
+`bindings`, `input-test`, WinMM joysticks and Windows keyboard/mouse hooks. See the end of this file for
+what is verified. Decision of 2026-10-13: any action can be bound to **any button of any input device on
 the PC**: keyboard, mouse, gamepad, steering wheel, button box. Nothing here has been tried on hardware yet; the
 "to verify" column says what must be checked on the author's devices before it is called working.
 
 *Resumen en español al final.*
+
+## Implemented in step 1 (what it is and what was verified)
+
+| Piece | State |
+|---|---|
+| `input/model.py`, `input/actions.py`: inputs, bindings with modifiers, hold / tap, conflicts | tested with a fake backend (hold, auto-repeat, chords, release when a device disappears, conflict) |
+| `WinMMJoystickBackend` (ctypes, no dependency) | **seen on the author's PC**: the G29 (`046d:c24f`, 25 buttons, 4 axes) is listed with its product name read from the registry, the duplicate zero-button entry is ignored; the press/release logic is tested with a fake API. **Not yet tested with a real press of the wheel.** |
+| `WindowsHookBackend` (global `WH_KEYBOARD_LL` / `WH_MOUSE_LL`) | **verified**: an injected key (F24) is seen and passed on; mouse buttons are implemented and untested |
+| `pit-wall bind <action>` | press-to-assign, modifiers held become a chord, a plain left/right click is refused, the same input on two actions is refused; writes `config/bindings.yaml` (git-ignored, read by `load_config`) |
+| `pit-wall bindings`, `pit-wall input-test` | list the bindings and the connected wheels; print every press with the device name |
+
+**Known and untested**: whether Logitech G HUB changes what a wheel button reports to WinMM (to check with
+`pit-wall input-test` and a real press), buttons above 32 on one device (WinMM limit), two identical devices
+(they share the `vid:pid`).
+
 
 ## 1. Actions (what can be bound)
 

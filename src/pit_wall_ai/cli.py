@@ -117,6 +117,22 @@ def _parser() -> argparse.ArgumentParser:
     )
     chat.add_argument("--wait", type=float, default=5.0, help="seconds to wait for live telemetry")
 
+    bd = sub.add_parser("bind", help="assign a button (any device) to an action by pressing it")
+    bd.add_argument("--config", help="YAML config")
+    bd.add_argument("action", help="push_to_talk, cancel, repeat_last, mute_engineer, ...")
+    bd.add_argument(
+        "--replace", action="store_true", help="replace the existing bindings of the action"
+    )
+    bd.add_argument("--clear", action="store_true", help="remove the bindings of the action")
+    bd.add_argument("--timeout", type=float, default=15.0, help="seconds to wait for a press")
+
+    bl = sub.add_parser("bindings", help="list the bindings and the connected joysticks")
+    bl.add_argument("--config", help="YAML config")
+
+    it = sub.add_parser("input-test", help="print every press and release, to check a device")
+    it.add_argument("--config", help="YAML config")
+    it.add_argument("--seconds", type=float, default=30.0, help="how long to listen (30)")
+
     tr = sub.add_parser(
         "trim", help="cut a window of a recording into a small .pwrec.gz at a lower rate"
     )
@@ -510,6 +526,24 @@ def _cmd_chat(cfg: AppConfig, a: argparse.Namespace) -> int:
     return cmd_chat(cfg, a)
 
 
+def _cmd_bind(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .input.cli_input import cmd_bind
+
+    return cmd_bind(cfg, a)
+
+
+def _cmd_bindings(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .input.cli_input import cmd_bindings
+
+    return cmd_bindings(cfg, a)
+
+
+def _cmd_input_test(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .input.cli_input import cmd_input_test
+
+    return cmd_input_test(cfg, a)
+
+
 def _cmd_trim(cfg: AppConfig, a: argparse.Namespace) -> int:
     import os
 
@@ -623,6 +657,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             "ask": _cmd_ask,
             "eval": _cmd_eval,
             "trim": _cmd_trim,
+            "bind": _cmd_bind,
+            "bindings": _cmd_bindings,
+            "input-test": _cmd_input_test,
             "chat": _cmd_chat,
         }[args.cmd]
         return handler(cfg, args)

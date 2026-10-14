@@ -109,3 +109,11 @@ importantes: `brake_temp` no se calienta en este coche y `max_power`/`max_torque
 
 **Cómo confirmar lo que falta:** con el juego en pista, `pit-wall dump-shm --watch 60 --json report.json`, y
 comparar con el HUD el ángulo del volante en una curva conocida y la marcha en un momento dado.
+
+## Brake temperature is not simulated by every car
+
+Measured here: the MX-5 Cup reports 15 °C constant (the air temperature) and the Supra GT4 a flat value, while
+braking from 244 km/h. A Kunos forum thread (May 2017, secondary source, not verified by this project) says
+only some cars simulate brake heat (the Cobra, the F40 and a few classic Porsches among them), and that most
+modern race cars do not. The code does not carry a list of cars: a brake-temperature sensor that does not move
+(range under 8 °C over the observation window) is treated as unusable by the alert rule and by the chat.

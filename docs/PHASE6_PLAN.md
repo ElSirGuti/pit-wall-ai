@@ -1,7 +1,7 @@
 # Phase 6 plan: full voice
 
-Status: **plan, waiting for approval** (rule of the project: plan and risks first). Nothing here is
-implemented. What is said about libraries, models and the Gemini Live API comes from general knowledge and from
+Status: **approved 2026-10-15; step 1 (buttons) implemented**, the rest is not. The author's answers are in
+section 7. What is said about libraries, models and the Gemini Live API comes from general knowledge and from
 the quota page the author shared, and is marked *to verify*; the **latency and accuracy numbers are to be
 measured on the author's PC**, not assumed.
 
@@ -118,7 +118,7 @@ documented and unused.
 
 | Step | Content | Done when |
 |---|---|---|
-| 1 | bindings + `pit-wall input-test`, `FakeBackend`, WinMM/hook spike on the G29, keyboard and mouse | press/release events with the device name; under 30 ms; works with G HUB running |
+| 1 | bindings + `pit-wall input-test`, `FakeBackend`, WinMM/hook spike on the G29, keyboard and mouse | **implemented**; the G29 is seen and the keyboard hook verified with an injected key; **pending: a real press of the wheel with G HUB running** (`docs/PENDIENTES.md`) |
 | 2 | audio capture + `pit-wall mic-test` | levels, 3 s recording, device selection, pre-roll and tail verified |
 | 3 | `Transcriber` interface + faster-whisper backend + `pit-wall stt-test file.wav` | latency and word error rate on the author's own phrases, CPU vs GPU, **and the effect on the game's frame rate** |
 | 4 | `pit-wall voice`: button -> STT -> chat -> speech with priorities and barge-in | works end to end on a replayed session; critical alert cuts an answer; a press cuts speech |
@@ -154,6 +154,22 @@ author's approval** before the next.
 5. Will you **record the sample phrases** (30 to 40) once step 3 is approved?
 6. Is it acceptable that an **answer cuts** an alert of medium priority when you press the button (the alert is
    lost if it expires)?
+
+## 7. The author's answers (2026-10-15)
+
+1. **Button:** the author will configure it with `pit-wall bind push_to_talk` (any device).
+2. **Microphone:** selectable by name; usually a headset, sometimes the Razer Seiren Mini. Needs a device list
+   and a `voice.input_device` setting (step 2).
+3. **Where recognition runs:** both CPU and GPU must be tried and left as a user setting, because the load
+   differs by game (iRacing is CPU-hungry). Settings: `stt.device: auto | cpu | cuda`, model size, threads,
+   process priority. Step 3 compares them on this PC, including the effect on the frame rate.
+4. **Voice output:** selectable by name too (`voice.output_device`).
+5. **Alert vs answer policy** (a medium alert arrives while an answer plays): explained with an example,
+   answer pending.
+
+Also from the author: brake temperature is not simulated by every car of Assetto Corsa (a Kunos forum
+statement of 2017 lists the Cobra, the F40 and some classic Porsches). It matches what was measured here
+(a flat sensor on two cars) and is handled without a list of cars: a sensor that does not move is ignored.
 
 ---
 

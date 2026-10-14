@@ -300,6 +300,15 @@ class ChatConfig(_Model):
     stale_after_s: float = Field(5.0, gt=0)  # older data is announced as such in a model answer
 
 
+class InputConfig(_Model):
+    """Buttons bound to actions (see docs/INPUT_BINDINGS.md). ``pit-wall bind`` writes ``config/bindings.yaml``."""
+
+    poll_hz: float = Field(
+        200.0, ge=10, le=1000
+    )  # joystick polling; keyboard and mouse are event driven
+    bindings: dict[str, list[dict]] = Field(default_factory=dict)
+
+
 class AppConfig(_Model):
     telemetry: TelemetryConfig = TelemetryConfig()
     logging: LoggingConfig = LoggingConfig()
@@ -307,6 +316,7 @@ class AppConfig(_Model):
     engineer: EngineerConfig = EngineerConfig()
     analysis: AnalysisConfig = AnalysisConfig()
     chat: ChatConfig = ChatConfig()
+    input: InputConfig = InputConfig()
 
 
 class ConfigError(ValueError):
@@ -344,6 +354,14 @@ def load_config(path: str | Path | None = None, env: Mapping[str, str] | None = 
         if not isinstance(loaded, dict):
             raise ConfigError(f"{p}: the top level must be a mapping")
         data = _deep_merge(data, loaded)
+    bindings_file = Path("config/bindings.yaml")  # written by `pit-wall bind`, git-ignored
+    if env is None and bindings_file.is_file():
+        try:
+            data = _deep_merge(
+                data, yaml.safe_load(bindings_file.read_text(encoding="utf-8")) or {}
+            )
+        except yaml.YAMLError as exc:
+            raise ConfigError(f"{bindings_file}: invalid YAML: {exc}") from exc
     try:
         return AppConfig.model_validate(data)
     except Exception as exc:  # pydantic.ValidationError
