@@ -24,7 +24,9 @@ llm:                    # phase 5; the provider is swappable
   provider: mock        # mock (offline) | gemini (HTTPS to Google, needs the key and allow_cloud)
   allow_cloud: false    # nothing is sent to a cloud model unless true. The free tier may use what is sent
                         # (the compact session summary and your question) to improve Google's products.
-  model: gemini-2.5-flash  # the only place a model name lives; `pit-wall llm-check` lists the valid ones
+  model: gemini-3.1-flash-lite  # the only place a model name lives; `pit-wall llm-check` lists the valid ones
+  fallback_models: []   # tried in order when the model is overloaded (503) or times out, e.g. [gemini-3.5-flash]
+  thinking_budget: null # tokens the model may think before answering (they count in max_output_tokens)
   base_url: https://generativelanguage.googleapis.com/v1beta
   temperature: 0.2
   api_key_env: GEMINI_API_KEY

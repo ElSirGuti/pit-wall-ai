@@ -75,7 +75,8 @@ def run_llm_check(
     latencies: list[float] = []
     failures = 0
     limited: list[float | None] = []
-    request = LLMRequest(system=PING_SYSTEM, user=PING_USER, max_output_tokens=16)
+    # the configured output budget, not a tiny one: thinking tokens count in it (16 gave MAX_TOKENS)
+    request = LLMRequest(system=PING_SYSTEM, user=PING_USER)
     tokens = 0
     for i in range(1, calls + 1):
         t0 = clock()
@@ -98,7 +99,9 @@ def run_llm_check(
         latencies.append(dt)
         used = (resp.usage or {}).get("total", 0)
         tokens += used
-        out(f"call {i}: {dt * 1000:.0f} ms, reply {resp.text[:30]!r}, tokens {used}")
+        usage = resp.usage or {}
+        extra = f", thinking {usage['thoughts']}" if usage.get("thoughts") else ""
+        out(f"call {i}: {dt * 1000:.0f} ms, reply {resp.text[:30]!r}, tokens {used}{extra}")
         if i < calls:
             sleep(0.0)
 

@@ -29,6 +29,7 @@ from .llm import (
     LLMRateLimited,
     LLMRequest,
     LLMResponse,
+    LLMTransient,
     LLMUnavailable,
     register_provider,
 )
@@ -148,7 +149,9 @@ class GeminiProvider:
         try:
             return self._transport.request(method, url, self._headers(), data, self.cfg.timeout_s)
         except OSError as exc:
-            raise LLMError(f"network error talking to the model: {self._redact(str(exc))}") from exc
+            raise LLMTransient(
+                f"network error talking to the model: {self._redact(str(exc))}"
+            ) from exc
 
     def _redact(self, text: str) -> str:
         return text.replace(self._key, "***") if self._key else text
@@ -178,7 +181,9 @@ class GeminiProvider:
         return sorted(m.name for m in self.list_models() if m.can_generate)
 
     # -- errors -------------------------------------------------------------------------------------
-    def _raise_for_status(self, resp: HttpResponse, *, listing: bool = False) -> None:
+    def _raise_for_status(
+        self, resp: HttpResponse, *, listing: bool = False, model: str | None = None
+    ) -> None:
         s = resp.status
         if 200 <= s < 300:
             return
@@ -188,17 +193,20 @@ class GeminiProvider:
         if s in (401, 403) or (s == 400 and "api key" in msg.lower()):
             raise LLMUnavailable(f"the API key was rejected ({s}): {msg}")
         if s == 404 and not listing:
-            raise LLMUnavailable(self._model_missing_message(msg))
+            raise LLMUnavailable(self._model_missing_message(msg, model or self.cfg.model))
+        if s in (503, 504):
+            raise LLMTransient(f"the model is overloaded or unreachable ({s}): {msg}")
         raise LLMError(f"the model API answered {s}: {msg}")
 
-    def _model_missing_message(self, api_message: str) -> str:
+    def _model_missing_message(self, api_message: str, model: str | None = None) -> str:
         """The API said 404 for generateContent. Always include what the API itself said, and tell apart
         "this name is not in the key's list" from "it is listed but generation answers 404"."""
+        model = model or self.cfg.model
         try:
             names = self.accepted_models()
         except LLMError as exc:  # the listing failed too: say so, do not hide the first problem
             return (
-                f"model {self.cfg.model!r} answered 404 ({api_message}); the list of models "
+                f"model {model!r} answered 404 ({api_message}); the list of models "
                 f"available to this key could not be read either: {exc}"
             )
         shown = ", ".join(names[:20]) + (" ..." if len(names) > 20 else "")
@@ -214,14 +222,14 @@ class GeminiProvider:
             hint = (
                 f" The API itself suggests {suggestion!r} ({where}): try llm.model: {suggestion}."
             )
-        if self.cfg.model in names:
+        if model in names:
             return (
-                f"model {self.cfg.model!r} is in this key's list but generateContent answered 404: "
+                f"model {model!r} is in this key's list but generateContent answered 404: "
                 f"{api_message}. It may be retired or not available for text generation.{hint} Set llm.model (or use --model) to another. "
                 f"Models: {shown}"
             )
         return (
-            f"model {self.cfg.model!r} was not found ({api_message}). Models this key can use: "
+            f"model {model!r} was not found ({api_message}). Models this key can use: "
             f"{shown or '(none)'}. Set llm.model in config/local.yaml to one of them."
         )
 
@@ -240,16 +248,42 @@ class GeminiProvider:
                 "maxOutputTokens": request.max_output_tokens or self.cfg.max_output_tokens,
             },
         }
+        if self.cfg.thinking_budget is not None:  # field name to verify against the model in use
+            body["generationConfig"]["thinkingConfig"] = {
+                "thinkingBudget": self.cfg.thinking_budget
+            }
         if request.system.strip():
             body["systemInstruction"] = {"parts": [{"text": request.system.strip()}]}
         return body
 
     def generate(self, request: LLMRequest) -> LLMResponse:
+        """The configured model first; if it is overloaded or times out, the ``fallback_models`` in order."""
+        models = [self.cfg.model, *self.cfg.fallback_models]
+        last: LLMTransient | None = None
+        for i, model in enumerate(models):
+            try:
+                resp = self._generate_with(model, request)
+            except LLMTransient as exc:
+                last = exc
+                log.warning(
+                    "model call failed, trying the next one"
+                    if i + 1 < len(models)
+                    else "model call failed",
+                    extra={"model": model, "error": str(exc)},
+                )
+                continue
+            if i:
+                log.info(
+                    "answered by a fallback model", extra={"model": model, "primary": models[0]}
+                )
+            return resp
+        assert last is not None
+        raise last
+
+    def _generate_with(self, model: str, request: LLMRequest) -> LLMResponse:
         t0 = self._clock()
-        resp = self._send(
-            "POST", f"models/{self.cfg.model}:generateContent", self.build_body(request)
-        )
-        self._raise_for_status(resp)
+        resp = self._send("POST", f"models/{model}:generateContent", self.build_body(request))
+        self._raise_for_status(resp, model=model)
         data = resp.json()
         feedback = data.get("promptFeedback") or {}
         if feedback.get("blockReason"):
@@ -261,20 +295,31 @@ class GeminiProvider:
             raise LLMError("the model returned no candidates")
         cand = candidates[0]
         parts = (cand.get("content") or {}).get("parts") or []
-        text = "".join(str(p.get("text", "")) for p in parts).strip()
+        # thinking models may return thought parts; only the visible answer is text without "thought": true
+        text = "".join(str(p.get("text", "")) for p in parts if not p.get("thought")).strip()
+        usage = data.get("usageMetadata") or {}
         if not text:
             reason = cand.get("finishReason", "unknown")
+            if reason == "MAX_TOKENS":
+                spent = int(usage.get("thoughtsTokenCount", 0) or 0)
+                budget = request.max_output_tokens or self.cfg.max_output_tokens
+                raise LLMError(
+                    f"the model used its whole output budget ({budget} tokens"
+                    + (f", {spent} of them thinking" if spent else "")
+                    + ") before writing any text; thinking tokens count in that budget. Raise "
+                    "llm.max_output_tokens or lower llm.thinking_budget"
+                )
             raise LLMError(f"the model returned no text (finish reason: {reason})")
-        usage = data.get("usageMetadata") or {}
         return LLMResponse(
             text=text,
-            model=str(data.get("modelVersion") or self.cfg.model),
+            model=str(data.get("modelVersion") or model),
             latency_s=self._clock() - t0,
             usage={
                 k: int(usage[v])
                 for k, v in (
                     ("prompt", "promptTokenCount"),
                     ("output", "candidatesTokenCount"),
+                    ("thoughts", "thoughtsTokenCount"),
                     ("total", "totalTokenCount"),
                 )
                 if v in usage

@@ -39,6 +39,11 @@ class LLMError(RuntimeError):
     """Any failure of a provider call."""
 
 
+class LLMTransient(LLMError):
+    """Temporary: the service is overloaded (503/504), the call timed out or the network dropped.
+    Another model or a later try may work; nothing is wrong with the key or the request."""
+
+
 class LLMUnavailable(LLMError):
     """No key, no network, unknown provider: the call cannot be made at all."""
 

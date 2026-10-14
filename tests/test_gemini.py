@@ -159,7 +159,10 @@ def test_several_text_parts_are_joined():
     [
         ({"promptFeedback": {"blockReason": "SAFETY"}}, "safety filter"),
         ({"candidates": []}, "no candidates"),
-        ({"candidates": [{"content": {"parts": []}, "finishReason": "MAX_TOKENS"}]}, "MAX_TOKENS"),
+        (
+            {"candidates": [{"content": {"parts": []}, "finishReason": "MAX_TOKENS"}]},
+            "whole output budget",
+        ),
         ({}, "no candidates"),
     ],
 )
@@ -473,3 +476,113 @@ def test_llm_check_lists_every_usable_model():
     )
     text = "\n".join(lines)
     assert "more" not in text and "model-39" in text and "model-00" in text
+
+
+# -- what the real service did on 2026-10-14 -----------------------------------------------------------------
+def test_max_tokens_with_thinking_says_where_the_budget_went():
+    body = {
+        "candidates": [{"content": {"parts": []}, "finishReason": "MAX_TOKENS"}],
+        "usageMetadata": {"promptTokenCount": 20, "thoughtsTokenCount": 16, "totalTokenCount": 36},
+    }
+    with pytest.raises(LLMError) as e:
+        provider(resp(200, body), max_output_tokens=16)[0].generate(REQ)
+    msg = str(e.value)
+    assert "(16 tokens, 16 of them thinking)" in msg
+    assert "llm.max_output_tokens" in msg and "llm.thinking_budget" in msg
+
+
+def test_thought_parts_are_not_part_of_the_answer_and_thinking_tokens_are_reported():
+    body = {
+        "candidates": [
+            {
+                "content": {
+                    "parts": [{"text": "pensando...", "thought": True}, {"text": "ok"}],
+                }
+            }
+        ],
+        "usageMetadata": {
+            "promptTokenCount": 10,
+            "candidatesTokenCount": 1,
+            "thoughtsTokenCount": 40,
+            "totalTokenCount": 51,
+        },
+    }
+    r = provider(resp(200, body))[0].generate(REQ)
+    assert r.text == "ok" and r.usage["thoughts"] == 40
+
+
+def test_the_thinking_budget_is_sent_only_when_configured():
+    p, t = provider(resp(200, ok_body()))
+    p.generate(REQ)
+    assert "thinkingConfig" not in json.loads(t.calls[0]["body"])["generationConfig"]
+    p, t = provider(resp(200, ok_body()), thinking_budget=0)
+    p.generate(REQ)
+    assert json.loads(t.calls[0]["body"])["generationConfig"]["thinkingConfig"] == {
+        "thinkingBudget": 0
+    }
+
+
+def test_an_overloaded_model_is_transient_and_the_fallback_answers():
+    overloaded = resp(
+        503, {"error": {"message": "This model is currently experiencing high demand."}}
+    )
+    p, t = provider(
+        overloaded,
+        resp(200, ok_body("desde el reserva")),
+        model="primary",
+        fallback_models=["backup"],
+    )
+    r = p.generate(REQ)
+    assert r.text == "desde el reserva"
+    assert t.calls[0]["url"].endswith("/models/primary:generateContent")
+    assert t.calls[1]["url"].endswith("/models/backup:generateContent")
+
+
+def test_without_fallbacks_an_overload_is_a_transient_error_with_the_api_message():
+    from pit_wall_ai.engineer.llm import LLMTransient
+
+    overloaded = resp(
+        503, {"error": {"message": "This model is currently experiencing high demand."}}
+    )
+    with pytest.raises(LLMTransient, match="high demand"):
+        provider(overloaded)[0].generate(REQ)
+
+
+def test_a_timeout_also_falls_through_to_the_next_model():
+    p, t = provider(
+        TimeoutError("The read operation timed out"),
+        resp(200, ok_body("vale")),
+        model="primary",
+        fallback_models=["backup"],
+    )
+    assert p.generate(REQ).text == "vale" and len(t.calls) == 2
+
+
+def test_a_rejected_key_does_not_try_the_fallbacks():
+    p, t = provider(
+        resp(403, {"error": {"message": "denied"}}),
+        resp(200, ok_body()),
+        fallback_models=["backup"],
+    )
+    with pytest.raises(LLMUnavailable):
+        p.generate(REQ)
+    assert len(t.calls) == 1
+
+
+def test_all_models_overloaded_raises_the_last_transient_error():
+    from pit_wall_ai.engineer.llm import LLMTransient
+
+    over = resp(503, {"error": {"message": "high demand"}})
+    p, t = provider(over, model="a", fallback_models=["b", "c"])
+    with pytest.raises(LLMTransient):
+        p.generate(REQ)
+    assert [c["url"].rsplit("/", 1)[1] for c in t.calls] == [
+        "a:generateContent",
+        "b:generateContent",
+        "c:generateContent",
+    ]
+
+
+def test_the_default_model_is_one_that_answered_on_the_real_service():
+    assert LLMConfig().model == "gemini-3.1-flash-lite"  # gemini-2.5-flash is retired for new users
+    assert LLMConfig().fallback_models == [] and LLMConfig().thinking_budget is None

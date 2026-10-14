@@ -72,7 +72,12 @@ class LLMConfig(_Model):
     # Nothing is sent to a cloud model unless this is true (the free tier may use inputs to improve
     # Google's products). With it false only the mock provider and the local answers work.
     allow_cloud: bool = False
-    model: str = "gemini-2.5-flash"  # the ONLY place a model name lives; `pit-wall llm-check` lists valid ones
+    model: str = "gemini-3.1-flash-lite"  # the ONLY place a model name lives; `pit-wall llm-check` lists valid ones
+    # Tried in order when the model above is overloaded (503) or times out. Names only here, in YAML.
+    fallback_models: list[str] = Field(default_factory=list)
+    # Tokens the model may spend thinking before it answers (counted in the output budget). None = do not
+    # send the setting; 0 = no thinking where the model allows it. Lower = faster, cheaper, shorter answers.
+    thinking_budget: int | None = Field(None, ge=0)
     base_url: str = "https://generativelanguage.googleapis.com/v1beta"
     temperature: float = Field(0.2, ge=0, le=2)
     api_key_env: str = "GEMINI_API_KEY"

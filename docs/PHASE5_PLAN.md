@@ -145,6 +145,9 @@ Everything else is an open question for the model, with the context attached.
 
 | Risk | Mitigation |
 |---|---|
+| Capacity: a model answers 503 "high demand" or times out (seen on the first real run) | `llm.fallback_models`, short timeout, local answers for the frequent questions, cache; never block the loop |
+| Thinking models spend the output budget before writing text (seen: MAX_TOKENS at 16 tokens) | budget sized for thinking, `llm.thinking_budget`, error that says where the tokens went |
+| A listed model is retired for new users (seen: 404 on the old default) | the API's own message and its suggested replacement are shown by `llm-check` |
 | Free quotas unknown or changing | adaptive limiter, daily budget, `llm-check`, local answers for the frequent questions |
 | Model name or endpoint drift | model in YAML, `llm-check` lists what exists; the provider interface isolates it |
 | Invented or misread numbers | grounding check, short answers, evaluation set, numbers labelled with units in the context |
