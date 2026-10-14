@@ -142,9 +142,10 @@ pista con coche de desgaste real, banderas, daños y penalizaciones. Lo de arrib
 * cuando quieras alemán sin nube: pedir la traducción de las respuestas locales (unas 25 funciones de
   `chat/local.py`).
 
-## Modo MCP (para quien no tiene clave de API)
+## Modo MCP (para quien no tiene clave de API) — aplazado, sin prisa
 
-Propuesta en `docs/MCP_PLAN.md`, sin código. Lo que necesito de ti:
+Propuesta en `docs/MCP_PLAN.md`, sin código; decidido el 2026-10-14 que puede esperar. Solo cubre la
+conversación (los avisos siguen siendo de la voz local). Cuando se retome, lo que necesito de ti:
 
 * la documentación de los MCP que has desarrollado (convenciones de nombres de herramientas, respuestas
   cortas y largas, errores, consentimiento y registro), para que éste se parezca a los tuyos;

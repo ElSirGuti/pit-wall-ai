@@ -1,6 +1,6 @@
 # Plan: the engineer as an MCP server, with general MCP conventions
 
-Status: **proposal, not approved, no code yet.** Same proposal as `MCP_PLAN.md`, rewritten to follow the
+Status: **proposal, deferred by the author (2026-10-14): nice to have, not urgent. No code.** Same proposal as `MCP_PLAN.md`, rewritten to follow the
 conventions that usually make an MCP server dependable for an assistant (section 7). No private or
 organisation-specific detail is used here.
 

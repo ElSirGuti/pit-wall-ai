@@ -1,6 +1,8 @@
 # Plan: the engineer as an MCP server (for people without an API key)
 
-Status: **proposal, not approved, no code yet.** Requested by the author on 2026-10-14.
+Status: **proposal, deferred by the author (2026-10-14): nice to have, not urgent. No code.**
+Requested by the author on 2026-10-14. It only covers the conversation: the rule alerts (lap summary,
+lock-ups, fuel...) stay with the local voice in every mode.
 
 ## 0. Why
 
