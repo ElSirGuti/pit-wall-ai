@@ -103,6 +103,12 @@ pit-wall run --voice --language en
 pit-wall run --mute                  # same rules, printed instead of spoken
 pit-wall tyre-corners race.pwrec.gz   # which corners work the tyres hardest (estimate, validated or not)
 pit-wall say "Box this lap"          # test the voice and see its latency
+
+# Talk to the engineer (push-to-talk): see docs/VOICE.md
+pit-wall devices                     # microphones and outputs
+pit-wall voices --test               # hear every installed voice
+pit-wall voice                       # live conversation (button + microphone)
+pit-wall stt-test --device both      # speech recognition: speed and accuracy, CPU vs GPU
 pit-wall rules                       # active rules, thresholds and per-session policies
 ```
 
@@ -177,7 +183,7 @@ Capture used: Assetto Corsa 1.16.4, shared-memory 1.7, LFM practice server, Toyo
 | 3 | Rule-based alert engine with local TTS | done ([docs](docs/ENGINEER.md)); thresholds conservative, to calibrate |
 | 4 | Braking analysis per corner vs the best lap (track geometry generated locally) | **in progress** ([docs](docs/TRACK_GEOMETRY.md)): geometry, numbering, per-corner comparison and the spoken hint are in; to be checked live and against the real circuits' numbering |
 | 5 | Text chat with Gemini using a compact telemetry summary, plan in [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md) (including questions such as "which corner is that?", answered from the geometry) | planned |
-| 6 | Full voice (buttons done; microphone and voice/output selection coded: `pit-wall devices`, `mic-test`, `voices --test`): push-to-talk bindable to any button of any device (keyboard, mouse, gamepad, wheel, button box; [plan](docs/INPUT_BINDINGS.md)), STT, spoken answers | planned ([plan](docs/PHASE6_PLAN.md)) |
+| 6 | Full voice (buttons done; microphone and voice/output selection coded: `pit-wall devices`, `mic-test`, `voices --test`): push-to-talk bindable to any button of any device (keyboard, mouse, gamepad, wheel, button box; [plan](docs/INPUT_BINDINGS.md)), STT, spoken answers | steps 1 to 4 done, simulated end to end ([guide](docs/VOICE.md), [plan](docs/PHASE6_PLAN.md)); live test pending |
 | 6c | The engineer as an MCP server, for people without an API key ([proposal](docs/MCP_PLAN.md)) | proposal, deferred |
 | 6b | The engineer as a character: radio protocol (half-duplex, ACK, acknowledgement phrase), profiles and personas, names, conversation memory | planned, see [docs/ENGINEER_EXPERIENCE_PLAN.md](docs/ENGINEER_EXPERIENCE_PLAN.md) |
 | 7 | Post-session debrief with Gemini | planned |

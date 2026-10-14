@@ -123,7 +123,7 @@ documented and unused.
 | 3 (**implemented; measured on the PC with synthetic phrases, see 7.1**) | `Transcriber` interface + faster-whisper backend + `pit-wall stt-test file.wav` | latency and word error rate on the author's own phrases, CPU vs GPU, **and the effect on the game's frame rate** |
 | 4 (**implemented, simulated end to end; live with the wheel pending**, see 7.2) | `pit-wall voice`: button -> STT -> chat -> speech with priorities and barge-in | works end to end on a replayed session; critical alert cuts an answer; a press cuts speech |
 | 5 | evaluation: 30 to 40 spoken questions, end-to-end latency report; Gemini Live spike | numbers reported, decision on Live recorded |
-| 6 | README ES/EN, `docs/VOICE.md`, pending list updated | |
+| 6 (**done**) | README ES/EN, `docs/VOICE.md`, pending list updated | the guide exists and the commands are in the README |
 
 Each step is delivered with tests (hardware replaced by fakes where there is no hardware) and **waits for the
 author's approval** before the next.
