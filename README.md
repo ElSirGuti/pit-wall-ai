@@ -110,9 +110,14 @@ See [docs/ENGINEER.md](docs/ENGINEER.md) for how a message is decided, the rules
 and how the alignment with the game's lap position was verified (error below 0.5 m on Magione, Imola, Spa).
 
 ```bash
-# Phase 5: check the cloud model (off by default; see docs/LLM.md)
-pit-wall llm-check --allow-cloud
+# Phase 5: the text chat (local answers always; the cloud model only if you turn it on, see docs/LLM.md)
+pit-wall ask "how much fuel is left?" --file race.pwrec.gz
+pit-wall chat                       # live game; type exit to finish
+pit-wall llm-check --allow-cloud    # test the cloud model
 ```
+
+One chat, any service: the plan for other providers and the final `.exe` is in
+[docs/PROVIDERS_PLAN.md](docs/PROVIDERS_PLAN.md).
 
 `pit-wall --help` lists every option. Run the checks with `pytest` and `ruff check src tests`.
 

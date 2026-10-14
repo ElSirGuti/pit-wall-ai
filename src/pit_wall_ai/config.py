@@ -291,12 +291,22 @@ class AnalysisConfig(_Model):
     verified_numbering: list[str] = Field(default_factory=list)
 
 
+class ChatConfig(_Model):
+    """The text conversation with the engineer (phase 5)."""
+
+    history_turns: int = Field(
+        6, ge=0, le=30
+    )  # previous question/answer pairs sent with a question
+    stale_after_s: float = Field(5.0, gt=0)  # older data is announced as such in a model answer
+
+
 class AppConfig(_Model):
     telemetry: TelemetryConfig = TelemetryConfig()
     logging: LoggingConfig = LoggingConfig()
     llm: LLMConfig = LLMConfig()
     engineer: EngineerConfig = EngineerConfig()
     analysis: AnalysisConfig = AnalysisConfig()
+    chat: ChatConfig = ChatConfig()
 
 
 class ConfigError(ValueError):

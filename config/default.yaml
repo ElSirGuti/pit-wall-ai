@@ -154,3 +154,7 @@ analysis:               # phase 4: track geometry and braking analysis
     min_distance_m: 10  # a braking-point difference smaller than this is never said
     min_time_s: 0.10    # a time loss in the corner smaller than this is never said
     big_loss_s: 0.50    # a loss this big is said even without a braking point (no brake there, or it ran on)
+
+chat:                   # phase 5: the text conversation (`pit-wall ask`, `pit-wall chat`)
+  history_turns: 6      # previous question/answer pairs sent along with a question
+  stale_after_s: 5      # telemetry older than this is announced as such in a model answer

@@ -112,9 +112,14 @@ curvas, la comparación de frenadas, el aviso hablado y cómo se verificó la al
 (error bajo 0,5 m en Magione, Imola y Spa): [docs/TRACK_GEOMETRY.md](docs/TRACK_GEOMETRY.md).
 
 ```bash
-# Fase 5: comprobar el modelo en la nube (desactivado por defecto; ver docs/LLM.md)
-pit-wall llm-check --allow-cloud
+# Fase 5: el chat de texto (siempre respuestas locales; el modelo en la nube solo si lo activas, ver docs/LLM.md)
+pit-wall ask "¿cuánta gasolina queda?" --file carrera.pwrec.gz
+pit-wall chat                       # juego en vivo; escribe salir para terminar
+pit-wall llm-check --allow-cloud    # probar el modelo en la nube
 ```
+
+Un chat, cualquier servicio: el plan para otros proveedores y el `.exe` final está en
+[docs/PROVIDERS_PLAN.md](docs/PROVIDERS_PLAN.md).
 
 `pit-wall --help` lista todas las opciones. Las comprobaciones: `pytest` y `ruff check src tests`.
 

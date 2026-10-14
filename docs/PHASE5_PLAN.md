@@ -1,6 +1,6 @@
 # Phase 5 plan: text chat with Gemini
 
-Status: **approved 2026-10-14; steps 1 to 5 implemented** (sections 11 and 12). Steps 6 and 7 are not. Statements about Gemini's API and quotas come from a web search
+Status: **approved 2026-10-14; steps 1 to 6 implemented** (sections 11 to 13). Step 7 (evaluation set, latency report) is not. Statements about Gemini's API and quotas come from a web search
 (2026-10-14) and from the author's earlier notes; they are marked *to verify* and are checked by the
 `llm-check` command of step 1 before anything depends on them.
 
@@ -137,7 +137,7 @@ Everything else is an open question for the model, with the context attached.
 | 3 | `ContextBuilder` + golden tests | **done** (chat/context.py): built on a real race recording, under 1 500 tokens |
 | 4 | `IntentRouter` + local answers | **done** (chat/local.py): table of questions passes; every local answer passes its own grounding check |
 | 5 | `GroundingCheck` | **done** (chat/grounding.py): formats, roundings, wrong wheel / corner / lap / unit are caught in tests |
-| 6 | `ChatSession` + `pit-wall chat` / `pit-wall ask` (live or `--file`) | end-to-end on a replayed race |
+| 6 | `ChatSession` + `pit-wall chat` / `pit-wall ask` (live or `--file`) | **done** (chat/session.py, runtime.py, cli_chat.py): end-to-end on a replayed race with the offline provider; **not yet run against the real model** |
 | 7 | evaluation set, latency report, docs (README ES/EN, `docs/CHAT.md`) | numbers reported to the author |
 
 ## 9. Risks
@@ -228,6 +228,25 @@ All three work **without a network** and are covered by `tests/test_chat.py` (ab
 * The router is keyword based: a question phrased unusually goes to the model, which is the safe side.
 * Not done yet: the chat session itself (history, the call to the model with this context and the grounding
   check on its reply, the notice when `allow_cloud` is off) and the evaluation set: steps 6 and 7.
+
+## 13. Status of step 6: the conversation
+
+`pit-wall ask "<question>"` and `pit-wall chat` (live game, or `--file` to ask about a recording).
+
+1. **Local**: a question the router knows is answered from the fact sheet, with no model call.
+2. **Model**: the rest goes to the provider with the system prompt, the last `chat.history_turns` exchanges and
+   the compact context; its reply goes through the grounding check and the sentences with a number it cannot
+   back are removed (an empty result becomes an honest refusal). Data older than `chat.stale_after_s` is
+   announced.
+3. **Degraded**: rate limit, overload or error: a local summary (session, laps, fuel) and the reason.
+4. **Unavailable**: no key or `llm.allow_cloud: false`: the chat says so, says what it can still answer
+   locally, and keeps answering those.
+
+Every reply carries a tag in the terminal: `[local, 4 ms]`, `[model, gemini..., 1.2 s]`, `[cache]`,
+`[degraded, provider_429]`, `[unavailable]`, `[... 1 claim(s) removed]`.
+
+**Not measured yet**: the latency of a model answer with a real ~1 500-token context, and how often the real
+model attaches a number to the wrong place. That is the evaluation set of step 7, which needs the key.
 
 ---
 

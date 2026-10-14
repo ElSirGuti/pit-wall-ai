@@ -92,6 +92,31 @@ def _parser() -> argparse.ArgumentParser:
         "rules", help="list the alert rules, their thresholds and the session policies"
     ).add_argument("--config", help="YAML config")
 
+    ask = sub.add_parser("ask", help="ask the engineer one question (live game or --file)")
+    common(ask)
+    ask.add_argument("text", help="the question")
+    ask.add_argument("--language", choices=["es", "en"], help="language of the answer")
+    ask.add_argument(
+        "--session",
+        choices=["practice", "qualify", "race", "hotlap"],
+        default="practice",
+        help="session kind for .ld/.csv logs, which do not say (default practice)",
+    )
+    ask.add_argument("--wait", type=float, default=5.0, help="seconds to wait for live telemetry")
+
+    chat = sub.add_parser(
+        "chat", help="talk with the engineer in the terminal (live game or --file)"
+    )
+    common(chat)
+    chat.add_argument("--language", choices=["es", "en"], help="language of the answers")
+    chat.add_argument(
+        "--session",
+        choices=["practice", "qualify", "race", "hotlap"],
+        default="practice",
+        help="session kind for .ld/.csv logs, which do not say (default practice)",
+    )
+    chat.add_argument("--wait", type=float, default=5.0, help="seconds to wait for live telemetry")
+
     chk = sub.add_parser(
         "llm-check", help="test the configured cloud model: models the key can use, latency, 429"
     )
@@ -441,6 +466,18 @@ def _print_lap_comparison(g, names, result, cfg) -> None:
             )
 
 
+def _cmd_ask(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .chat.cli_chat import cmd_ask
+
+    return cmd_ask(cfg, a)
+
+
+def _cmd_chat(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .chat.cli_chat import cmd_chat
+
+    return cmd_chat(cfg, a)
+
+
 def _cmd_llm_check(cfg: AppConfig, a: argparse.Namespace) -> int:
     from .engineer.llmcheck import run_llm_check
 
@@ -534,6 +571,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             "rules": _cmd_rules,
             "corners": _cmd_corners,
             "llm-check": _cmd_llm_check,
+            "ask": _cmd_ask,
+            "chat": _cmd_chat,
         }[args.cmd]
         return handler(cfg, args)
     except ConfigError as exc:
