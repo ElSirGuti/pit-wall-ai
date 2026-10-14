@@ -750,3 +750,15 @@ def test_the_session_question_no_longer_answers_the_time_question():
     assert r.intents == (L.Intent.SESSION,)
     sheet = build_facts(synthetic_inputs())
     assert "Quedan" not in L.answer(r, sheet, lang="es").text
+
+
+def test_a_question_about_one_corner_is_answered_about_that_corner_not_the_worst():
+    _, worst, _ = ask("¿dónde pierdo tiempo?")
+    _, a, _ = ask("¿cuánto perdí en la curva 1?")
+    assert "curva 1" in a.text and "curva 2" not in a.text
+    assert a.text != worst.text
+
+
+def test_corner_numbers_spoken_as_words_are_understood():
+    _, a, _ = ask("¿cuánto perdí en la curva dos?")
+    assert "Curvone (la curva 2)" in a.text and "pierdes" in a.text

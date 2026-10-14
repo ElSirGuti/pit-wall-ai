@@ -56,6 +56,8 @@ _KEYS: dict[Intent, tuple[str, ...]] = {
     ),
     Intent.LOSS: (
         "pierdo",
+        "perdi",
+        "perdida",
         "perdiendo",
         "pierdes",
         "perder tiempo",
@@ -250,6 +252,7 @@ def route(question: str, track: TrackInfo | None = None) -> Routed | None:
         return None  # an open question: the model, with the context
     found: list[Intent] = []
     corners: tuple[int, ...] = ()
+    hits: list[int] = []
     if track is not None and track.geometry is not None:
         hits = find_corner(track.geometry, question, track.names)
         if hits and _has(q, _IDENTITY):
@@ -267,6 +270,9 @@ def route(question: str, track: TrackInfo | None = None) -> Routed | None:
             found.append(intent)
     if not found:
         return None
+    # "how was the braking of corner 4": the loss analysis, but about THAT corner, not the worst one
+    if Intent.LOSS in found and hits and Intent.CORNER not in found:
+        corners = tuple(hits)
     # data the context can never hold wins only when nothing answerable was asked
     if Intent.UNKNOWN_DATA in found and len(found) > 1:
         found.remove(Intent.UNKNOWN_DATA)
@@ -591,6 +597,8 @@ def _loss(sheet, lang, track, routed, th):
         )
     ref = sheet.value("analysis.reference_lap")
     keys = ["analysis.lap", "analysis.reference_lap"]
+    if routed.corners:
+        return _loss_of_corner(sheet, lang, names, routed.corners, lap, keys)
     w = sheet.value("analysis.worst.corner")
     if w is None:
         d, s = th
@@ -616,11 +624,11 @@ def _loss(sheet, lang, track, routed, th):
             else ("earlier" if be > 0 else "later")
         )
         text = (
-            f"En la vuelta {lap}, en {ref_name}: frenas {_num(abs(be), 0, lang)} m {how} que en tu mejor vuelta "
-            f"y pierdes {_num(loss, 2, lang)} s en la curva."
+            f"En la vuelta {lap}, en {ref_name}: pierdes {_num(loss, 2, lang)} s y frenas "
+            f"{_num(abs(be), 0, lang)} m {how} que en tu mejor vuelta."
             if lang == "es"
-            else f"On lap {lap}, at {ref_name}: you brake {_num(abs(be), 0, lang)} m {how} than on your best lap "
-            f"and lose {_num(loss, 2, lang)} s through the corner."
+            else f"On lap {lap}, at {ref_name}: you lose {_num(loss, 2, lang)} s and brake "
+            f"{_num(abs(be), 0, lang)} m {how} than on your best lap."
         )
     else:
         extra = ""
@@ -635,6 +643,55 @@ def _loss(sheet, lang, track, routed, th):
             f"En la vuelta {lap}, en {ref_name}: pierdes {_num(loss, 2, lang)} s respecto a tu mejor vuelta{extra}."
             if lang == "es"
             else f"On lap {lap}, at {ref_name}: you lose {_num(loss, 2, lang)} s against your best lap{extra}."
+        )
+    return text, keys
+
+
+def _loss_of_corner(sheet, lang, names, corners, lap, keys):
+    """What the comparison with the best lap says about the corner(s) the driver named."""
+    if len(corners) > 1:
+        options = ", ".join(_corner_ref(sheet, n, names, lang) for n in corners)
+        return (
+            f"Puede ser: {options}. ¿Cuál?"
+            if lang == "es"
+            else f"It could be: {options}. Which one?"
+        ), []
+    n = corners[0]
+    ref_name = _corner_ref(sheet, n, names, lang)
+    k = f"analysis.corners.C{n}"
+    td = sheet.value(f"{k}.time_diff_s")
+    if td is None:
+        text = (
+            f"En la vuelta {lap} no tengo una comparación de {ref_name} con tu mejor vuelta: "
+            f"esa curva no se pudo medir en una de las dos."
+            if lang == "es"
+            else f"On lap {lap} I have no comparison of {ref_name} with your best lap: "
+            f"that corner could not be measured on one of them."
+        )
+        return text, keys
+    keys = [*keys, f"{k}.time_diff_s"]
+    be = sheet.value(f"{k}.brake_earlier_m")
+    loss = abs(td)
+    if td >= 0:
+        gist_es, gist_en = f"pierdes {_num(loss, 2, lang)} s", f"you lose {_num(loss, 2, lang)} s"
+    else:
+        gist_es, gist_en = f"ganas {_num(loss, 2, lang)} s", f"you gain {_num(loss, 2, lang)} s"
+    if be is not None:
+        keys.append(f"{k}.brake_earlier_m")
+        how_es = "antes" if be > 0 else "más tarde"
+        how_en = "earlier" if be > 0 else "later"
+        text = (
+            f"En la vuelta {lap}, en {ref_name}: {gist_es} y frenas {_num(abs(be), 0, lang)} m {how_es} "
+            f"que en tu mejor vuelta."
+            if lang == "es"
+            else f"On lap {lap}, at {ref_name}: {gist_en} and you brake {_num(abs(be), 0, lang)} m "
+            f"{how_en} than on your best lap."
+        )
+    else:
+        text = (
+            f"En la vuelta {lap}, en {ref_name}: {gist_es} respecto a tu mejor vuelta."
+            if lang == "es"
+            else f"On lap {lap}, at {ref_name}: {gist_en} against your best lap."
         )
     return text, keys
 

@@ -208,6 +208,10 @@ engine noise), so they measure speed and gross errors only:
   accuracy with the author's voice and microphone. The 0.4 s GPU latency is the reason to prefer the GPU in
   AC; in iRacing the CPU may be the better choice: that is what `stt.device` is for.
 
+**Follow-up (2026-10-14).** "psi" heard as "sencaí" is now corrected by a short table of measured
+mis-hearings (`stt/postfix.py`, applied before the question reaches the chat; it grows only from real
+recordings). Spoken corner numbers ("curva seis") are understood by the corner lookup.
+
 ### 7.2 Step 4: the voice turn (2026-10-14)
 
 `pit-wall voice` runs button -> utterance -> recognition -> chat -> speech. Radio rules (decided with the

@@ -50,7 +50,7 @@ WHEEL_ALIASES = {
     "RR": ("rr", "trasero derecho", "trasera derecha", "rear right", "neumatico trasero derecho"),
 }
 RECENT_LAPS = 5
-TOP_CORNERS = 4
+TOP_CORNERS = 24  # every corner of the circuit: a question about one corner must find it
 RECENT_ALERTS = 5
 BRAKE_ALIVE_RANGE_C = 8.0  # the same criterion as the brake-temperature rule
 

@@ -113,7 +113,7 @@ Ver `docs/PHASE6_PLAN.md`, sección "Preguntas para el autor". Lo que necesitar�
 * medir el efecto de `stt.device: cuda` vs `cpu` en los fps del juego: `pit-wall stt-test --device both` con el juego abierto y comparar fps (instalar `pip install -e ".[stt,stt-cuda]"`);
 * grabar las **40 frases habladas** de `docs/FRASES_VOZ.md` (tanda en silencio y tanda con el coche sonando)
   para medir el reconocimiento de voz con tu voz y tu micrófono;
-* decidir sobre "psi" mal reconocido: tabla de correcciones o modelo `medium` (`docs/PHASE6_PLAN.md` 7.1);
+* "psi" mal reconocido: resuelto con una tabla de correcciones (`stt/postfix.py`); con tus frases reales se amplía o se prueba el modelo `medium`;
 * idea nueva (2026-10-14): **desgaste de neumáticos por curva** con consejo para reducirlo, ver
   `docs/PHASE8_PLAN.md` 3.4; espera tu aprobación del plan y una grabación de al menos 8 vueltas.
 

@@ -119,10 +119,27 @@ def find_corner(
     return find_in_names(query, names or {}, len(geometry.apexes))
 
 
+_NUMBER_WORDS = {
+    "uno": 1, "una": 1, "dos": 2, "tres": 3, "cuatro": 4, "cinco": 5, "seis": 6, "siete": 7,
+    "ocho": 8, "nueve": 9, "diez": 10, "once": 11, "doce": 12, "trece": 13, "catorce": 14,
+    "quince": 15, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7,
+    "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12,
+}  # fmt: skip
+
+
+def _digits(q: str) -> str:
+    """ "curva seis" -> "curva 6": a recogniser writes the words, a keyboard the digits."""
+    return re.sub(
+        r"\b(curva|corner|turn)\s+([a-z]+)\b",
+        lambda m: f"{m.group(1)} {_NUMBER_WORDS.get(m.group(2), m.group(2))}",
+        q,
+    )
+
+
 def find_in_names(query: str, names: dict[int, str], count: int | None = None) -> list[int]:
     """The same lookup from the names alone (a circuit table), without a racing line."""
     n_corners = count if count is not None else (max(names) if names else 0)
-    q = " ".join(w for w in _norm(query).split() if w not in _ARTICLES)
+    q = " ".join(w for w in _digits(_norm(query)).split() if w not in _ARTICLES)
     if not q:
         return []
     out: list[int] = []

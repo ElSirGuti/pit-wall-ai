@@ -31,6 +31,7 @@ import numpy as np
 
 from ..audio.capture import Utterance
 from ..stt import SttUnavailable, Transcriber
+from ..stt.postfix import fix as fix_transcript
 
 log = logging.getLogger(__name__)
 
@@ -218,7 +219,7 @@ class VoiceSession:
                 tr = self.transcriber.transcribe(
                     np.asarray(u.pcm, dtype=np.int16), hotwords=self.hotwords()
                 )
-                text = tr.text.strip()
+                text = fix_transcript(tr.text.strip())
             except SttUnavailable as exc:
                 turn.error = str(exc)
                 ack_timer.cancel()
