@@ -124,8 +124,7 @@ Ver `docs/PHASE6_PLAN.md`, sección "Preguntas para el autor". Lo que necesitar�
 * los cinco estilos de `engineer.persona` se notan en la redacción y mantienen las cifras;
 * **la clave se pegó en el chat: rótala cuando termines las pruebas** (solo está en `.env`, ignorado por git).
 
-Observación abierta: el modelo escribe 84.913 segundos donde el chat local escribe 1:24,913; conviene una
-regla en las instrucciones o una conversión del texto de los tiempos de vuelta.
+Corregido: los tiempos de vuelta del modelo se leen como minutos y segundos (1:24,913).
 
 ## Sesión única de mediciones
 

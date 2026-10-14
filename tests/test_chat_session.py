@@ -252,3 +252,21 @@ def test_the_evaluation_fails_a_wrong_number_and_a_missing_refusal():
     assert [r.status for r in rep.results] == ["fail", "fail"]
     assert any("grounding: unsupported" in why for why in rep.results[0].reasons)  # invented 25
     assert any("grounding" in why or "does not state" in why for why in rep.results[1].reasons)
+
+
+def test_lap_times_written_in_seconds_are_read_as_minutes_and_seconds():
+    from pit_wall_ai.chat.session import lap_times_as_clock as c
+
+    assert (
+        c("tu mejor vuelta es de 84.913 segundos en la 3", "es")
+        == "tu mejor vuelta es de 1:24,913 en la 3"
+    )
+    assert c("fue de 84,913 s", "es") == "fue de 1:24,913"
+    assert c("best lap 84.913 seconds", "en") == "best lap 1:24.913"  # no unit match: untouched
+    assert c("best lap 84.913 s", "en") == "best lap 1:24.913"
+    assert c("delta de 0,98 segundos", "es") == "delta de 0,98 segundos"
+    assert (
+        c("pierdes 65,2 segundos", "es") == "pierdes 65,2 segundos"
+    )  # one decimal: a gap, not a lap
+    assert c("vuelta de 125.500 segundos", "es") == "vuelta de 2:05,500"
+    assert c("ya dicho 1:24,913", "es") == "ya dicho 1:24,913"

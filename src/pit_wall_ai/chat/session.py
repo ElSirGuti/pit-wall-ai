@@ -14,10 +14,12 @@ Order of what happens to a question:
 from __future__ import annotations
 
 import logging
+import re
 import time
 from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
+from decimal import Decimal
 
 from ..config import AppConfig
 from ..engineer.client import LLMClient
@@ -40,7 +42,8 @@ SYSTEM = {
         "resumen, cuenta con lo que SÍ hay y no añadas esa frase como relleno. No inventes el clima, los "
         "rivales ni nada que no veas. No des consejos de reglaje ni de estrategia de carrera: aún no están "
         "disponibles. Si CONTEXT dice que no hay análisis de frenadas, dilo. Para comparar ejes o lados "
-        "usa los valores de tyres.axles."
+        "usa los valores de tyres.axles. Los tiempos de vuelta se dicen en minutos y segundos "
+        "(1:24,913), nunca como 84,913 segundos."
     ),
     "en": (
         "You are the race engineer of a simracing driver and you speak over the radio. Answer in English, in "
@@ -49,9 +52,34 @@ SYSTEM = {
         "CONTEXT answer: I do not have that data. If asked for a summary, use what IS there and do not add "
         "that sentence as filler. Do not invent weather, rivals or anything you "
         "cannot see. Do not give setup or race strategy advice: they are not available yet. If CONTEXT says "
-        "there is no braking analysis, say so. To compare axles or sides use the tyres.axles values."
+        "there is no braking analysis, say so. To compare axles or sides use the tyres.axles values. "
+        "Say lap times as minutes and seconds (1:24.913), never as 84.913 seconds."
     ),
 }
+
+_LAP_SECONDS = re.compile(
+    r"(?<![\d:.,])(\d{2,3})([.,])(\d{2,3})\s*(?:segundos|seconds|seg|sec|s)\b"
+)
+
+
+def lap_times_as_clock(text: str, lang: str) -> str:
+    """ "84.913 segundos" -> "1:24,913": a lap time is read as minutes and seconds, as a race engineer would.
+
+    Only values of a minute or more with two or three decimals (a lap time, not a gap of 0,98 s)."""
+
+    def repl(m: re.Match) -> str:
+        whole, frac = m.group(1), m.group(3)
+        ms = Decimal(f"{whole}.{frac}")
+        if ms < 60:
+            return m.group(0)
+        minutes, rest = divmod(ms, Decimal(60))
+        sep = "," if lang == "es" else "."
+        digits = len(frac)
+        secs = f"{rest:0{3 + digits}.{digits}f}".replace(".", sep)
+        return f"{int(minutes)}:{secs}"
+
+    return _LAP_SECONDS.sub(repl, text)
+
 
 CAPABILITIES = {
     "es": "gasolina y vueltas restantes, neumáticos, frenos, mejor vuelta y delta, sesión, penalizaciones, "
@@ -201,6 +229,7 @@ class ChatSession:
             text = G.sanitize(resp.text, report, self.lang)
         age = sheet.value("data_age_s")
         stale = self.cfg.chat.stale_after_s
+        text = lap_times_as_clock(text, self.lang)
         if age is not None and age > stale:
             text = (
                 f"(datos de hace {age:.0f} s) "
