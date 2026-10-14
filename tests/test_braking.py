@@ -392,3 +392,12 @@ def test_braking_for_a_corner_can_begin_inside_the_previous_corners_extent():
     ref = lap(2, {500: 420, 800: 705})
     comp = {c.corner: c for c in compare_lap(g, two, ref, CFG)}[2]
     assert comp.brake_earlier_m == pytest.approx(15.0, abs=2.5)
+
+
+def test_a_recording_that_starts_before_the_game_publishes_its_static_page_is_still_identified():
+    from pit_wall_ai.analysis.offline import first_known_static
+    from pit_wall_ai.telemetry.snapshot import StaticInfo
+
+    empty, known = StaticInfo(), StaticInfo(track="magione", track_length_m=2455.7)
+    assert first_known_static([empty, empty, known, known]).track == "magione"
+    assert first_known_static([empty, empty]).track == ""

@@ -35,6 +35,12 @@ class OfflineResult:
     samples: int = 0
 
 
+def first_known_static(statics: list[StaticInfo]) -> StaticInfo:
+    """The first static info that names a track. A recording that starts in the menu (or before the game has
+    published its static page) begins with an empty one, which must not be taken for the session's."""
+    return next((s for s in statics if s.track), statics[0])
+
+
 def iter_snapshots(
     path: str | Path, *, session: str = "practice"
 ) -> tuple[StaticInfo, Iterator[Snapshot]]:
@@ -46,7 +52,7 @@ def iter_snapshots(
             for row, st, t in zip(rec.rows, rec.statics, rec.times, strict=True):
                 yield snapshot_from_flat(row, st, t=t)
 
-        return rec.statics[0], gen_native()
+        return first_known_static(rec.statics), gen_native()
     base = load_recording(path)
     static = static_from_recording(base)
     kind = int(_SESSION[session])
