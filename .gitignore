@@ -50,3 +50,4 @@ config/local.yaml
 # Local recordings (copy the ones worth keeping into tests/fixtures)
 /*.pwrec.gz
 /*.pwrec
+/eval_report*.md

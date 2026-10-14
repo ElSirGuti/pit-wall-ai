@@ -100,3 +100,50 @@ def cmd_chat(cfg: AppConfig, a: argparse.Namespace, *, stdin=None) -> int:
     finally:
         _close(runtime, poller)
     return 0
+
+
+def cmd_eval(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from . import evalset
+
+    if not a.file:
+        print(
+            "eval needs --file (a recording): the cases are asked about a fixed session",
+            file=sys.stderr,
+        )
+        return 2
+    # the evaluation paces itself: give the client the room it needs and no daily cap
+    rl = cfg.llm.rate_limit.model_copy(
+        update={"initial_rpm": 12.0, "max_rpm": 12.0, "daily_budget": None, "adaptive": False}
+    )
+    cfg = cfg.model_copy(
+        update={"llm": cfg.llm.model_copy(update={"rate_limit": rl, "cache_ttl_s": 0})}
+    )
+    runtime, session, poller = _build(cfg, a)
+    only = {c.strip() for c in a.only.split(",")} if a.only else None
+    print(
+        f"[{len(evalset.CASES)} cases; model: {cfg.llm.model}; pace {a.pace:g} s]", file=sys.stderr
+    )
+
+    def show(r) -> None:
+        mark = {"pass": "PASS", "fail": "FAIL", "skip": "skip"}[r.status]
+        tag = r.reply.tag if r.reply else "-"
+        print(f"{mark}  {r.case.id:18s} [{tag}]", flush=True)
+        for why in r.reasons:
+            print(f"      {why}", flush=True)
+
+    try:
+        report = evalset.run(session, only=only, pace_s=a.pace, on_result=show)
+    finally:
+        _close(runtime, poller)
+    note = f"Model: `{cfg.llm.model}`, fallback: {', '.join(cfg.llm.fallback_models) or 'none'}. Recording: `{Path(a.file).name}`."
+    Path(a.out).write_text(evalset.to_markdown(report, model_note=note), encoding="utf-8")
+    s = report.summary()
+    print(
+        f"\npassed {s['passed']}/{s['ran']} (skipped {s['skipped']}); model answers {s['model_answers']}, "
+        f"with removed claims {s['answers_with_violations']}; latency median "
+        f"{(s['latency_median_ms'] or 0) / 1000:.2f} s, p95 {(s['latency_p95_ms'] or 0) / 1000:.2f} s"
+    )
+    print(f"report written to {a.out}")
+    return 0 if s["failed"] == 0 else 1

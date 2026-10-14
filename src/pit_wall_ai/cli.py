@@ -117,6 +117,22 @@ def _parser() -> argparse.ArgumentParser:
     )
     chat.add_argument("--wait", type=float, default=5.0, help="seconds to wait for live telemetry")
 
+    ev = sub.add_parser(
+        "eval",
+        help="run the chat evaluation set on a recording (needs the cloud model for most cases)",
+    )
+    common(ev)
+    ev.add_argument("--language", choices=["es", "en"], help="language of the engineer")
+    ev.add_argument(
+        "--session",
+        choices=["practice", "qualify", "race", "hotlap"],
+        default="race",
+        help="session kind for .ld/.csv logs (default race)",
+    )
+    ev.add_argument("--only", help="comma separated categories: local,open,impossible,trap")
+    ev.add_argument("--pace", type=float, default=5.0, help="seconds between model calls (quota)")
+    ev.add_argument("--out", default="eval_report.md", help="where to write the Markdown report")
+
     chk = sub.add_parser(
         "llm-check", help="test the configured cloud model: models the key can use, latency, 429"
     )
@@ -478,6 +494,12 @@ def _cmd_chat(cfg: AppConfig, a: argparse.Namespace) -> int:
     return cmd_chat(cfg, a)
 
 
+def _cmd_eval(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .chat.cli_chat import cmd_eval
+
+    return cmd_eval(cfg, a)
+
+
 def _cmd_llm_check(cfg: AppConfig, a: argparse.Namespace) -> int:
     from .engineer.llmcheck import run_llm_check
 
@@ -572,6 +594,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "corners": _cmd_corners,
             "llm-check": _cmd_llm_check,
             "ask": _cmd_ask,
+            "eval": _cmd_eval,
             "chat": _cmd_chat,
         }[args.cmd]
         return handler(cfg, args)

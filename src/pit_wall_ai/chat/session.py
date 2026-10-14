@@ -17,7 +17,7 @@ import logging
 import time
 from collections import deque
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from ..config import AppConfig
 from ..engineer.client import LLMClient
@@ -67,6 +67,7 @@ class ChatReply:
     model: str = ""
     violations: tuple[G.Violation, ...] = ()
     note: str = ""
+    raw: str = ""  # the model's own words before the grounding check removed anything
 
     @property
     def tag(self) -> str:
@@ -127,19 +128,22 @@ class ChatSession:
         self.stats = ChatStats()
 
     # -- the public call ----------------------------------------------------------------------------
-    def ask(self, question: str) -> ChatReply:
+    def ask(self, question: str, *, force_model: bool = False) -> ChatReply:
+        """``force_model`` skips the local router (used by the evaluation to test the model itself)."""
         t0 = self._clock()
         self.stats.asked += 1
         inp = self._inputs()
         sheet = build_facts(inp)
-        reply = self._answer(question, inp, sheet)
+        reply = self._answer(question, inp, sheet, force_model)
         reply = _with_latency(reply, (self._clock() - t0) * 1000.0)
         self.history.append((question, reply.text))
         return reply
 
     # -- internals ----------------------------------------------------------------------------------
-    def _answer(self, question: str, inp: ChatInputs, sheet: FactSheet) -> ChatReply:
-        routed = L.route(question, inp.track)
+    def _answer(
+        self, question: str, inp: ChatInputs, sheet: FactSheet, force_model: bool = False
+    ) -> ChatReply:
+        routed = None if force_model else L.route(question, inp.track)
         b = self.cfg.analysis.braking
         if routed is not None:
             ans = L.answer(
@@ -196,6 +200,7 @@ class ChatSession:
             model=resp.model,
             violations=tuple(report.violations),
             latency_ms=resp.latency_s * 1000.0,
+            raw=resp.text,
         )
 
     def _compose(self, question: str) -> str:
@@ -248,9 +253,7 @@ class ChatSession:
 def _with_latency(reply: ChatReply, ms: float) -> ChatReply:
     if reply.latency_ms:  # a model call already measured its own
         return reply
-    return ChatReply(
-        reply.text, reply.source, reply.intents, ms, reply.model, reply.violations, reply.note
-    )
+    return replace(reply, latency_ms=ms)
 
 
 __all__ = ["ChatReply", "ChatSession", "ChatStats", "make_client", "field"]

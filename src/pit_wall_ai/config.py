@@ -84,7 +84,7 @@ class LLMConfig(_Model):
     base_url: str = "https://generativelanguage.googleapis.com/v1beta"
     temperature: float = Field(0.2, ge=0, le=2)
     api_key_env: str = "GEMINI_API_KEY"
-    timeout_s: float = Field(8.0, gt=0)
+    timeout_s: float = Field(5.0, gt=0)
     max_output_tokens: int = Field(300, ge=16)
     cache_ttl_s: float = Field(20.0, ge=0)
     rate_limit: RateLimitConfig = RateLimitConfig()
@@ -328,7 +328,9 @@ def load_config(path: str | Path | None = None, env: Mapping[str, str] | None = 
     if env is None:
         load_dotenv(override=False)
     chosen = path or environ.get("PIT_WALL_CONFIG")
-    if not chosen and Path("config/local.yaml").is_file():
+    if (
+        not chosen and env is None and Path("config/local.yaml").is_file()
+    ):  # an explicit env is hermetic
         chosen = "config/local.yaml"
     data: dict = {}
     if chosen:
