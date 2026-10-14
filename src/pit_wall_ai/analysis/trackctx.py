@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 from ..config import AnalysisConfig
 from ..telemetry.snapshot import StaticInfo
-from .circuit_names import corner_names, numbering_verified
+from .circuit_names import corner_names, numbering_verified, table_names
 from .track_geometry import TrackGeometry
 from .tracks import Resolution, resolve
 
@@ -69,6 +69,8 @@ class TrackAnalysis:
                 },
             )
         else:
+            info.names = table_names(st.track) or {}  # the corners can still be named
+            info.verified = bool(info.names)
             log.warning(
                 "braking analysis off for this track",
                 extra={"track": st.track, "layout": st.track_configuration, "reason": res.reason},

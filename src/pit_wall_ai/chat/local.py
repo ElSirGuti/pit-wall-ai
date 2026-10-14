@@ -14,7 +14,12 @@ import re
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-from ..analysis.corner_text import describe_corner, find_corner
+from ..analysis.corner_text import (
+    describe_corner,
+    describe_from_names,
+    find_corner,
+    find_in_names,
+)
 from ..analysis.trackctx import TrackInfo
 from ..engineer import messages as M
 from .facts import FactSheet, norm
@@ -77,6 +82,12 @@ _KEYS: dict[Intent, tuple[str, ...]] = {
         "cuanto me queda de",
     ),
     Intent.TYRES: (
+        "mas caliente",
+        "mas calientes",
+        "mas fria",
+        "mas frio",
+        "hottest",
+        "coldest",
         "neumatico",
         "neumaticos",
         "gomas",
@@ -105,10 +116,13 @@ _KEYS: dict[Intent, tuple[str, ...]] = {
         "mi mejor",
     ),
     Intent.SESSION: (
-        "sesion",
-        "session",
+        "que sesion",
+        "en que sesion",
+        "tipo de sesion",
+        "what session",
+        "which session",
+        "session type",
         "en que estoy",
-        "que tipo de sesion",
         "cuanto tiempo queda",
         "time left",
         "mi posicion",
@@ -172,6 +186,24 @@ _KEYS[Intent.NOT_YET] = (
     "tyre strategy",
     "estrategia de neumaticos",
 )
+_FORCE_MODEL = (
+    "resumeme",
+    "resumen",
+    "resume",
+    "resumir",
+    "summary",
+    "summarize",
+    "summarise",
+    "explicame",
+    "explica",
+    "explain",
+    "opinas",
+    "opinion",
+    "que tal he conducido",
+    "how did i drive",
+)
+_HOTTEST = ("mas caliente", "mas calientes", "hottest")
+_COLDEST = ("mas fria", "mas frio", "coldest")
 _ORDER = (
     Intent.CORNER,
     Intent.LAST_ALERT,
@@ -196,6 +228,7 @@ def _has(text: str, phrases: tuple[str, ...]) -> bool:
 class Routed:
     intents: tuple[Intent, ...]
     corners: tuple[int, ...] = ()
+    flags: tuple[str, ...] = ()
 
 
 def route(question: str, track: TrackInfo | None = None) -> Routed | None:
@@ -203,10 +236,19 @@ def route(question: str, track: TrackInfo | None = None) -> Routed | None:
     q = norm(question)
     if not q:
         return None
+    if _has(q, _FORCE_MODEL):
+        return None  # an open question: the model, with the context
     found: list[Intent] = []
     corners: tuple[int, ...] = ()
     if track is not None and track.geometry is not None:
         hits = find_corner(track.geometry, question, track.names)
+        if hits and _has(q, _IDENTITY):
+            corners = tuple(hits)
+            found.append(Intent.CORNER)
+    elif (
+        track is not None and track.names
+    ):  # no racing line here, but the circuit's table names the corners
+        hits = find_in_names(question, track.names)
         if hits and _has(q, _IDENTITY):
             corners = tuple(hits)
             found.append(Intent.CORNER)
@@ -228,7 +270,10 @@ def route(question: str, track: TrackInfo | None = None) -> Routed | None:
     # a braking/losing question already covers "frenadas": do not also dump the brake temperatures
     if Intent.LOSS in found and Intent.BRAKES in found:
         found.remove(Intent.BRAKES)
-    return Routed(tuple(found), corners)
+    flags = tuple(
+        f for f, words in (("hottest", _HOTTEST), ("coldest", _COLDEST)) if _has(q, words)
+    )
+    return Routed(tuple(found), corners, flags)
 
 
 @dataclass(frozen=True)
@@ -353,6 +398,12 @@ def _laps(sheet, lang, track, routed, th):
             if lang == "es"
             else f"Best lap, number {bl}: {_clock(best, lang)}."
         )
+    if ll is not None and ll == bl and last is not None:
+        out.append(
+            "La última vuelta es tu mejor vuelta."
+            if lang == "es"
+            else "The last lap is your best lap."
+        )
     d = sheet.value("laps.last.delta_to_best_s")
     if d is not None:
         keys.append("laps.last.delta_to_best_s")
@@ -370,7 +421,7 @@ def _laps(sheet, lang, track, routed, th):
     if live is not None:
         keys.append("laps.current.live_delta_s")
         out.append(
-            f"Delta en vivo: {live:+.2f} s contra la referencia.".replace(".", ",")
+            f"Delta en vivo: {f'{live:+.2f}'.replace('.', ',')} s contra la referencia."
             if lang == "es"
             else f"Live delta: {live:+.2f} s against the reference."
         )
@@ -403,13 +454,30 @@ def _tyres(sheet, lang, track, routed, th):
         rows.append(f"{_WHEEL[lang][w]}: {', '.join(bits)}")
     if not rows:
         return NO_DATA[lang], []
+    temps = {w: sheet.value(f"tyres.{w}.core_c") for w in ("FL", "FR", "RL", "RR")}
+    temps = {w: t for w, t in temps.items() if t is not None}
+    extra = []
+    if temps and "hottest" in routed.flags:
+        w = max(temps, key=temps.get)
+        extra.append(
+            f"El más caliente es el {_WHEEL[lang][w]}, a {_num(temps[w], 0, lang)} °C."
+            if lang == "es"
+            else f"The hottest is the {_WHEEL[lang][w]} one, at {_num(temps[w], 0, lang)} °C."
+        )
+    if temps and "coldest" in routed.flags:
+        w = min(temps, key=temps.get)
+        extra.append(
+            f"El más frío es el {_WHEEL[lang][w]}, a {_num(temps[w], 0, lang)} °C."
+            if lang == "es"
+            else f"The coldest is the {_WHEEL[lang][w]} one, at {_num(temps[w], 0, lang)} °C."
+        )
     comp = sheet.value("session.compound")
     head = (
         (f"Neumáticos ({comp}): " if lang == "es" else f"Tyres ({comp}): ")
         if comp
         else ("Neumáticos: " if lang == "es" else "Tyres: ")
     )
-    return head + "; ".join(rows) + ".", keys
+    return " ".join([*extra, head + "; ".join(rows) + "."]), keys
 
 
 def _brakes(sheet, lang, track, routed, th):
@@ -469,6 +537,33 @@ def _penalty(sheet, lang, track, routed, th):
     ), ["penalties.time_s"]
 
 
+_WHY_ES = (
+    (
+        "no Assetto Corsa tracks folder",
+        "no encuentro la carpeta de pistas de Assetto Corsa en este equipo (analysis.ac_dirs)",
+    ),
+    (
+        "no fast_lane.ai for track",
+        "no hay línea de carrera de esta pista en la instalación del juego",
+    ),
+    (
+        "no valid reference lap",
+        "todavía no hay una vuelta de referencia válida con el mismo compuesto",
+    ),
+    ("no line of", "ninguna línea de carrera coincide con la longitud de la pista (¿otro layout?)"),
+    ("no game length", "no sé qué trazado de la pista es sin la longitud que da el juego"),
+)
+
+
+def _why(reason: str, lang: str) -> str:
+    if lang != "es":
+        return reason
+    for prefix, text in _WHY_ES:
+        if reason.startswith(prefix) or prefix in reason[:60]:
+            return text
+    return reason
+
+
 def _loss(sheet, lang, track, routed, th):
     unavailable = sheet.value("analysis.unavailable")
     lap = sheet.value("analysis.lap")
@@ -479,6 +574,7 @@ def _loss(sheet, lang, track, routed, th):
             if lang == "es"
             else "no braking analysis for this track"
         )
+        why = _why(str(why), lang)
         return (
             (f"No puedo decirlo: {why}." if lang == "es" else f"I cannot say: {why}."),
             ["analysis.unavailable"],
@@ -534,6 +630,17 @@ def _loss(sheet, lang, track, routed, th):
 
 
 def _corner(sheet, lang, track, routed, th):
+    if track is not None and track.geometry is None and track.names and routed.corners:
+        names, count = track.names, max(track.names)
+        if len(routed.corners) == 1:
+            d = describe_from_names(routed.corners[0], count, names, lang)
+            return (d[0].upper() + d[1:] + "."), []
+        options = ", ".join(_corner_ref(sheet, n, names, lang) for n in routed.corners)
+        return (
+            f"Puede ser: {options}. ¿Cuál?"
+            if lang == "es"
+            else f"It could be: {options}. Which one?"
+        ), []
     if track is None or track.geometry is None or not routed.corners:
         return NO_DATA[lang], []
     names = track.names

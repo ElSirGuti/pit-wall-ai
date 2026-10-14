@@ -116,26 +116,47 @@ def find_corner(
     Several numbers come back when the text is ambiguous ("esse" matches three corners); the caller asks
     which one. Accents and case are ignored.
     """
+    return find_in_names(query, names or {}, len(geometry.apexes))
+
+
+def find_in_names(query: str, names: dict[int, str], count: int | None = None) -> list[int]:
+    """The same lookup from the names alone (a circuit table), without a racing line."""
+    n_corners = count if count is not None else (max(names) if names else 0)
     q = " ".join(w for w in _norm(query).split() if w not in _ARTICLES)
     if not q:
         return []
     out: list[int] = []
     m = re.search(r"\b(?:curva|corner|turn|t)?\s*(\d{1,2})\b", q)
-    if m and 1 <= int(m.group(1)) <= len(geometry.apexes):
+    if m and 1 <= int(m.group(1)) <= n_corners:
         out.append(int(m.group(1)))
-    for num, name in (names or {}).items():
+    for num, name in names.items():
         nm = _norm(name)
         generic = _norm(re.sub(r"^curva\s+", "", name))
         hit = q in (nm, generic) or nm in q or (len(q) >= 4 and q in nm)
         if hit and num not in out:
             out.append(num)
-    ordinals = {
-        "primera": 1,
-        "first": 1,
-        "ultima": len(geometry.apexes),
-        "last": len(geometry.apexes),
-    }
+    ordinals = {"primera": 1, "first": 1, "ultima": n_corners, "last": n_corners}
     for word, num in ordinals.items():
-        if re.search(rf"\b{word}\b", q) and "curva" in q and num not in out:
+        if num >= 1 and re.search(rf"\b{word}\b", q) and "curva" in q and num not in out:
             out.append(num)
     return out
+
+
+def describe_from_names(number: int, count: int, names: dict[int, str], lang: str = "es") -> str:
+    """ "Prima Esse, que es la curva 11, la última": what is known without the geometry."""
+    es = lang == "es"
+    if _named(names, number):
+        head = (
+            f"{names[number]}, que es la curva {number}"
+            if es
+            else f"{names[number]}, which is corner {number}"
+        )
+    else:
+        head = f"la curva {number}" if es else f"corner {number}"
+    if number == count:
+        tail = "la última" if es else "the last one"
+    elif number == 1:
+        tail = "la primera" if es else "the first one"
+    else:
+        return head
+    return f"{head}, {tail}"

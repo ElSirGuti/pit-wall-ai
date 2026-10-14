@@ -368,7 +368,7 @@ def test_every_local_answer_passes_its_own_grounding_check():
         "neumáticos",
         "frenos",
         "mejor vuelta y delta",
-        "sesión",
+        "¿en qué sesión estoy?",
         "penalización",
         "¿dónde pierdo tiempo?",
         "¿qué fue eso?",
@@ -571,3 +571,102 @@ def test_setup_and_strategy_questions_get_a_clear_not_yet_without_the_model(ques
     es = L.answer(r, sheet, lang="es").text
     assert "todavía no están disponibles" in es and "fase 8" in es
     assert "not available yet" in L.answer(r, sheet, lang="en").text
+
+
+# -- the findings of the first run with the real model on a PC without the game ---------------------------------
+def no_game_track() -> TrackInfo:
+    from pit_wall_ai.analysis import circuit_names
+
+    reason = "no Assetto Corsa tracks folder found (set analysis.ac_dirs)"
+    return TrackInfo(
+        "magione",
+        "",
+        Resolution("magione", "", reason=reason),
+        circuit_names.table_names("magione") or {},
+    )
+
+
+def test_the_table_names_corners_without_the_game_only_for_a_verified_circuit():
+    from pit_wall_ai.analysis import circuit_names
+
+    names = circuit_names.table_names("magione")
+    assert names is not None and len(names) == 11 and names[6] == "Curvone"
+    assert circuit_names.table_names("spa") is None  # its table order is not the circuit numbering
+    assert circuit_names.table_names("some_mod_track") is None
+
+
+@pytest.mark.parametrize(
+    ("question", "number"),
+    [
+        ("¿cuál es la prima esse?", 11),
+        ("¿cuál es la curva 6?", 6),
+        ("¿qué curva es el curvone?", 6),
+    ],
+)
+def test_a_corner_is_identified_from_the_table_when_the_game_is_not_installed(question, number):
+    t = no_game_track()
+    inp = synthetic_inputs()
+    inp.track = t
+    sheet = build_facts(inp)
+    r = L.route(question, t)
+    assert r is not None and r.corners == (number,)
+    text = L.answer(r, sheet, lang="es", track=t).text
+    assert f"curva {number}" in text and "no tengo ese dato" not in text.lower()
+    assert "la última" in text if number == 11 else "la primera" not in text
+
+
+def test_the_loss_answer_explains_in_spanish_why_there_is_no_analysis():
+    inp = synthetic_inputs()
+    inp.track = no_game_track()
+    sheet = build_facts(inp)
+    r = L.route("¿dónde pierdo tiempo?", inp.track)
+    text = L.answer(r, sheet, lang="es", track=inp.track).text
+    assert "carpeta de pistas de Assetto Corsa" in text and "analysis.ac_dirs" in text
+    assert "no Assetto Corsa tracks folder" not in text
+
+
+def test_summarise_and_explain_are_open_questions_even_with_a_keyword_inside():
+    for q in (
+        "resúmeme la sesión en dos frases",
+        "explícame cómo van los neumáticos",
+        "summarise my session",
+        "¿qué opinas de mis frenadas?",
+    ):
+        assert L.route(q) is None, q
+    assert L.route("¿en qué sesión estoy?").intents == (L.Intent.SESSION,)
+
+
+def test_the_hottest_tyre_is_named_with_its_temperature():
+    _, a, r = ask("¿cuál neumático está más caliente y a cuántos grados?")
+    assert r.flags == ("hottest",)
+    assert a.text.startswith("El más caliente es el delantero derecho, a 98 °C.")
+    _, both, _ = ask("¿cuál es el más caliente y el más frío?")
+    assert "El más caliente es el delantero derecho" in both.text
+    assert "El más frío es el delantero izquierdo, a 82 °C." in both.text
+
+
+def test_the_hottest_answer_passes_its_own_grounding_check():
+    inp = synthetic_inputs()
+    sheet = build_facts(inp)
+    q = "¿cuál neumático está más caliente y a cuántos grados?"
+    a = L.answer(L.route(q, inp.track), sheet, lang="es", track=inp.track)
+    assert G.check(a.text, sheet, q).ok
+
+
+def test_asking_for_the_best_lap_when_the_last_is_the_best_says_so():
+    inp = synthetic_inputs()
+    inp.laps = [lap(1, {500: 400}, ms=85_000), lap(2, {500: 400}, ms=84_000)]
+    inp.best = inp.laps[1]
+    _, a, _ = ask("compara mi mejor vuelta con la última", inp)
+    assert "La última vuelta es tu mejor vuelta." in a.text
+
+
+def test_the_live_delta_sentence_keeps_its_full_stop():
+    from pit_wall_ai.analysis.laps import CurrentLap
+
+    inp = synthetic_inputs()
+    inp.current = CurrentLap(
+        number=3, elapsed_ms=40_000, sector=1, out_lap=False, delta_ms=980.0, reference_number=1
+    )
+    _, a, _ = ask("¿cuál fue mi última vuelta?", inp)
+    assert a.text.endswith("Delta en vivo: +0,98 s contra la referencia.")

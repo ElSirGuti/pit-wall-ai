@@ -29,6 +29,20 @@ def numbering_verified(track: str) -> bool:
     return bool(c and c.get("numbering_verified"))
 
 
+def table_names(track: str) -> dict[int, str] | None:
+    """{number: name} straight from the table, only for a circuit whose numbering was verified.
+
+    It lets the chat answer "which corner is the Prima Esse?" on a machine without the game installed
+    (no racing line). For an unverified circuit the table order is not known to be the circuit's numbering,
+    so nothing is returned.
+    """
+    c = circuit_for(track)
+    if not c or not c.get("numbering_verified"):
+        return None
+    out = {int(e["order"]): str(e["name"]) for e in c.get("corners", []) if "order" in e}
+    return out or None
+
+
 def _norm(s: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", s.lower())
 
