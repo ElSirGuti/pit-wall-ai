@@ -101,3 +101,51 @@ def test_decimals_use_the_comma_in_spanish_and_german_only():
     assert decimal_comma("quedan 2.0 litros", "es") == "quedan 2,0 litros"
     assert decimal_comma("2.0 litres", "en") == "2.0 litres"
     assert decimal_comma("Runde 3. Dann 2.", "de") == "Runde 3. Dann 2."
+
+
+# -- the local answers in German ---------------------------------------------------------------------------------
+def test_german_questions_are_routed_locally():
+    from pit_wall_ai.chat import local as L
+
+    cases = {
+        "Wie viel Sprit habe ich noch?": "fuel",
+        "Wie sind die Reifen vorne?": "tyres",
+        "Wie sieht es mit den Bremsen aus?": "brakes",
+        "Was ist meine schnellste Runde?": "laps",
+        "Habe ich eine Strafe?": "penalty",
+        "Wo verliere ich am meisten Zeit?": "loss",
+        "Wie ist das Wetter in Monza?": "unknown_data",
+        "Wann soll ich boxen?": "not_yet",
+        "Wie lange noch?": "time_left",
+    }
+    for q, intent in cases.items():
+        r = L.route(q, None, "de")
+        assert r is not None and r.intents[0].value == intent, q
+    assert L.route("Fasse die Session zusammen", None, "de") is None  # an open question: the model
+    assert L.route("Erzähl mir einen Witz", None, "de") is None
+
+
+def test_the_german_answers_pass_the_grounding_check():
+    from pit_wall_ai.chat import grounding as G
+    from pit_wall_ai.chat import local as L
+    from pit_wall_ai.chat.context import build_facts
+    from tests.test_chat import synthetic_inputs
+
+    sheet = build_facts(synthetic_inputs())
+    for q in (
+        "Wie viel Sprit habe ich noch?",
+        "Wie sind die Reifen vorne?",
+        "Was ist meine schnellste Runde?",
+        "Wo verliere ich am meisten Zeit?",
+    ):
+        r = L.route(q, None, "de")
+        assert r is not None
+        a = L.answer(r, sheet, lang="de", thresholds=(10.0, 0.1))
+        assert G.check(a.text, sheet, q).ok, (q, a.text)
+        assert (
+            a.text
+            and "Noch" in a.text
+            or "Reifen" in a.text
+            or "Runde" in a.text
+            or "Kurve" in a.text
+        )

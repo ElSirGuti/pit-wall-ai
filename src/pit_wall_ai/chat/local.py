@@ -243,30 +243,39 @@ class Routed:
     flags: tuple[str, ...] = ()
 
 
-def route(question: str, track: TrackInfo | None = None) -> Routed | None:
-    """The intents of a question, or ``None`` when it should go to the model."""
+def route(question: str, track: TrackInfo | None = None, lang: str = "es") -> Routed | None:
+    """The intents of a question, or ``None`` when it should go to the model.
+
+    Spanish and English share one keyword table (a question in either is understood in both); German has
+    its own (``local_de``) and is used when ``lang`` is ``"de"``."""
+    de = lang == "de"
+    if de:
+        from . import local_de as DE
+
+        question = DE.fold(question)
     q = norm(question)
     if not q:
         return None
-    if _has(q, _FORCE_MODEL):
+    if _has(q, DE.FORCE_MODEL if de else _FORCE_MODEL):
         return None  # an open question: the model, with the context
+    identity = DE.IDENTITY if de else _IDENTITY
     found: list[Intent] = []
     corners: tuple[int, ...] = ()
     hits: list[int] = []
     if track is not None and track.geometry is not None:
         hits = find_corner(track.geometry, question, track.names)
-        if hits and _has(q, _IDENTITY):
+        if hits and _has(q, identity):
             corners = tuple(hits)
             found.append(Intent.CORNER)
     elif (
         track is not None and track.names
     ):  # no racing line here, but the circuit's table names the corners
         hits = find_in_names(question, track.names)
-        if hits and _has(q, _IDENTITY):
+        if hits and _has(q, identity):
             corners = tuple(hits)
             found.append(Intent.CORNER)
     for intent in _ORDER[1:]:
-        if _has(q, _KEYS[intent]):
+        if _has(q, DE.KEYS.get(intent.value, ()) if de else _KEYS[intent]):
             found.append(intent)
     if not found:
         return None
@@ -286,9 +295,8 @@ def route(question: str, track: TrackInfo | None = None) -> Routed | None:
     # a braking/losing question already covers "frenadas": do not also dump the brake temperatures
     if Intent.LOSS in found and Intent.BRAKES in found:
         found.remove(Intent.BRAKES)
-    flags = tuple(
-        f for f, words in (("hottest", _HOTTEST), ("coldest", _COLDEST)) if _has(q, words)
-    )
+    hot, cold = (DE.HOTTEST, DE.COLDEST) if de else (_HOTTEST, _COLDEST)
+    flags = tuple(f for f, words in (("hottest", hot), ("coldest", cold)) if _has(q, words))
     return Routed(tuple(found), corners, flags)
 
 
@@ -330,7 +338,11 @@ _WHEEL = {
     },
     "en": {"FL": "front left", "FR": "front right", "RL": "rear left", "RR": "rear right"},
 }
-NO_DATA = {"es": "No tengo ese dato.", "en": "I do not have that data."}
+NO_DATA = {
+    "es": "No tengo ese dato.",
+    "en": "I do not have that data.",
+    "de": "Diese Angabe habe ich nicht.",
+}
 
 
 def _corner_ref(sheet: FactSheet, number: int, names: dict[int, str], lang: str) -> str:
@@ -350,6 +362,17 @@ def answer(
     """The text for the routed intents, built only from ``sheet`` (and the geometry for corner questions)."""
     parts: list[str] = []
     keys: list[str] = []
+    if lang == "de":
+        from . import local_de as DE
+
+        for intent in routed.intents:
+            text, used = DE.BUILDERS[intent.value](sheet, track, routed, thresholds)
+            if text:
+                parts.append(text)
+                keys += used
+        if not parts:
+            parts.append(DE.NO_DATA)
+        return LocalAnswer(" ".join(parts), routed.intents, tuple(keys), tuple(parts))
     for intent in routed.intents:
         fn = _BUILDERS[intent]
         text, used = fn(sheet, lang, track, routed, thresholds)

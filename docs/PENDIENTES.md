@@ -148,8 +148,8 @@ pista con coche de desgaste real, banderas, daños y penalizaciones. Lo de arrib
 * poner `engineer.language: de` en `config/local.yaml` y leer las frases alemanas de `docs/FRASES_VOZ.md`
   (con el móvil, en `frases/telefono/`) para medir el reconocimiento en alemán; lo mismo con `en`;
 * decirme si el reconocimiento en alemán con el modelo `small` es suficiente o conviene `medium`;
-* cuando quieras alemán sin nube: pedir la traducción de las respuestas locales (unas 25 funciones de
-  `chat/local.py`).
+* las respuestas locales en alemán ya existen (`chat/local_de.py`): comprobar con frases reales que el
+  enrutado entiende tu forma de preguntar y decirme las que no reconozca.
 
 ## Modo MCP (para quien no tiene clave de API) — aplazado, sin prisa
 

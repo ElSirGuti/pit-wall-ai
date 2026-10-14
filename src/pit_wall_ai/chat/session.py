@@ -209,8 +209,7 @@ class ChatSession:
             if mem is not None:
                 self.stats.local += 1
                 return ChatReply(mem.text, "local", ("recall",))
-        # German has no local answer builders yet: the model answers (with the grounding check)
-        routed = None if force_model or self.lang == "de" else L.route(question, inp.track)
+        routed = None if force_model else L.route(question, inp.track, self.lang)
         b = self.cfg.analysis.braking
         if routed is not None:
             ans = L.answer(
@@ -317,8 +316,7 @@ class ChatSession:
         if self.lang == "de":
             return (
                 f"Ich kann das Cloud-Modell nicht erreichen: {why} "
-                "Auf Deutsch gibt es noch keine lokalen Antworten; wechsle auf Spanisch oder Englisch "
-                f"für lokale Antworten zu {cap}."
+                f"Bis dahin antworte ich lokal zu {cap}."
             )
         if self.lang == "es":
             return (
@@ -329,15 +327,14 @@ class ChatSession:
 
     def _degraded_text(self, sheet: FactSheet, why: str) -> str:
         parts = []
-        if self.lang != "de":
-            for intents in ((L.Intent.SESSION,), (L.Intent.LAPS,), (L.Intent.FUEL,)):
-                a = L.answer(L.Routed(intents), sheet, lang=self.lang)
-                if a.text and a.text != L.NO_DATA[self.lang]:
-                    parts.append(a.text)
+        for intents in ((L.Intent.SESSION,), (L.Intent.LAPS,), (L.Intent.FUEL,)):
+            a = L.answer(L.Routed(intents), sheet, lang=self.lang)
+            if a.text and a.text != L.NO_DATA[self.lang]:
+                parts.append(a.text)
         head = {
             "es": f"No he podido consultar el modelo ({why}). Esto es lo que sé:",
             "en": f"I could not reach the model ({why}). This is what I know:",
-            "de": f"Ich konnte das Modell nicht erreichen ({why}).",
+            "de": f"Ich konnte das Modell nicht erreichen ({why}). Das weiß ich:",
         }[self.lang]
         return " ".join([head, *parts]) if parts else head
 
