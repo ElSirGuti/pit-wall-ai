@@ -152,6 +152,18 @@ than one simulator exists, the structure is there and the only profile is AC.
 
 ---
 
+## Languages (2026-10-14): es, en, de
+
+`engineer.language: es | en | de` selects the text AND the voice language. German covers: the spoken alerts
+(`messages.py`), the model instructions and the grounding refusal, the persona styles, the spoken orders
+("nicht stören", "du kannst wieder sprechen"), the radio phrases, the memory ("was hast du mir über Kurve 4
+gesagt"), the recogniser vocabulary and language, the corner aliases ("Kurve 4", "Kurve vier") and the
+decimal comma. **Not yet in German**: the local answer builders (`chat/local.py`: fuel, tyres, laps... written
+from facts in Spanish and English): in German every question goes to the model, which is checked by the same
+grounding, so without the cloud model German answers "no local answers in German" and says what to do.
+Pending for German: those builders, the braking-corner descriptions of `corner_text`, and a German Windows
+voice (none is installed on the author's PC; `pit-wall voices` lists them once added).
+
 ## Status of phase 6b (2026-10-14)
 
 * **Persona** (`engineer/persona.py`, `engineer.persona` in the config): engineer name, driver name, a style

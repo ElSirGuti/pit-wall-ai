@@ -43,7 +43,22 @@ STYLES: dict[str, dict[str, str]] = {
     },
 }
 
-DEFAULT_NAME = {"es": "tu ingeniero de pista", "en": "your race engineer"}
+_DE_STYLES = {
+    "neutral": "",
+    "brief": "Stil: so kurz wie möglich; ein einziger Satz, wenn er reicht, ohne Begrüßung und Schnörkel.",
+    "calm": "Stil: ruhig und beruhigend; gelassen, ohne Probleme zu dramatisieren, und zuerst nennen, was gut läuft.",
+    "technical": "Stil: technisch und präzise; Rennsport-Fachsprache, die Werte mit Einheit vor dem Schluss.",
+    "warm": "Stil: freundlich und aufmunternd; den Fahrer ab und zu mit Namen ansprechen, Gutes anerkennen und die Stimmung hochhalten.",
+    "direct": "Stil: direkt und fordernd; auf den Punkt, den Fehler klar benennen und sagen, was zu tun ist.",
+}
+for _k, _v in _DE_STYLES.items():
+    STYLES[_k]["de"] = _v
+
+DEFAULT_NAME = {
+    "es": "tu ingeniero de pista",
+    "en": "your race engineer",
+    "de": "dein Renningenieur",
+}
 
 
 @dataclass(frozen=True)
@@ -61,39 +76,53 @@ class Persona:
 
     def system_suffix(self, lang: str) -> str:
         """Lines appended to the model's instructions; empty for the neutral default."""
-        lang = lang if lang in ("es", "en") else "en"
+        lang = lang if lang in ("es", "en", "de") else "en"
         parts: list[str] = []
         if self.name:
             parts.append(
-                f"Te llamas {self.name}." if lang == "es" else f"Your name is {self.name}."
+                {
+                    "es": f"Te llamas {self.name}.",
+                    "en": f"Your name is {self.name}.",
+                    "de": f"Du heißt {self.name}.",
+                }[lang]
             )
         if self.driver_name:
             parts.append(
-                f"El piloto se llama {self.driver_name}."
-                if lang == "es"
-                else f"The driver is called {self.driver_name}."
+                {
+                    "es": f"El piloto se llama {self.driver_name}.",
+                    "en": f"The driver is called {self.driver_name}.",
+                    "de": f"Der Fahrer heißt {self.driver_name}.",
+                }[lang]
             )
         style = STYLES.get(self.style, STYLES["neutral"])[lang]
         if style:
             parts.append(style)
         if self.custom and self.custom.strip():
-            head = (
-                "Indicaciones de estilo del piloto"
-                if lang == "es"
-                else "Style notes from the driver"
-            )
+            head = {
+                "es": "Indicaciones de estilo del piloto",
+                "en": "Style notes from the driver",
+                "de": "Stilhinweise des Fahrers",
+            }[lang]
             parts.append(f"{head}: {self.custom.strip()}")
         if parts:
             parts.append(
-                "El estilo nunca cambia los datos: los números y los hechos son los de CONTEXT."
-                if lang == "es"
-                else "Style never changes the data: numbers and facts are the ones in CONTEXT."
+                {
+                    "es": "El estilo nunca cambia los datos: los números y los hechos son los de CONTEXT.",
+                    "en": "Style never changes the data: numbers and facts are the ones in CONTEXT.",
+                    "de": "Der Stil ändert nie die Daten: Zahlen und Fakten sind die aus CONTEXT.",
+                }[lang]
             )
         return " ".join(parts)
 
     def greeting(self, lang: str, voice_name: str | None = None) -> str:
         """The introduction used by the voice test; the persona's name wins over the voice's."""
         who = self.name or voice_name
+        if lang == "de":
+            return (
+                f"Hallo, ich bin {who} und werde dein Renningenieur sein."
+                if who
+                else "Hallo, ich werde dein Renningenieur sein."
+            )
         if lang == "es":
             return (
                 f"Hola, soy {who} y seré tu ingeniero de pista."

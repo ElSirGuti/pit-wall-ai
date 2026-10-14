@@ -31,6 +31,14 @@ QUIET = (
     "quiet please",
     "stay quiet",
     "shut up",
+    "nicht storen",
+    "stor mich nicht",
+    "jetzt nicht",
+    "ruhe",
+    "sei still",
+    "halt den mund",
+    "kein funk",
+    "lass mich in ruhe",
 )
 RESUME = (
     "ya puedes hablar",
@@ -45,6 +53,11 @@ RESUME = (
     "you can speak",
     "talk to me again",
     "back on",
+    "du kannst sprechen",
+    "du kannst wieder sprechen",
+    "sprich wieder",
+    "ruhe vorbei",
+    "du kannst wieder funken",
 )
 
 

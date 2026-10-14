@@ -303,11 +303,11 @@ def sanitize(reply: str, report: GroundingReport, lang: str = "es") -> str:
     kept = [s for s in (x.strip() for x in _SENTENCE.split(reply) if x.strip()) if s not in bad]
     if kept:
         return " ".join(kept)
-    return (
-        "No puedo confirmar ese dato con la información que tengo."
-        if lang == "es"
-        else "I cannot confirm that with the information I have."
-    )
+    return {
+        "es": "No puedo confirmar ese dato con la información que tengo.",
+        "en": "I cannot confirm that with the information I have.",
+        "de": "Diese Angabe kann ich mit den Informationen, die ich habe, nicht bestätigen.",
+    }.get(lang, "I cannot confirm that with the information I have.")
 
 
 __all__ = ["GroundingReport", "Violation", "check", "sanitize", "norm"]

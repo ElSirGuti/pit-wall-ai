@@ -47,13 +47,13 @@ def format_turn(t: VoiceTurn) -> str:
     return "\n".join(lines)
 
 
-def hotwords_for(runtime) -> str:
+def hotwords_for(runtime, lang: str = "es") -> str:
     try:
         info = runtime.inputs().track
         names = list(info.names.values()) if info is not None else []
     except Exception:  # noqa: BLE001
         names = []
-    return build_hotwords(names)
+    return build_hotwords(names, lang=lang)
 
 
 def cmd_voice(
@@ -104,7 +104,7 @@ def cmd_voice(
         ask=chat.ask,
         language=cfg.engineer.language,
         ack_after_s=cfg.radio.ack_after_s,
-        hotwords=lambda: hotwords_for(runtime),
+        hotwords=lambda: hotwords_for(runtime, cfg.engineer.language),
         engineer=runtime.engineer,
         quiet_ends_on_speech=cfg.radio.quiet_ends_on_speech,
         on_turn=lambda t: None,

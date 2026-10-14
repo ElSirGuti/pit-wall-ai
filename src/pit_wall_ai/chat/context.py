@@ -95,7 +95,7 @@ def _time_numbers(ms: float) -> tuple[float, ...]:
 
 
 def corner_aliases(number: int, name: str | None) -> list[str]:
-    out = [f"curva {number}", f"corner {number}", f"turn {number}"]
+    out = [f"curva {number}", f"corner {number}", f"turn {number}", f"kurve {number}"]
     if name:
         out.append(name)
         out.append(re.sub(r"^curva\s+", "", name, flags=re.IGNORECASE))

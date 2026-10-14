@@ -16,6 +16,7 @@ EXIT_WORDS = {"salir", "exit", "quit", "q", "adios", "adiós"}
 BANNER = {
     "es": "Ingeniero de carrera. Pregunta lo que quieras (salir para terminar).",
     "en": "Race engineer. Ask anything (type exit to finish).",
+    "de": "Renningenieur. Frag, was du willst (exit zum Beenden).",
 }
 
 

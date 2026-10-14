@@ -261,7 +261,7 @@ class PersonaConfig(_Model):
 
 class EngineerConfig(_Model):
     enabled: bool = False  # opt in: `pit-wall run --voice` or enabled: true
-    language: Literal["es", "en"] = "es"
+    language: Literal["es", "en", "de"] = "es"
     voice: VoiceConfig = VoiceConfig()
     persona: PersonaConfig = PersonaConfig()
     calm: CalmConfig = CalmConfig()

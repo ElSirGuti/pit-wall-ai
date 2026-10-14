@@ -15,6 +15,7 @@ from .devices import DeviceNotFound, find_device, usable
 SAMPLE = {
     "es": "Hola, soy {name} y seré tu ingeniero de pista. Quedan dos vueltas de gasolina.",
     "en": "Hello, I am {name} and I will be your race engineer. Two laps of fuel left.",
+    "de": "Hallo, ich bin {name} und werde dein Renningenieur sein. Sprit für zwei Runden.",
 }
 
 

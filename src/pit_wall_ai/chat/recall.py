@@ -27,6 +27,11 @@ _TRIGGERS = (
     "what did you say",
     "what did you warn",
     "you told me",
+    "was hast du mir gesagt",
+    "was hattest du mir gesagt",
+    "was hast du gesagt",
+    "was hast du mir geraten",
+    "was hast du mir gemeldet",
 )
 MAX_QUOTES = 2
 
@@ -39,12 +44,15 @@ class Recall:
 
 def is_recall(question: str) -> bool:
     q = _norm(question)
-    return any(t in q for t in _TRIGGERS)
+    if any(t in q for t in _TRIGGERS):
+        return True
+    # German puts the topic between the verb parts: "was hast du mir ueber Kurve 4 gesagt"
+    return "was hast du mir" in q and any(w in q for w in ("gesagt", "geraten", "gemeldet"))
 
 
 def _mentions(text: str, number: int, names: dict[int, str]) -> bool:
     t = _norm(text)
-    if re.search(rf"\b(?:curva|corner|turn)\s+{number}\b", t):
+    if re.search(rf"\b(?:curva|corner|turn|kurve)\s+{number}\b", t):
         return True
     name = names.get(number)
     if name:
@@ -56,9 +64,9 @@ def _mentions(text: str, number: int, names: dict[int, str]) -> bool:
 def _ago(seconds: float, lang: str) -> str:
     s = max(0, int(round(seconds)))
     if s < 90:
-        return f"hace {s} s" if lang == "es" else f"{s} s ago"
+        return {"es": f"hace {s} s", "en": f"{s} s ago", "de": f"vor {s} s"}[lang]
     m = round(s / 60)
-    return f"hace {m} min" if lang == "es" else f"{m} min ago"
+    return {"es": f"hace {m} min", "en": f"{m} min ago", "de": f"vor {m} Min."}[lang]
 
 
 def recall(
@@ -83,9 +91,12 @@ def recall(
         return None  # "what did you tell me?" alone is the last-alert explanation of the router
     if len(corners) > 1:
         opts = ", ".join(names.get(n) or f"curva {n}" for n in corners)
-        return Recall(
-            f"Puede ser: {opts}. ¿Cuál?" if lang == "es" else f"It could be: {opts}. Which one?", 0
-        )
+        which = {
+            "es": f"Puede ser: {opts}. ¿Cuál?",
+            "en": f"It could be: {opts}. Which one?",
+            "de": f"Das kann sein: {opts}. Welche?",
+        }[lang]
+        return Recall(which, 0)
     quotes: list[tuple[float | None, str]] = []
     if corners:
         n = corners[0]
@@ -96,13 +107,20 @@ def recall(
         for _q, ans in history:
             if _mentions(ans, n, names):
                 quotes.append((None, ans))
-        label = names.get(n) or (f"la curva {n}" if lang == "es" else f"corner {n}")
-        about_es, about_en = f"sobre {label}", f"about {label}"
+        label = (
+            names.get(n) or {"es": f"la curva {n}", "en": f"corner {n}", "de": f"Kurve {n}"}[lang]
+        )
+        about_es, about_en, about_de = f"sobre {label}", f"about {label}", f"zu {label}"
     else:
         for a in alerts:
             quotes.append(((now - a.t) if now is not None else None, a.text))
-        about_es, about_en = "", ""
+        about_es, about_en, about_de = "", "", ""
     if not quotes:
+        if lang == "de":
+            return Recall(
+                f"Ich habe keine Meldung und keine Antwort {about_de or 'in letzter Zeit'} gespeichert.",
+                0,
+            )
         if lang == "es":
             return Recall(
                 f"No tengo registrado ningún aviso ni respuesta {about_es or 'reciente'}.".replace(
@@ -118,9 +136,9 @@ def recall(
     for ago, text in quotes:
         when = f" ({_ago(ago, lang)})" if ago is not None else ""
         parts.append(f"«{text.rstrip('.')}»{when}")
-    head = (
-        f"Esto es lo que te dije {about_es}: ".replace("  ", " ")
-        if lang == "es"
-        else f"This is what I told you {about_en}: ".replace("  ", " ")
-    )
+    head = {
+        "es": f"Esto es lo que te dije {about_es}: ",
+        "en": f"This is what I told you {about_en}: ",
+        "de": f"Das habe ich dir {about_de} gesagt: ",
+    }[lang].replace("  ", " ")
     return Recall(head + "; ".join(parts) + ".", len(quotes))

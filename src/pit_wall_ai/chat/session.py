@@ -58,8 +58,16 @@ SYSTEM = {
 }
 
 _LAP_SECONDS = re.compile(
-    r"(?<![\d:.,])(\d{2,3})([.,])(\d{2,3})\s*(?:segundos|seconds|seg|sec|s)\b"
+    r"(?<![\d:.,])(\d{2,3})([.,])(\d{2,3})\s*(?:segundos|seconds|sekunden|seg|sec|sek|s)\b",
+    re.IGNORECASE,
 )
+
+
+def decimal_comma(text: str, lang: str) -> str:
+    """Spanish and German write 2,0 litros / 2,0 Liter; the model copies the dots of the context."""
+    if lang not in ("es", "de"):
+        return text
+    return re.sub(r"(?<=\d)\.(?=\d)", ",", text)
 
 
 def lap_times_as_clock(text: str, lang: str) -> str:
@@ -73,7 +81,7 @@ def lap_times_as_clock(text: str, lang: str) -> str:
         if ms < 60:
             return m.group(0)
         minutes, rest = divmod(ms, Decimal(60))
-        sep = "," if lang == "es" else "."
+        sep = "," if lang in ("es", "de") else "."
         digits = len(frac)
         secs = f"{rest:0{3 + digits}.{digits}f}".replace(".", sep)
         return f"{int(minutes)}:{secs}"
@@ -81,11 +89,25 @@ def lap_times_as_clock(text: str, lang: str) -> str:
     return _LAP_SECONDS.sub(repl, text)
 
 
+SYSTEM["de"] = (
+    "Du bist der Renningenieur eines Simracing-Fahrers und sprichst über Funk. Antworte auf Deutsch, "
+    "in höchstens zwei kurzen Sätzen. Benutze NUR die Daten im Block CONTEXT: jede Zahl, die du schreibst, "
+    "muss dort stehen, mit ihrer Einheit und dem Rad, der Kurve oder der Runde zugeordnet, zu der sie gehört. "
+    "Wenn nach einem konkreten Wert gefragt wird, der nicht in CONTEXT steht, antworte: Diese Angabe habe "
+    "ich nicht. Bei einer Zusammenfassung nutze, was da ist, und füge diesen Satz nicht als Füllsel an. "
+    "Erfinde kein Wetter, keine Gegner und nichts, was du nicht siehst. Gib keine Setup- oder "
+    "Rennstrategie-Ratschläge: sie sind noch nicht verfügbar. Wenn CONTEXT sagt, dass es keine "
+    "Bremsanalyse gibt, sag das. Zum Vergleich von Achsen oder Seiten nutze die Werte in tyres.axles. "
+    "Rundenzeiten sagst du in Minuten und Sekunden (1:24,913), nie als 84,913 Sekunden."
+)
+
 CAPABILITIES = {
     "es": "gasolina y vueltas restantes, neumáticos, frenos, mejor vuelta y delta, sesión, penalizaciones, "
     "dónde pierdes tiempo y qué curva es cada una",
     "en": "fuel and laps left, tyres, brakes, best lap and delta, session, penalties, where you lose time and "
     "which corner is which",
+    "de": "Sprit und verbleibende Runden, Reifen, Bremsen, schnellste Runde und Delta, Session, Strafen, "
+    "wo du Zeit verlierst und welche Kurve welche ist",
 }
 
 
@@ -187,7 +209,8 @@ class ChatSession:
             if mem is not None:
                 self.stats.local += 1
                 return ChatReply(mem.text, "local", ("recall",))
-        routed = None if force_model else L.route(question, inp.track)
+        # German has no local answer builders yet: the model answers (with the grounding check)
+        routed = None if force_model or self.lang == "de" else L.route(question, inp.track)
         b = self.cfg.analysis.braking
         if routed is not None:
             ans = L.answer(
@@ -229,13 +252,14 @@ class ChatSession:
             text = G.sanitize(resp.text, report, self.lang)
         age = sheet.value("data_age_s")
         stale = self.cfg.chat.stale_after_s
-        text = lap_times_as_clock(text, self.lang)
+        text = decimal_comma(lap_times_as_clock(text, self.lang), self.lang)
         if age is not None and age > stale:
-            text = (
-                f"(datos de hace {age:.0f} s) "
-                if self.lang == "es"
-                else f"(data from {age:.0f} s ago) "
-            ) + text
+            stale_note = {
+                "es": f"(datos de hace {age:.0f} s) ",
+                "en": f"(data from {age:.0f} s ago) ",
+                "de": f"(Daten von vor {age:.0f} s) ",
+            }[self.lang]
+            text = stale_note + text
         if resp.cached:
             self.stats.cached += 1
         else:
@@ -252,16 +276,31 @@ class ChatSession:
     def _compose(self, question: str) -> str:
         if not self.history:
             return question
+        labels = {
+            "es": {
+                "pq": "Pregunta anterior",
+                "pa": "Respuesta anterior",
+                "head": "Conversación reciente:",
+                "now": "Pregunta actual:",
+            },
+            "en": {
+                "pq": "Previous question",
+                "pa": "Previous answer",
+                "head": "Recent conversation:",
+                "now": "Current question:",
+            },
+            "de": {
+                "pq": "Vorherige Frage",
+                "pa": "Vorherige Antwort",
+                "head": "Letzte Unterhaltung:",
+                "now": "Aktuelle Frage:",
+            },
+        }[self.lang]
         lines = []
         for q, a in self.history:
-            lines.append(
-                f"Pregunta anterior: {q}" if self.lang == "es" else f"Previous question: {q}"
-            )
-            lines.append(
-                f"Respuesta anterior: {a}" if self.lang == "es" else f"Previous answer: {a}"
-            )
-        head = "Conversación reciente:" if self.lang == "es" else "Recent conversation:"
-        now = "Pregunta actual:" if self.lang == "es" else "Current question:"
+            lines.append(f"{labels['pq']}: {q}")
+            lines.append(f"{labels['pa']}: {a}")
+        head, now = labels["head"], labels["now"]
         return "\n".join([head, *lines, now, question])
 
     def _self_check(self, text: str, sheet: FactSheet, question: str) -> None:
@@ -275,6 +314,12 @@ class ChatSession:
     def _unavailable_text(self) -> str:
         cap = CAPABILITIES[self.lang]
         why = self.unavailable_reason
+        if self.lang == "de":
+            return (
+                f"Ich kann das Cloud-Modell nicht erreichen: {why} "
+                "Auf Deutsch gibt es noch keine lokalen Antworten; wechsle auf Spanisch oder Englisch "
+                f"für lokale Antworten zu {cap}."
+            )
         if self.lang == "es":
             return (
                 f"No puedo consultar el modelo en la nube: {why} "
@@ -284,15 +329,16 @@ class ChatSession:
 
     def _degraded_text(self, sheet: FactSheet, why: str) -> str:
         parts = []
-        for intents in ((L.Intent.SESSION,), (L.Intent.LAPS,), (L.Intent.FUEL,)):
-            a = L.answer(L.Routed(intents), sheet, lang=self.lang)
-            if a.text and a.text != L.NO_DATA[self.lang]:
-                parts.append(a.text)
-        head = (
-            f"No he podido consultar el modelo ({why}). Esto es lo que sé:"
-            if self.lang == "es"
-            else f"I could not reach the model ({why}). This is what I know:"
-        )
+        if self.lang != "de":
+            for intents in ((L.Intent.SESSION,), (L.Intent.LAPS,), (L.Intent.FUEL,)):
+                a = L.answer(L.Routed(intents), sheet, lang=self.lang)
+                if a.text and a.text != L.NO_DATA[self.lang]:
+                    parts.append(a.text)
+        head = {
+            "es": f"No he podido consultar el modelo ({why}). Esto es lo que sé:",
+            "en": f"I could not reach the model ({why}). This is what I know:",
+            "de": f"Ich konnte das Modell nicht erreichen ({why}).",
+        }[self.lang]
         return " ".join([head, *parts]) if parts else head
 
 

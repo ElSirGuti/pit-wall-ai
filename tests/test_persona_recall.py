@@ -33,7 +33,7 @@ def test_name_driver_and_style_reach_the_prompt_and_the_data_rule_is_kept():
 
 def test_every_style_has_both_languages_and_no_real_person_is_named():
     for key, texts in STYLES.items():
-        assert set(texts) == {"es", "en"}, key
+        assert set(texts) == {"es", "en", "de"}, key
     banned = ("bozzi", "bonnington", "lambiase", "hamilton", "verstappen")
     blob = " ".join(t for v in STYLES.values() for t in v.values()).lower()
     assert not any(b in blob for b in banned)

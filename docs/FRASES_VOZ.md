@@ -93,3 +93,50 @@ casco. Dime cuáles has dejado y los mido: `pit-wall stt-test frases/telefono/*.
 * [ ] tanda A (silencio)
 * [ ] tanda B (con motor)
 * [ ] cifras anotadas en `docs/PHASE6_PLAN.md`
+
+## Frases en alemán y en inglés (para probar los idiomas)
+
+Pon `engineer.language: de` (o `en`) en `config/local.yaml` y graba las frases en ese idioma. La
+referencia es la misma numeración de arriba. Para la voz hace falta una voz de Windows del idioma
+(Configuración > Hora e idioma > Voz > Agregar voces: "Deutsch (Deutschland)" trae Hedda y Katja;
+`pit-wall voices` las lista).
+
+### Deutsch
+1. Wie viel Sprit habe ich noch?
+3. Wie viele Runden sind noch übrig?
+6. Wie sind die Reifen vorne?
+8. Wie hoch ist der Reifendruck in psi?
+14. Wie sieht es mit den Bremsen aus?
+17. Was ist meine schnellste Runde?
+18. Wie weit bin ich von meiner Bestzeit weg?
+20. Wie viel habe ich in der letzten Runde verloren?
+22. Wie viel habe ich in Kurve sechs verloren?
+23. Wie war das Bremsen in Kurve vier?
+24. Wo verliere ich am meisten Zeit?
+27. Was hast du mir über Kurve vier gesagt?
+29. Habe ich eine Strafe?
+30. In welcher Position fahre ich?
+33. Wiederhole das Letzte.
+34. Verstanden.
+35. Bitte kürzer.
+36. Nicht stören!
+37. Du kannst wieder sprechen.
+38. Wie ist das Wetter in Monza? (Falle: keine Angabe vorhanden)
+
+### English
+1. How much fuel do I have left?
+3. How many laps are left?
+6. How are the front tyres?
+8. What is the tyre pressure in psi?
+14. How are the brakes?
+17. What is my fastest lap?
+20. How much did I lose on the last lap?
+22. How much did I lose in corner six?
+23. How was the braking in corner four?
+24. Where am I losing the most time?
+27. What did you tell me about corner four?
+29. Do I have a penalty?
+33. Repeat the last one.
+36. Do not bother me now.
+37. You can talk again.
+38. What is the weather like in Monza? (trap: no such data)

@@ -32,7 +32,7 @@ _ASYNC = 1
 _PURGE_BEFORE_SPEAK = 2
 _RUNNING_SPEAKING = 2
 # primary language ids (the low 10 bits of the LCID that SAPI reports as a hex string)
-_PRIMARY_LANG = {"es": 0x0A, "en": 0x09}
+_PRIMARY_LANG = {"es": 0x0A, "en": 0x09, "de": 0x07}
 
 
 class TtsBackend(Protocol):

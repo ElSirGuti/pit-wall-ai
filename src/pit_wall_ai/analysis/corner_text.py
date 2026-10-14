@@ -124,13 +124,15 @@ _NUMBER_WORDS = {
     "ocho": 8, "nueve": 9, "diez": 10, "once": 11, "doce": 12, "trece": 13, "catorce": 14,
     "quince": 15, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7,
     "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12,
+    "eins": 1, "zwei": 2, "drei": 3, "vier": 4, "funf": 5, "sechs": 6, "sieben": 7, "acht": 8,
+    "neun": 9, "zehn": 10, "elf": 11, "zwolf": 12, "dreizehn": 13, "vierzehn": 14, "funfzehn": 15,
 }  # fmt: skip
 
 
 def _digits(q: str) -> str:
     """ "curva seis" -> "curva 6": a recogniser writes the words, a keyboard the digits."""
     return re.sub(
-        r"\b(curva|corner|turn)\s+([a-z]+)\b",
+        r"\b(curva|corner|turn|kurve)\s+([a-z]+)\b",
         lambda m: f"{m.group(1)} {_NUMBER_WORDS.get(m.group(2), m.group(2))}",
         q,
     )

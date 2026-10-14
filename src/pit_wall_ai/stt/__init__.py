@@ -33,6 +33,35 @@ BASE_VOCABULARY = (
 )
 
 
+VOCABULARY = {
+    "es": BASE_VOCABULARY,
+    "en": (
+        "psi",
+        "front left",
+        "front right",
+        "rear left",
+        "rear right",
+        "fuel",
+        "tyres",
+        "braking point",
+        "fastest lap",
+        "box",
+    ),
+    "de": (
+        "psi",
+        "vorne links",
+        "vorne rechts",
+        "hinten links",
+        "hinten rechts",
+        "Sprit",
+        "Reifen",
+        "Bremspunkt",
+        "schnellste Runde",
+        "Box",
+    ),
+}
+
+
 class SttUnavailable(RuntimeError):
     """The recogniser cannot run here (library missing, model not downloaded, no CUDA)."""
 
@@ -65,10 +94,12 @@ class Transcriber(Protocol):
     def close(self) -> None: ...
 
 
-def build_hotwords(corner_names: list[str] | None = None, extra: list[str] | None = None) -> str:
+def build_hotwords(
+    corner_names: list[str] | None = None, extra: list[str] | None = None, lang: str = "es"
+) -> str:
     """One string of names to bias the recogniser; duplicates dropped, order kept."""
     seen: dict[str, None] = {}
-    for w in [*(corner_names or []), *BASE_VOCABULARY, *(extra or [])]:
+    for w in [*(corner_names or []), *VOCABULARY.get(lang, BASE_VOCABULARY), *(extra or [])]:
         w = w.strip()
         if w:
             seen.setdefault(w, None)

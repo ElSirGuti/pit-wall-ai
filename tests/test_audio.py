@@ -323,7 +323,7 @@ def test_the_language_is_read_from_the_lcid():
     assert (
         T._lang_of("80A") == "es"
         and T._lang_of("409") == "en"
-        and T._lang_of("407").startswith("lcid")
+        and T._lang_of("40C").startswith("lcid")
     )
 
 

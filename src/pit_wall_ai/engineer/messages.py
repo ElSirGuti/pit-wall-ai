@@ -1,4 +1,4 @@
-"""Spoken messages: short, fixed shape "fact + action", in Spanish and English.
+"""Spoken messages: short, fixed shape "fact + action", in Spanish, English and German.
 
 Each one must be understood at 200 km/h in under two seconds, so none has more than ~6 words. Numbers are
 written the way the voice should read them.
@@ -14,10 +14,12 @@ _WHEEL = {
         "RR": "trasero derecho",
     },
     "en": {"FL": "front left", "FR": "front right", "RL": "rear left", "RR": "rear right"},
+    "de": {"FL": "vorne links", "FR": "vorne rechts", "RL": "hinten links", "RR": "hinten rechts"},
 }
 _AXLE = {
     "es": {"front": "delanteros", "rear": "traseros"},
     "en": {"front": "front", "rear": "rear"},
+    "de": {"front": "vorne", "rear": "hinten"},
 }
 
 TEXTS: dict[str, dict[str, str]] = {
@@ -73,6 +75,32 @@ TEXTS: dict[str, dict[str, str]] = {
         "best_sector": "Best sector {n}",
         "test": "Voice test, engineer ready",
     },
+    "de": {
+        "lockup": "{where} blockiert, Bremse lösen",
+        "wheelspin": "Durchdrehen {axle}, Gas dosieren",
+        "spin": "Dreher, Kupplung und Bremse",
+        "offtrack": "Neben der Strecke, vorsichtig zurück",
+        "fuel_warn": "Sprit für {amount}, sparen",
+        "fuel_critical": "Sprit für {amount}, Box",
+        "tyre_hot": "Reifen {axle} heiß, Fuß vom Gas",
+        "pressure_high": "Reifendruck hoch {where}, anpassen",
+        "puncture": "Reifenschaden {where}, Box",
+        "brake_hot": "Bremsen heiß, früher bremsen",
+        "penalty": "{seconds} Sekunden Strafe, abbüßen",
+        "flag_yellow": "Gelbe Flagge, Fuß vom Gas",
+        "flag_blue": "Blaue Flagge, lass ihn vorbei",
+        "flag_black": "Schwarze Flagge, Box",
+        "flag_white": "Weiße Flagge, letzte Runde",
+        "damage": "Schaden erkannt, prüfen",
+        "lap": "Runde {n}, {time}, {delta}",
+        "lap_best": "Schnellste Runde, {time}",
+        "delta_faster": "{tenths} schneller",
+        "delta_slower": "{tenths} langsamer",
+        "delta_slower_s": "{seconds} Sekunden langsamer",
+        "delta_same": "gleiches Tempo",
+        "best_sector": "Bestzeit Sektor {n}",
+        "test": "Sprachtest, Ingenieur bereit",
+    },
 }
 
 
@@ -86,10 +114,10 @@ def wheels_name(lang: str, wheels: list[str]) -> str:
     if len(s) == 1:
         return _WHEEL[lang][next(iter(s))]
     if s == {"FL", "FR"}:
-        return {"es": "delanteros", "en": "front axle"}[lang]
+        return {"es": "delanteros", "en": "front axle", "de": "Vorderachse"}[lang]
     if s == {"RL", "RR"}:
-        return {"es": "traseros", "en": "rear axle"}[lang]
-    return {"es": "varias ruedas", "en": "several wheels"}[lang]
+        return {"es": "traseros", "en": "rear axle", "de": "Hinterachse"}[lang]
+    return {"es": "varias ruedas", "en": "several wheels", "de": "mehrere Räder"}[lang]
 
 
 def axle_name(lang: str, axle: str) -> str:
@@ -115,6 +143,19 @@ _NUM = {
         "diez",
     ],
     "en": ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"],
+    "de": [
+        "null",
+        "eins",
+        "zwei",
+        "drei",
+        "vier",
+        "fünf",
+        "sechs",
+        "sieben",
+        "acht",
+        "neun",
+        "zehn",
+    ],
 }
 
 
@@ -125,6 +166,17 @@ def laps_phrase(lang: str, remaining: float) -> str:
     """
     n, frac = int(remaining), remaining - int(remaining)
     num = lambda k: _NUM[lang][k] if k < len(_NUM[lang]) else str(k)  # noqa: E731
+    if lang == "de":
+        if frac >= 0.75:
+            k = n + 1
+            return f"fast {num(k)} Runden" if k > 1 else "fast eine Runde"
+        if frac >= 0.5:
+            if n == 0:
+                return "eine halbe Runde"
+            return "anderthalb Runden" if n == 1 else f"{num(n)}einhalb Runden"
+        if n == 0:
+            return "weniger als eine halbe Runde"
+        return "eine Runde" if n == 1 else f"{num(n)} Runden"
     es = lang == "es"
     if frac >= 0.75:  # almost the next whole number
         k = n + 1
@@ -154,6 +206,10 @@ def lap_time_words(ms: int) -> str:
 
 def _tenths(lang: str, seconds: float) -> str:
     """A time loss as it is said: "2 décimas" below a second, "1,3 segundos" above."""
+    if lang == "de":
+        if seconds < 0.95:
+            return f"{max(1, round(seconds * 10))} Zehntel"
+        return f"{seconds:.1f}".replace(".", " Komma ") + " Sekunden"
     if seconds < 0.95:
         n = max(1, round(seconds * 10))
         if lang == "es":
@@ -170,8 +226,11 @@ def where_phrase(
     if name:
         return name
     if number is not None:
-        return f"Curva {number}" if lang == "es" else f"Corner {number}"
+        return {"es": f"Curva {number}", "en": f"Corner {number}", "de": f"Kurve {number}"}[lang]
     d = round(at_m / 10.0) * 10
+    if lang == "de":
+        side = "Rechtskurve" if direction == "right" else "Linkskurve"
+        return f"{side} {d} Meter nach der Ziellinie"
     if lang == "es":
         side = "derechas" if direction == "right" else "izquierdas"
         return f"Curva de {side} a {d} metros de meta"
@@ -181,6 +240,9 @@ def where_phrase(
 def braking_hint(lang: str, *, where: str, metres: float, earlier: bool, loss_s: float) -> str:
     """The measured fact first (braking point against the best lap), then the time it cost. No causes."""
     m = round(abs(metres))
+    if lang == "de":
+        how = "früher" if earlier else "später"
+        return f"{where}: du bremst {m} Meter {how} als in deiner schnellsten Runde, {_tenths(lang, loss_s)} verloren"
     if lang == "es":
         how = "antes" if earlier else "más tarde"
         return (
@@ -195,6 +257,13 @@ def loss_hint(lang: str, *, where: str, loss_s: float, min_speed_delta: float | 
     clearly lower. Facts only."""
     lost = _tenths(lang, loss_s)
     slower = min_speed_delta is not None and min_speed_delta <= -5.0
+    if lang == "de":
+        base = f"{where}: {lost} verloren"
+        return base + (
+            f", Mindestgeschwindigkeit {round(-min_speed_delta)} Kilometer pro Stunde niedriger"
+            if slower
+            else ""
+        )
     if lang == "es":
         base = f"{where}: pierdes {lost}"
         return base + (

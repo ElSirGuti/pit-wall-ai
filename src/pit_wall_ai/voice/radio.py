@@ -55,6 +55,14 @@ PHRASES = {
         "quiet": "Understood, quiet. I will only call you for something critical.",
         "resume": "Okay, I am back on the alerts.",
     },
+    "de": {
+        "ack": "Einen Moment.",
+        "nothing": "Das habe ich nicht verstanden, sag es noch einmal.",
+        "stt_down": "Ich kann dich gerade nicht verstehen.",
+        "busy": "",
+        "quiet": "Verstanden, ich bin still. Ich melde mich nur, wenn es kritisch ist.",
+        "resume": "Okay, ich melde mich wieder.",
+    },
 }
 
 
