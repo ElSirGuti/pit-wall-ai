@@ -111,8 +111,11 @@ Ver `docs/PHASE6_PLAN.md`, sección "Preguntas para el autor". Lo que necesitar�
 * en casa, con el paquete de voz instalado (`pip install -e ".[voice]"`): ejecutar `pit-wall devices`, `pit-wall mic-test --device seiren` (o el casco) y `pit-wall voices --test`, y anotar qué micrófono, qué salida y qué voz prefieres para ponerlos en `config/local.yaml`;
 * si quieres otra voz: bájala en Configuración de Windows > Hora e idioma > Voz > Agregar voces, y vuelve a ejecutar `pit-wall voices`;
 * medir el efecto de `stt.device: cuda` vs `cpu` en los fps del juego: `pit-wall stt-test --device both` con el juego abierto y comparar fps (instalar `pip install -e ".[stt,stt-cuda]"`);
-* grabar unas **30 a 40 frases habladas** (preguntas típicas, con números y nombres de curvas) para medir el
-  reconocimiento de voz con tu voz y tu micrófono; idealmente algunas con el coche sonando de fondo.
+* grabar las **40 frases habladas** de `docs/FRASES_VOZ.md` (tanda en silencio y tanda con el coche sonando)
+  para medir el reconocimiento de voz con tu voz y tu micrófono;
+* decidir sobre "psi" mal reconocido: tabla de correcciones o modelo `medium` (`docs/PHASE6_PLAN.md` 7.1);
+* idea nueva (2026-10-14): **desgaste de neumáticos por curva** con consejo para reducirlo, ver
+  `docs/PHASE8_PLAN.md` 3.4; espera tu aprobación del plan y una grabación de al menos 8 vueltas.
 
 ## Ya cerrado
 

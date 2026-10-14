@@ -156,6 +156,41 @@ inputs for improvement: the user is told before the first rival-related request.
   (n = 41 corners); try a stiffer rear anti-roll bar" and *not* a sweeping claim from one session.
 * The profile is stored locally and can be wiped.
 
+### 3.4 Tyre wear by corner and how to reduce it (idea of 2026-10-14, not approved yet)
+
+Target conversation:
+
+> Driver: "¿Cómo tengo los neumáticos delanteros?"
+> Engineer: "Están muy desgastados: estás bloqueando mucho en las frenadas de las curvas 5 y 11 y metiendo
+> demasiado volante en la 7."
+
+**What the data allows (honest limits).** The measured wear (rubber grip, already used for the degradation
+trend) is a value **per tyre and per lap**, not per corner. Attributing it to corners is therefore an
+**estimate** from a proxy, and must be said as such ("lo que más castiga..."), never as a measurement:
+
+| Cause | Proxy per corner, from channels already read | Advice (rule, not LLM) |
+|---|---|---|
+| Lock-ups under braking (front) | front wheel slip while brake > threshold, time and peak | "suelta un poco el freno antes de girar / frena más recto" |
+| Too much steering (scrubbing, understeer) | front slip angle or steering angle above the reference lap at the same speed and lateral g | "menos volante: frena un poco antes y entra más lento" |
+| Wheelspin on exit (rear) | rear slip while throttle > threshold | "acelera más progresivo en la salida" |
+| Overheating of one tyre | temperature rise per corner and per axle side | "esa curva carga el lado X: revisa la línea o la presión" |
+
+* **Per corner score** = integral of (slip x load) over the corner window, normalised by the lap's total; the
+  corners are those of the geometry layer, so the names are the real ones.
+* **Validation before use**: the sum of the proxy over a stint must correlate with the measured wear drop per
+  lap; if it does not on the author's recordings, the feature is not enabled (it would be inventing).
+* **Same rules as the rest**: numbers come from code; the model only phrases; the grounding check applies to
+  the corner numbers and to the percentages; a minimum sample (for example 5 valid laps on the same compound)
+  and the incident laps excluded, as the degradation trend already does.
+* **Output**: a ranked list ("curvas 5, 7 y 11: el 48 % de la carga de los delanteros") plus the dominant cause
+  of each; on request ("¿en qué curvas gasto más los neumáticos?") and, optionally, in the stint summary.
+* **Needs**: a recording of at least 8 laps on one compound with the tyre wear channel moving (the author's
+  existing sessions may be enough to try), and a check of which wheel-slip and steering channels each car
+  fills (same caution as with brake temperature).
+* **Risks**: the proxy may not follow the real wear model of the car; a cause diagnosed from slip alone can
+  be wrong when the car is a different setup; advice must stay conservative and be learnt against the ledger
+  of section 3.3.
+
 ### 3.3 The learning loop: a ledger of suggestions and what happened
 
 The language model does not learn between sessions (its weights never change). What improves is a **local
