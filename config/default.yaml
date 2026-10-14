@@ -174,3 +174,13 @@ audio:                  # phase 6: the microphone for push-to-talk
   tail_ms: 150          # and after it went up
   min_utterance_ms: 300 # shorter than this is an accidental touch and is dropped
   keep_audio: false     # keep the last utterances on disk to debug the recognition (never committed)
+
+stt:                    # phase 6: speech recognition (pip install -e ".[stt]"); `pit-wall stt-test`
+  backend: faster-whisper
+  model: small          # tiny | base | small | medium
+  device: auto          # auto | cpu | cuda: a per-game choice (CPU-hungry sims: try cuda; AC: cpu is fine)
+  compute_type: auto    # auto | int8 | float16 | int8_float16
+  threads: 4            # CPU threads for the recogniser
+  beam_size: 1          # 1 = fastest
+  language: null        # null = the engineer's language
+  model_dir: null       # where models are stored; null = the Hugging Face cache

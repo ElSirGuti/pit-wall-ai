@@ -124,6 +124,13 @@ def _parser() -> argparse.ArgumentParser:
     dv = sub.add_parser("devices", help="list the microphones and the audio outputs")
     dv.add_argument("--config", help="YAML config")
 
+    st = sub.add_parser("stt-test", help="speech recognition: latency, accuracy, cpu vs gpu")
+    st.add_argument("--config", help="YAML config")
+    st.add_argument("files", nargs="*", help="wav files (none: synthesised phrases)")
+    st.add_argument("--ref", action="append", help="reference text of each file, in order")
+    st.add_argument("--device", choices=["cpu", "cuda", "both"], default="cpu")
+    st.add_argument("--model", help="tiny | base | small | medium (default: stt.model)")
+    st.add_argument("--hotword", action="append", help="extra words to bias the recogniser")
     mt = sub.add_parser("mic-test", help="record a few seconds and show the level")
     mt.add_argument("--config", help="YAML config")
     mt.add_argument("--device", help="part of the microphone name (default: audio.input_device)")
@@ -564,6 +571,12 @@ def _cmd_mic_test(cfg: AppConfig, a: argparse.Namespace) -> int:
     return cmd_mic_test(cfg, a)
 
 
+def _cmd_stt_test(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .stt.cli_stt import cmd_stt_test
+
+    return cmd_stt_test(cfg, a)
+
+
 def _cmd_voices(cfg: AppConfig, a: argparse.Namespace) -> int:
     from .audio.cli_audio import cmd_voices
 
@@ -705,6 +718,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "devices": _cmd_devices,
             "mic-test": _cmd_mic_test,
             "voices": _cmd_voices,
+            "stt-test": _cmd_stt_test,
             "bindings": _cmd_bindings,
             "input-test": _cmd_input_test,
             "chat": _cmd_chat,

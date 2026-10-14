@@ -120,7 +120,7 @@ documented and unused.
 |---|---|---|
 | 1 | bindings + `pit-wall input-test`, `FakeBackend`, WinMM/hook spike on the G29, keyboard and mouse | **implemented**; the G29 is seen and the keyboard hook verified with an injected key; **pending: a real press of the wheel with G HUB running** (`docs/PENDIENTES.md`) |
 | 2 | audio capture + `pit-wall mic-test` | levels, 3 s recording, device selection, pre-roll and tail verified |
-| 3 | `Transcriber` interface + faster-whisper backend + `pit-wall stt-test file.wav` | latency and word error rate on the author's own phrases, CPU vs GPU, **and the effect on the game's frame rate** |
+| 3 (**implemented; measured on the PC with synthetic phrases, see 7.1**) | `Transcriber` interface + faster-whisper backend + `pit-wall stt-test file.wav` | latency and word error rate on the author's own phrases, CPU vs GPU, **and the effect on the game's frame rate** |
 | 4 | `pit-wall voice`: button -> STT -> chat -> speech with priorities and barge-in | works end to end on a replayed session; critical alert cuts an answer; a press cuts speech |
 | 5 | evaluation: 30 to 40 spoken questions, end-to-end latency report; Gemini Live spike | numbers reported, decision on Live recorded |
 | 6 | README ES/EN, `docs/VOICE.md`, pending list updated | |
@@ -188,6 +188,25 @@ author's approval** before the next.
 Also from the author: brake temperature is not simulated by every car of Assetto Corsa (a Kunos forum
 statement of 2017 lists the Cobra, the F40 and some classic Porsches). It matches what was measured here
 (a flat sensor on two cars) and is handled without a list of cars: a sensor that does not move is ignored.
+
+### 7.1 Step 3 measurements (2026-10-14, this PC: i5-11400, GTX 1660 SUPER 4 GB, model `small`, beam 1)
+
+Eight spoken questions **synthesised with the Windows voice Sabina** (not the author's voice, no microphone, no
+engine noise), so they measure speed and gross errors only:
+
+| Where | Load | Latency per phrase (2 to 3 s of audio) | Real-time factor | Word error rate |
+|---|---|---|---|---|
+| CPU, 4 threads, int8 | 122 s the first time (download), a few seconds afterwards | 1.87 s mean (1.75 to 2.10) | 0.76 | 8.9 % over 45 words |
+| GPU (CUDA, float16) | 3.3 s | 0.41 s mean (0.36 to 0.46) | 0.17 | 8.9 % (same errors) |
+
+* The errors are the same on both: "psi" heard as "sencaí" and digits ("curva 6" vs "seis"). The digit case is
+  a spelling difference that the chat router must accept; "psi" needs the recogniser vocabulary (hotwords did
+  not fix it with this model) or a post-correction table: **open**.
+* CUDA needs cuBLAS and cuDNN 12, which the NVIDIA wheels provide (`pip install -e ".[stt,stt-cuda]"`); without
+  them the model loads and then fails at the first call, so `load()` now warms the model up and reports it.
+* **Not measured yet**: the effect on the game's frame rate (needs the author, the game and the wheel) and the
+  accuracy with the author's voice and microphone. The 0.4 s GPU latency is the reason to prefer the GPU in
+  AC; in iRacing the CPU may be the better choice: that is what `stt.device` is for.
 
 ---
 

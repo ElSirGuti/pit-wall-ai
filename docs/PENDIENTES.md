@@ -110,6 +110,7 @@ Ver `docs/PHASE6_PLAN.md`, sección "Preguntas para el autor". Lo que necesitar�
 * ~~cómo se comporta un aviso medio mientras contesta el ingeniero~~ (decidido: gana el que empieza primero; los críticos siempre salen);
 * en casa, con el paquete de voz instalado (`pip install -e ".[voice]"`): ejecutar `pit-wall devices`, `pit-wall mic-test --device seiren` (o el casco) y `pit-wall voices --test`, y anotar qué micrófono, qué salida y qué voz prefieres para ponerlos en `config/local.yaml`;
 * si quieres otra voz: bájala en Configuración de Windows > Hora e idioma > Voz > Agregar voces, y vuelve a ejecutar `pit-wall voices`;
+* medir el efecto de `stt.device: cuda` vs `cpu` en los fps del juego: `pit-wall stt-test --device both` con el juego abierto y comparar fps (instalar `pip install -e ".[stt,stt-cuda]"`);
 * grabar unas **30 a 40 frases habladas** (preguntas típicas, con números y nombres de curvas) para medir el
   reconocimiento de voz con tu voz y tu micrófono; idealmente algunas con el coche sonando de fondo.
 

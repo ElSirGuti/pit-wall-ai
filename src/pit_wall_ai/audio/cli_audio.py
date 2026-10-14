@@ -13,8 +13,8 @@ from .capture import AudioBackend, Microphone, UtteranceRecorder, write_wav
 from .devices import DeviceNotFound, find_device, usable
 
 SAMPLE = {
-    "es": "Hola, soy tu ingeniero de carrera. Quedan dos vueltas de gasolina.",
-    "en": "Hello, I am your race engineer. Two laps of fuel left.",
+    "es": "Hola, soy {name} y seré tu ingeniero de pista. Quedan dos vueltas de gasolina.",
+    "en": "Hello, I am {name} and I will be your race engineer. Two laps of fuel left.",
 }
 
 
@@ -150,7 +150,7 @@ def cmd_voices(cfg: AppConfig, a: argparse.Namespace, *, out: Callable[[str], No
     chosen = [v for v in voices if not a.voice or a.voice.lower() in v.name.lower()]
     out(f"\nPlaying a sample with {len(chosen)} voice(s) on {output or 'the default output'}...")
     for v in chosen:
-        text = SAMPLE.get(v.language, SAMPLE["en"])
+        text = SAMPLE.get(v.language, SAMPLE["en"]).format(name=T.short_name(v.name))
         out(f"  {v.name}")
         tts = T.SapiTts(
             language=cfg.engineer.language,

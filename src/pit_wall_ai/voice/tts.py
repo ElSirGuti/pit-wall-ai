@@ -137,6 +137,51 @@ def _safe_attr(token, name: str) -> str:
         return ""
 
 
+_NOISE_WORDS = {"microsoft", "desktop", "mobile", "online", "natural", "voice", "text-to-speech"}
+
+
+def short_name(voice_name: str) -> str:
+    """The given name of a voice: "Microsoft Sabina Desktop - Spanish (Mexico)" -> "Sabina"."""
+    head = voice_name.split(" - ")[0]
+    for word in head.split():
+        if word.lower() not in _NOISE_WORDS:
+            return word
+    return voice_name
+
+
+def synth_to_wav(
+    text: str, path, *, voice_name: str | None = None, language: str = "es", rate: int = 0
+) -> None:
+    """Render ``text`` to a 16 kHz mono 16-bit WAV with a SAPI voice (no playback)."""
+    voice_name = voice_name or None
+
+    def run(client) -> None:
+        voice = client.Dispatch("SAPI.SpVoice")
+        chosen = None
+        for i in range(voice.GetVoices().Count):
+            v = voice.GetVoices().Item(i)
+            if voice_name and voice_name.lower() in v.GetAttribute("Name").lower():
+                chosen = v
+                break
+            try:
+                lcid = int(v.GetAttribute("Language").split(";")[0], 16)
+            except (ValueError, AttributeError):
+                continue
+            if chosen is None and (lcid & 0x3FF) == _PRIMARY_LANG.get(language, -1):
+                chosen = v
+        if chosen is not None:
+            voice.Voice = chosen
+        voice.Rate = rate
+        stream = client.Dispatch("SAPI.SpFileStream")
+        stream.Format.Type = 22  # SAFT16kHz16BitMono
+        stream.Open(str(path), 3)  # SSFMCreateForWrite
+        voice.AudioOutputStream = stream
+        voice.Speak(text, 0)
+        stream.Close()
+
+    _com_call(run)
+
+
 def pick_by_name(names: list[str], query: str | None) -> str | None:
     """The first name containing the query (case-insensitive); ``None`` when there is no query."""
     if not query:

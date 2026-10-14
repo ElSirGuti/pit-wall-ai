@@ -325,6 +325,19 @@ class AudioConfig(_Model):
     keep_audio: bool = False  # keep the last utterances on disk for debugging (never committed)
 
 
+class SttConfig(_Model):
+    """Speech recognition (phase 6). Where it runs is a user setting: iRacing is CPU-hungry, AC is not."""
+
+    backend: str = "faster-whisper"
+    model: str = "small"  # tiny | base | small | medium | a path or a Hugging Face id
+    device: str = "auto"  # auto | cpu | cuda
+    compute_type: str = "auto"  # auto | int8 | float16 | int8_float16 ...
+    threads: int = Field(4, ge=1, le=32)  # CPU threads used by the recogniser
+    beam_size: int = Field(1, ge=1, le=10)
+    language: str | None = None  # None = the engineer's language
+    model_dir: str | None = None  # where the models are kept; None = the Hugging Face cache
+
+
 class AppConfig(_Model):
     telemetry: TelemetryConfig = TelemetryConfig()
     logging: LoggingConfig = LoggingConfig()
@@ -334,6 +347,7 @@ class AppConfig(_Model):
     chat: ChatConfig = ChatConfig()
     input: InputConfig = InputConfig()
     audio: AudioConfig = AudioConfig()
+    stt: SttConfig = SttConfig()
 
 
 class ConfigError(ValueError):
