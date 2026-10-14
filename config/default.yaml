@@ -144,3 +144,4 @@ analysis:               # phase 4: track geometry and braking analysis
     throttle_on: 0.50   # throttle above this after the slowest point = back on power
     min_distance_m: 10  # a braking-point difference smaller than this is never said
     min_time_s: 0.10    # a time loss in the corner smaller than this is never said
+    big_loss_s: 0.50    # a loss this big is said even without a braking point (no brake there, or it ran on)

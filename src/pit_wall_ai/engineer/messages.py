@@ -188,3 +188,19 @@ def braking_hint(lang: str, *, where: str, metres: float, earlier: bool, loss_s:
         )
     how = "earlier" if earlier else "later"
     return f"{where}: you brake {m} meters {how} than your best lap, losing {_tenths(lang, loss_s)}"
+
+
+def loss_hint(lang: str, *, where: str, loss_s: float, min_speed_delta: float | None) -> str:
+    """A big time loss in a corner without a braking point to compare: time, and the slowest speed if it was
+    clearly lower. Facts only."""
+    lost = _tenths(lang, loss_s)
+    slower = min_speed_delta is not None and min_speed_delta <= -5.0
+    if lang == "es":
+        base = f"{where}: pierdes {lost}"
+        return base + (
+            f", velocidad mínima {round(-min_speed_delta)} kilómetros por hora menor"
+            if slower
+            else ""
+        )
+    base = f"{where}: losing {lost}"
+    return base + (f", minimum speed {round(-min_speed_delta)} km/h lower" if slower else "")

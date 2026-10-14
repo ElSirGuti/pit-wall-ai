@@ -96,6 +96,12 @@ one message: the corner where that lap braked differently from the best valid la
 * with a number you have verified (`analysis.verified_numbering: [magione]`): `Curva 4: frenas ...`
 * otherwise it describes the stretch: `Curva de derechas a 1730 metros de meta: frenas ...`
 
+A second kind of message covers a **big loss without a braking point to compare** (a corner taken without
+braking, braking that ran on from the previous corner, or the same braking point): when a corner costs at
+least `analysis.braking.big_loss_s` (0.5 s) it is said as time and, if clearly lower, the slowest speed:
+`Curva 7: pierdes 1 coma 9 segundos, velocidad mínima 27 kilómetros por hora menor`. Only one message per
+lap: whichever corner cost more time.
+
 The log line `alert fired` carries both braking points, the time difference, the span and the speed
 difference. Without the track's racing line (not installed, ambiguous layout) the rule is silent and logs
 the reason once (`braking analysis off for this track`).
@@ -106,3 +112,21 @@ the reason once (`braking analysis off for this track`).
   reordered to the shared memory's convention. Before, every log looked like a permanent spin.
 * `Steering Angle` is in degrees of the wheel; it is scaled by 1/450 to the shared memory's fraction of
   lock, so the "calm moment" detector works on logs.
+
+
+## Asking about a corner (used by the phase 5/6 conversation)
+
+The engineer must be able to answer "¿cuál es esa?". `analysis/corner_text.py` does it without a model:
+
+* `describe_corner(geometry, 11, "es", names)` -> `Prima Esse, que es la curva 11, la última, a izquierdas`;
+  it adds "la primera tras la recta larga" / "la última antes de la recta larga" when the stretch before or
+  after is 400 m or more without a corner.
+* `find_corner(geometry, "la prima esse", names)` -> `[11]`; by number ("curva 6"), by name ("curvone")
+  or by ordinal ("la última curva"). An ambiguous text ("la esse") returns several numbers, so the caller
+  asks which one.
+
+```
+pit-wall corners --track magione --length 2455.7 --what "prima esse"
+```
+
+The language model only receives these sentences; it does not decide which corner is which.

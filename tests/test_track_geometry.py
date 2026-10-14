@@ -382,3 +382,60 @@ def test_magione_has_eleven_numbered_corners_and_the_long_straight_ends_at_curvo
     )  # braking after the long straight
     assert apexes[4].apex_m < 1000 < 1600 < apexes[5].start_m  # ~800 m without a corner before it
     assert names[1] == "Curva Traliccio" and names[11] == "Prima Esse"
+
+
+# -- talking about a corner -------------------------------------------------------------------------------
+def _magione_geometry():
+    res = tracks.resolve("magione", "", length_m=2455.7)
+    if not res.ok:
+        pytest.skip(f"Magione is not installed: {res.reason}")
+    return res.geometry, circuit_names.corner_names(res.geometry, "magione")
+
+
+@pytest.mark.real_data
+def test_corner_descriptions_answer_which_one_is_that():
+    from pit_wall_ai.analysis.corner_text import describe_corner
+
+    g, names = _magione_geometry()
+    assert describe_corner(g, 11, "es", names).startswith(
+        "Prima Esse, que es la curva 11, la última"
+    )
+    assert describe_corner(g, 6, "es", names).startswith(
+        "Curvone, que es la curva 6, la primera tras la recta larga"
+    )
+    assert "la última antes de la recta larga" in describe_corner(g, 5, "es", names)
+    assert describe_corner(g, 1, "es", names).startswith(
+        "Curva Traliccio, que es la curva 1, la primera"
+    )
+    assert "the last one" in describe_corner(g, 11, "en", names)
+
+
+@pytest.mark.real_data
+def test_a_corner_can_be_found_by_name_number_or_ordinal():
+    from pit_wall_ai.analysis.corner_text import find_corner
+
+    g, names = _magione_geometry()
+    assert find_corner(g, "la prima esse", names) == [11]
+    assert find_corner(g, "PRIMA   ESSE?", names) == [11]
+    assert find_corner(g, "curva 6", names) == [6]
+    assert find_corner(g, "el curvone", names) == [6]
+    assert sorted(find_corner(g, "esse", names)) == [3, 10, 11]  # ambiguous: three esses
+    assert find_corner(g, "la última curva", names) == [11]
+    assert find_corner(g, "monza", names) == []
+    assert find_corner(g, "curva 40", names) == []
+
+
+def test_corner_text_on_a_synthetic_track(stadium_line):
+    from pit_wall_ai.analysis.corner_text import describe_corner, find_corner
+
+    g = analyze_line(stadium_line, track="stadium")
+    assert describe_corner(g, 2, "es").startswith("la curva 2, la última")
+    assert describe_corner(g, 2, "es").endswith("a derechas")
+    assert describe_corner(g, 1, "en").startswith("corner 1, the first one")
+    assert find_corner(g, "curva 2") == [2]
+
+
+def test_numbering_verified_flag_comes_from_the_table():
+    assert circuit_names.numbering_verified("magione") is True
+    assert circuit_names.numbering_verified("spa") is False
+    assert circuit_names.numbering_verified("some_mod_track") is False

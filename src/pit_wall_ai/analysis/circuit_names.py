@@ -23,6 +23,12 @@ def _table() -> list[dict]:
     return json.loads(text)["circuits"]
 
 
+def numbering_verified(track: str) -> bool:
+    """The author checked this circuit's corner numbering against the real circuit (flag in the table)."""
+    c = circuit_for(track)
+    return bool(c and c.get("numbering_verified"))
+
+
 def _norm(s: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", s.lower())
 

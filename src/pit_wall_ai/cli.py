@@ -107,6 +107,9 @@ def _parser() -> argparse.ArgumentParser:
     cor.add_argument("--file", help="a .pwrec.gz recording: track, layout and length come from it")
     cor.add_argument("--ac-dir", action="append", default=[], help="extra AC folder to search")
     cor.add_argument(
+        "--what", help='which corner is this? e.g. --what "prima esse" or --what "curva 6"'
+    )
+    cor.add_argument(
         "--laps", action="store_true", help="also compare every lap of --file against the best lap"
     )
     cor.add_argument(
@@ -471,6 +474,14 @@ def _cmd_corners(cfg: AppConfig, a: argparse.Namespace) -> int:
         )
     if not names:
         print("(no names for this circuit: numbered by the geometry only, numbering not verified)")
+    if a.what:
+        from .analysis.corner_text import describe_corner, find_corner
+
+        found = find_corner(g, a.what, names)
+        if not found:
+            print(f"\nno corner matches {a.what!r}")
+        for n in found:
+            print(f"\n{a.what!r}: " + describe_corner(g, n, cfg.engineer.language, names))
     if result is not None:
         _print_lap_comparison(g, names, result, cfg)
     return 0

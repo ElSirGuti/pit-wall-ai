@@ -288,6 +288,22 @@ def representative(lap: LapRecord, ref: LapRecord) -> bool:
     return lap.time_ms > 0 and lap.time_ms <= ref.time_ms * SLOW_LAP_RATIO
 
 
+def big_loss(c: CornerComparison, cfg: BrakingConfig) -> bool:
+    """A time loss large enough to be said even when there is no braking-point difference to state: the
+    corner was taken without braking, the braking ran on from the previous corner, or the braking point was
+    the same. It is a measured fact (time and slowest speed), not a diagnosis."""
+    return c.time_diff_s is not None and c.time_diff_s >= cfg.big_loss_s and not c.significant(cfg)
+
+
+def worst_issue(
+    comparisons: list[CornerComparison], cfg: BrakingConfig
+) -> tuple[str, CornerComparison] | None:
+    """The one corner worth a message for a lap: ("brake" | "loss", comparison), whichever cost most time."""
+    cands = [("brake", c) for c in comparisons if c.significant(cfg)]
+    cands += [("loss", c) for c in comparisons if big_loss(c, cfg)]
+    return max(cands, key=lambda kc: kc[1].time_diff_s or 0.0) if cands else None
+
+
 def worst_corner(
     comparisons: list[CornerComparison], cfg: BrakingConfig
 ) -> CornerComparison | None:

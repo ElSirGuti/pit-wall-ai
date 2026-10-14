@@ -261,6 +261,9 @@ class BrakingConfig(_Model):
         10.0, gt=0
     )  # a braking-point difference smaller than this is not said
     min_time_s: float = Field(0.10, gt=0)  # a time loss in the corner smaller than this is not said
+    big_loss_s: float = Field(
+        0.50, gt=0
+    )  # a loss this big is said even without a braking point to compare
 
 
 class AnalysisConfig(_Model):

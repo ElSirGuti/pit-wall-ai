@@ -401,3 +401,105 @@ def test_a_recording_that_starts_before_the_game_publishes_its_static_page_is_st
     empty, known = StaticInfo(), StaticInfo(track="magione", track_length_m=2455.7)
     assert first_known_static([empty, empty, known, known]).track == "magione"
     assert first_known_static([empty, empty]).track == ""
+
+
+# -- big loss without a braking point to compare -------------------------------------------------------------
+def test_a_big_loss_is_said_even_when_there_is_no_braking_point_to_compare():
+    from pit_wall_ai.analysis.braking import big_loss, worst_issue
+
+    ref = lap(1, {500: 400})  # corner 2 and 3 taken without braking
+    mine = lap(2, {500: 400}, vmin=60)
+    # a lap that is 25 km/h slower through corner 2 without braking (a slide, a lift)
+    slow = lap(3, {500: 400, 1500: 1500 - 5}, vmin=60)
+    comps = compare_lap(G, slow, ref, CFG)
+    assert all(c.time_diff_s is not None for c in comps)
+    got = worst_issue(comps, CFG)
+    # corner 2 has a braking point only in the slow lap: no distance to state, only a time
+    c2 = {c.corner: c for c in comps}[2]
+    assert c2.brake_earlier_m is None
+    assert (got is None) == (not big_loss(c2, CFG))
+    # nothing special when both laps are the same
+    assert worst_issue(compare_lap(G, mine, ref, CFG), CFG) is None
+
+
+def test_the_worst_issue_is_the_one_that_cost_most_whatever_its_kind():
+    from pit_wall_ai.analysis.braking import CornerComparison, CornerMetrics, worst_issue
+
+    none = CornerMetrics(1, None, None, None, None, None, None, None, None)
+
+    def comp(corner, earlier, loss):
+        return CornerComparison(
+            corner, 2, 1, earlier, loss, -10.0, None, None, (0.0, 1.0), none, none
+        )
+
+    cands = [comp(1, 14.0, 0.4), comp(2, None, 1.9), comp(3, 3.0, 0.2), comp(4, None, 0.3)]
+    kind, c = worst_issue(cands, CFG)
+    assert (kind, c.corner) == ("loss", 2)
+    kind, c = worst_issue([comp(1, 14.0, 0.9), comp(2, None, 0.6)], CFG)
+    assert (kind, c.corner) == ("brake", 1)
+    assert (
+        worst_issue([comp(1, 4.0, 0.3), comp(2, None, 0.4)], CFG) is None
+    )  # under every threshold
+
+
+def test_loss_wording_includes_the_slowest_speed_only_when_clearly_lower():
+    from pit_wall_ai.engineer import messages as M
+
+    assert M.loss_hint("es", where="Curva 7", loss_s=1.9, min_speed_delta=-27.2) == (
+        "Curva 7: pierdes 1 coma 9 segundos, velocidad mínima 27 kilómetros por hora menor"
+    )
+    assert M.loss_hint("es", where="Curvone", loss_s=0.6, min_speed_delta=-2.0) == (
+        "Curvone: pierdes 6 décimas"
+    )
+    assert (
+        M.loss_hint("es", where="Curvone", loss_s=0.6, min_speed_delta=4.0)
+        == "Curvone: pierdes 6 décimas"
+    )
+    assert M.loss_hint("en", where="Corner 7", loss_s=1.9, min_speed_delta=-27.2) == (
+        "Corner 7: losing 1.9 seconds, minimum speed 27 km/h lower"
+    )
+
+
+def test_the_spoken_hint_for_a_big_loss_names_the_corner_and_states_no_cause(tmp_path):
+    from pit_wall_ai.analysis import tracks as tr
+    from pit_wall_ai.analysis.laps import LapTracker
+    from pit_wall_ai.config import AnalysisConfig, EngineerConfig
+    from pit_wall_ai.engineer.rules import RuleContext, build_rules
+    from pit_wall_ai.events import LapCompleted
+    from pit_wall_ai.session.detector import SessionState
+    from pit_wall_ai.telemetry.snapshot import StaticInfo
+
+    from .helpers import snap
+    from .test_track_geometry import put_line
+
+    libs = tmp_path / "tracks"
+    put_line(libs, "stad")
+    res = tr.resolve("stad", "", length_m=1428.0, dirs=[libs])
+    L = res.geometry.length_m
+    c1, c2 = res.geometry.apexes
+    ref = lap(1, {c1.apex_m: c1.apex_m - 90, c2.apex_m: c2.apex_m - 90}, length=L)
+    # same braking points, but a much lower speed through the second corner
+    mine = lap(2, {c1.apex_m: c1.apex_m - 90, c2.apex_m: c2.apex_m - 90}, length=L, vmin=25)
+    ref.time_ms, mine.time_ms = 80_000, 83_000
+    tracker = LapTracker()
+    tracker.laps = [ref, mine]
+    rule = next(
+        r
+        for r in build_rules(EngineerConfig(), AnalysisConfig(ac_dirs=[str(libs)]))
+        if r.id == "braking_hint"
+    )
+    ctx = RuleContext(
+        snap(t=0.0, static=StaticInfo(track="stad", track_length_m=1428.0)),
+        SessionState(session="practice", status="live", phase="flying"),
+        tracker,
+        [LapCompleted(0.0, mine, False, 3000)],
+        "es",
+    )
+    alerts = rule.evaluate(ctx)
+    assert len(alerts) == 1
+    a = alerts[0]
+    assert (
+        a.values["kind"] == "loss" and abs(a.values["brake_earlier_m"]) < 10
+    )  # same braking point
+    assert a.text.startswith("Curva de derechas a ") and "pierdes" in a.text
+    assert "frenas" not in a.text and "porque" not in a.text

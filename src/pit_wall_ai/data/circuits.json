@@ -438,7 +438,9 @@
      "apex_fraction": 0.8945
     }
    ],
-   "note": "11 corners numbered as in the circuit map supplied by the author (2026-10-14); apex fractions are the 11 apexes of the game's racing line. Corner 7 has no name on the map."
+   "note": "11 corners numbered as in the circuit map supplied by the author (2026-10-14); apex fractions are the 11 apexes of the game's racing line. Corner 7 has no name on the map.",
+   "numbering_verified": true,
+   "verified_on": "2026-10-14"
   },
   {
    "id": "monaco",

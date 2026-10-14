@@ -19,7 +19,7 @@ from collections import deque
 from dataclasses import dataclass
 
 from ..analysis import braking as B
-from ..analysis.circuit_names import corner_names
+from ..analysis.circuit_names import corner_names, numbering_verified
 from ..analysis.laps import LapTracker
 from ..analysis.tracks import Resolution, resolve
 from ..config import AnalysisConfig, EngineerConfig
@@ -531,6 +531,10 @@ class BestSectorRule(Rule):
         return out
 
 
+def _r(v: float | None) -> float | None:
+    return None if v is None else round(v, 1)
+
+
 class BrakingHintRule(Rule):
     """After a lap: the corner where this lap braked differently from the best valid lap AND lost the most.
 
@@ -602,12 +606,16 @@ class BrakingHintRule(Rule):
             if geometry is None:
                 continue
             b = self.analysis.braking
-            worst = B.worst_corner(B.compare_lap(geometry, lap, ref, b), b)
-            if worst is None:
+            found = B.worst_issue(B.compare_lap(geometry, lap, ref, b), b)
+            if found is None:
                 continue
+            kind, worst = found
             corner = next(c for c in geometry.apexes if c.number == worst.corner)
             name = self._names.get(corner.number)
-            verified = ctx.snap.static.track in self.analysis.verified_numbering
+            verified = (
+                ctx.snap.static.track in self.analysis.verified_numbering
+                or numbering_verified(ctx.snap.static.track)
+            )
             where = M.where_phrase(
                 ctx.lang,
                 name=name,
@@ -615,24 +623,34 @@ class BrakingHintRule(Rule):
                 direction=corner.direction,
                 at_m=corner.apex_m,
             )
-            a = self._fire(
-                ctx,
-                f"lap{lap.number}",
-                M.braking_hint(
+            if kind == "brake":
+                text = M.braking_hint(
                     ctx.lang,
                     where=where,
                     metres=worst.brake_earlier_m,
                     earlier=worst.brake_earlier_m > 0,
                     loss_s=worst.time_diff_s,
-                ),
+                )
+            else:
+                text = M.loss_hint(
+                    ctx.lang,
+                    where=where,
+                    loss_s=worst.time_diff_s,
+                    min_speed_delta=worst.min_speed_delta_kmh,
+                )
+            a = self._fire(
+                ctx,
+                f"lap{lap.number}",
+                text,
+                kind=kind,
                 lap=lap.number,
                 reference=ref.number,
                 corner=corner.number,
                 corner_name=name,
                 numbering_verified=verified,
-                brake_point_m=round(worst.lap_metrics.brake_point_m, 1),
-                ref_brake_point_m=round(worst.ref_metrics.brake_point_m, 1),
-                brake_earlier_m=round(worst.brake_earlier_m, 1),
+                brake_point_m=_r(worst.lap_metrics.brake_point_m),
+                ref_brake_point_m=_r(worst.ref_metrics.brake_point_m),
+                brake_earlier_m=_r(worst.brake_earlier_m),
                 time_diff_s=round(worst.time_diff_s, 3),
                 min_speed_delta_kmh=None
                 if worst.min_speed_delta_kmh is None
