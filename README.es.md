@@ -179,6 +179,7 @@ Captura usada: Assetto Corsa 1.16.4, memoria compartida 1.7, servidor de prácti
 | 4 | Análisis de frenadas por curva contra la mejor vuelta (geometría de pista generada en local) | **en curso** ([docs](docs/TRACK_GEOMETRY.md)): geometría, numeración, comparación por curva y aviso hablado hechos; falta comprobarlos en vivo y contra la numeración real de los circuitos |
 | 5 | Chat de texto con Gemini usando un resumen compacto de telemetría, plan en [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md) (incluidas preguntas como "¿cuál es esa curva?", respondidas desde la geometría) | prevista |
 | 6 | Voz completa: push-to-talk asignable a cualquier botón de cualquier dispositivo (teclado, ratón, mando, volante, botonera; [plan](docs/INPUT_BINDINGS.md)), STT, respuestas habladas | prevista ([plan](docs/PHASE6_PLAN.md)) |
+| 6c | El ingeniero como servidor MCP, para quien no tiene clave de API ([propuesta](docs/MCP_PLAN.md)) | propuesta |
 | 6b | El ingeniero como personaje: protocolo de radio (semidúplex, ACK, frase de acuse), perfiles y personalidades, nombres, memoria de conversación | prevista, ver [docs/ENGINEER_EXPERIENCE_PLAN.md](docs/ENGINEER_EXPERIENCE_PLAN.md) |
 | 7 | Debrief post-sesión con Gemini | prevista |
 | 8 | Preparación de carrera: plan de estrategia con checklist de práctica editable, resumen de rivales, sugerencias de setup y de estilo de conducción | prevista, ver [docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md) |
