@@ -150,7 +150,8 @@ def cmd_voices(cfg: AppConfig, a: argparse.Namespace, *, out: Callable[[str], No
     chosen = [v for v in voices if not a.voice or a.voice.lower() in v.name.lower()]
     out(f"\nPlaying a sample with {len(chosen)} voice(s) on {output or 'the default output'}...")
     for v in chosen:
-        text = SAMPLE.get(v.language, SAMPLE["en"]).format(name=T.short_name(v.name))
+        tail = SAMPLE.get(v.language, SAMPLE["en"])
+        text = tail.format(name=cfg.engineer.persona.name or T.short_name(v.name))
         out(f"  {v.name}")
         tts = T.SapiTts(
             language=cfg.engineer.language,

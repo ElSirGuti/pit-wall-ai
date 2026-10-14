@@ -152,6 +152,18 @@ than one simulator exists, the structure is there and the only profile is AC.
 
 ---
 
+## Status of phase 6b (2026-10-14)
+
+* **Persona** (`engineer/persona.py`, `engineer.persona` in the config): engineer name, driver name, a style
+  among `neutral | brief | calm | technical | warm | direct` and free notes (`custom`). It only adds lines to
+  the model's instructions and to the voice greeting; numbers, rules and the grounding check are untouched.
+  Styles describe a manner; none imitates a real person. Local answers are not restyled (they are built from
+  facts), so the style shows in the model's answers.
+* **Memory** (`chat/recall.py`): "¿qué me habías dicho de la curva 4?" quotes the alerts and the earlier
+  answers that mention that corner (most recent first, with how long ago). A quote is not re-checked against
+  the current facts: it is what was said. Without a corner, "qué me dijiste" is still the last-alert
+  explanation. Not done yet: recall by topic ("qué me dijiste de la gasolina"), and persistence across sessions.
+
 ## Resumen en español
 
 * **La radio es semidúplex**: uno habla a la vez. El ingeniero no empieza mientras mantienes el botón; si lo

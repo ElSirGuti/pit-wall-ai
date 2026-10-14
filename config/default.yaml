@@ -51,6 +51,11 @@ engineer:               # phase 3: rule alerts spoken by the race engineer
   enabled: false        # opt in: `pit-wall run --voice` (or true here)
   language: es          # es | en : text AND voice language
   startup_quiet_s: 5    # silence right after a session starts / restarts
+  persona:              # phase 6b: who the engineer is and how they speak (the wording, never the data)
+    name: null          # how the engineer introduces themselves; null = the name of the voice (Sabina...)
+    driver_name: null   # how the engineer calls you
+    style: neutral      # neutral | brief | calm | technical | warm | direct
+    custom: null        # your own notes, e.g. "habla de usted", "sin chistes" (max 400 characters)
   voice:
     backend: sapi       # sapi = Windows voices (pip install -e ".[voice]") | command = your own synthesiser
                         # | console = print only | none

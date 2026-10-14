@@ -22,8 +22,10 @@ from dataclasses import dataclass, field, replace
 from ..config import AppConfig
 from ..engineer.client import LLMClient
 from ..engineer.llm import LLMRequest, LLMUnavailable, create_provider
+from ..engineer.persona import from_config as persona_from_config
 from . import grounding as G
 from . import local as L
+from . import recall as R
 from .context import ChatInputs, build_facts
 from .facts import FactSheet
 
@@ -126,6 +128,7 @@ class ChatSession:
         self.unavailable_reason = unavailable_reason
         self._clock = clock
         self.history: deque[tuple[str, str]] = deque(maxlen=max(0, cfg.chat.history_turns))
+        self.persona = persona_from_config(cfg.engineer.persona)
         self.stats = ChatStats()
 
     # -- the public call ----------------------------------------------------------------------------
@@ -144,6 +147,18 @@ class ChatSession:
     def _answer(
         self, question: str, inp: ChatInputs, sheet: FactSheet, force_model: bool = False
     ) -> ChatReply:
+        if not force_model:
+            mem = R.recall(
+                question,
+                alerts=list(inp.alerts),
+                history=list(self.history),
+                track=inp.track,
+                now=inp.now,
+                lang=self.lang,
+            )
+            if mem is not None:
+                self.stats.local += 1
+                return ChatReply(mem.text, "local", ("recall",))
         routed = None if force_model else L.route(question, inp.track)
         b = self.cfg.analysis.braking
         if routed is not None:
@@ -164,8 +179,9 @@ class ChatSession:
 
     def _ask_model(self, question: str, inp: ChatInputs, sheet: FactSheet) -> ChatReply:
         assert self.client is not None
+        suffix = self.persona.system_suffix(self.lang)
         request = LLMRequest(
-            system=SYSTEM[self.lang],
+            system=SYSTEM[self.lang] + (" " + suffix if suffix else ""),
             user=self._compose(question),
             context=sheet.context(),
         )

@@ -250,10 +250,20 @@ class PoliciesConfig(_Model):
     other: PolicyConfig = PolicyConfig(min_priority="medium")
 
 
+class PersonaConfig(_Model):
+    """Who the engineer is and how they speak (changes the wording, never the data)."""
+
+    name: str | None = None  # how the engineer introduces themselves; None = the voice's name
+    driver_name: str | None = None  # how the engineer calls the driver
+    style: Literal["neutral", "brief", "calm", "technical", "warm", "direct"] = "neutral"
+    custom: str | None = Field(None, max_length=400)  # the driver's own style notes
+
+
 class EngineerConfig(_Model):
     enabled: bool = False  # opt in: `pit-wall run --voice` or enabled: true
     language: Literal["es", "en"] = "es"
     voice: VoiceConfig = VoiceConfig()
+    persona: PersonaConfig = PersonaConfig()
     calm: CalmConfig = CalmConfig()
     policies: PoliciesConfig = PoliciesConfig()
     rules: RulesConfig = RulesConfig()
