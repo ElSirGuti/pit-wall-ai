@@ -132,6 +132,15 @@ Todo lo que falta medir con tu PC está ordenado en **`docs/SESION_MEDICION.md`*
 sentada: micrófono y voces, frases (`docs/FRASES_VOZ.md`), fps con el reconocedor en CPU y GPU, y una sesión de
 pista con coche de desgaste real, banderas, daños y penalizaciones. Lo de arriba se resuelve con ese guion.
 
+## Varias claves de API (reserva)
+
+* hecho: `GEMINI_API_KEY`, `GEMINI_API_KEY_2` ... o `GEMINI_API_KEY_LIST=a,b,c` en `.env`; pasa a la
+  siguiente cuando una agota su cuota (`docs/LLM.md`);
+* decidir **qué claves poner**: revisa los términos de Google antes de usar muchas cuentas gratuitas, porque
+  las cuotas son por proyecto y los términos pueden prohibir abrir cuentas para sortear los límites;
+  una alternativa que no depende de eso es otro proveedor como reserva (ver `docs/PROVIDERS_PLAN.md`);
+* probar con `pit-wall llm-check` cuando tengas 2 o más: debe listar cada clave como aceptada.
+
 ## Idiomas (alemán e inglés)
 
 * instalar una voz alemana en Windows (Configuración > Hora e idioma > Voz > Agregar voces > "Deutsch

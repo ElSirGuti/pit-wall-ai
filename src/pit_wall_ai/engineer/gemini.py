@@ -37,6 +37,9 @@ from .llm import (
 log = logging.getLogger(__name__)
 KEY_HEADER = "x-goog-api-key"
 TRANSIENT_COOLDOWN_S = 5.0  # leave an overloaded model alone this long before trying it again
+DAILY_QUOTA_COOLDOWN_S = (
+    3600.0  # a key that hit its DAILY quota rests this long (then it is tried again)
+)
 
 
 @dataclass(frozen=True)
@@ -121,6 +124,7 @@ class GeminiProvider:
         *,
         transport: HttpTransport | None = None,
         api_key: str | None = None,
+        api_keys: list[str] | None = None,
         clock=time.monotonic,
     ) -> None:
         if not cfg.allow_cloud:
@@ -129,36 +133,56 @@ class GeminiProvider:
                 "Set llm.allow_cloud: true in config/local.yaml to let the compact session summary and your "
                 "question be sent to Google (the free tier may use them to improve Google's products)."
             )
-        key = api_key or cfg.api_key()
-        if not key:
+        keys = list(api_keys) if api_keys else ([api_key] if api_key else cfg.api_keys())
+        if not keys:
             raise LLMUnavailable(
                 f"no API key: put {cfg.api_key_env}=... in .env (a free key from Google AI Studio)"
             )
         self.cfg = cfg
         self.model = cfg.model
-        self._key = key
+        self._keys = keys
+        self._active = 0  # the key in use: it is kept until it fails (sticky), then the next one
+        self._dead: set[int] = set()  # rejected by the API (401/403): not tried again in this run
         self._transport = transport or UrllibTransport()
         self._clock = clock
-        self._cooldown_until: dict[str, float] = {}
+        self._cooldown_until: dict[tuple[int, str], float] = {}  # (key index, model)
         self._no_thinking: set[str] = set()  # models that answered 400 to a thinking budget
-        self._cooldown_rate: set[str] = set()  # resting because of a 429 (not an overload)
+        self._cooldown_rate: set[tuple[int, str]] = (
+            set()
+        )  # resting because of a 429 (not an overload)
 
     # -- plumbing -----------------------------------------------------------------------------------
-    def _headers(self) -> dict[str, str]:
-        return {KEY_HEADER: self._key, "Content-Type": "application/json"}
+    @property
+    def key_count(self) -> int:
+        return len(self._keys)
 
-    def _send(self, method: str, path: str, body: dict | None = None) -> HttpResponse:
+    @property
+    def keys_usable(self) -> int:
+        return len(self._keys) - len(self._dead)
+
+    def _headers(self, key_index: int | None = None) -> dict[str, str]:
+        k = self._keys[self._active if key_index is None else key_index]
+        return {KEY_HEADER: k, "Content-Type": "application/json"}
+
+    def _send(
+        self, method: str, path: str, body: dict | None = None, key_index: int | None = None
+    ) -> HttpResponse:
         url = f"{self.cfg.base_url.rstrip('/')}/{path.lstrip('/')}"
         data = None if body is None else json.dumps(body, ensure_ascii=False).encode("utf-8")
         try:
-            return self._transport.request(method, url, self._headers(), data, self.cfg.timeout_s)
+            return self._transport.request(
+                method, url, self._headers(key_index), data, self.cfg.timeout_s
+            )
         except OSError as exc:
             raise LLMTransient(
                 f"network error talking to the model: {self._redact(str(exc))}"
             ) from exc
 
     def _redact(self, text: str) -> str:
-        return text.replace(self._key, "***") if self._key else text
+        for k in self._keys:
+            if k:
+                text = text.replace(k, "***")
+        return text
 
     # -- models -------------------------------------------------------------------------------------
     def list_models(self) -> list[ModelInfo]:
@@ -193,7 +217,12 @@ class GeminiProvider:
             return
         msg = self._redact(_error_message(resp))
         if s == 429:
-            raise LLMRateLimited(f"rate limited: {msg}", _retry_after(resp))
+            wait = _retry_after(resp)
+            if b"PerDay" in resp.body or b"per day" in resp.body.lower():
+                wait = max(
+                    wait or 0.0, DAILY_QUOTA_COOLDOWN_S
+                )  # a daily quota will not come back in a minute
+            raise LLMRateLimited(f"rate limited: {msg}", wait)
         if s in (401, 403) or (s == 400 and "api key" in msg.lower()):
             raise LLMUnavailable(f"the API key was rejected ({s}): {msg}")
         if s == 404 and not listing:
@@ -269,55 +298,84 @@ class GeminiProvider:
         """The configured model first; if it is overloaded, times out or is over its quota, the
         ``fallback_models`` in order. Quotas are per model, so a reserve has its own allowance.
 
-        A model that just failed is left alone for a while (its ``Retry-After`` on a 429, a few seconds on an
-        overload): failed requests count against the daily quota too, so hammering is expensive. When every
-        model is cooling down no request is made at all and the shortest wait is reported.
+        With several API keys, a key that is over its quota passes the request to the next key **for the same
+        model** before a fallback model is tried (a reserve key has the same quality). The key in use is kept
+        until it fails, so a long race spends one key at a time.
+
+        A (key, model) pair that just failed is left alone for a while (its ``Retry-After`` on a 429, a few
+        seconds on an overload): failed requests count against the daily quota too, so hammering is
+        expensive. When every pair is cooling down no request is made at all and the shortest wait is reported.
         """
         models = list(dict.fromkeys([self.cfg.model, *self.cfg.fallback_models]))
+        n = len(self._keys)
+        order = [(self._active + j) % n for j in range(n)]
+        order = [k for k in order if k not in self._dead]
+        if not order:
+            raise LLMUnavailable("every API key was rejected by the service")
         now = self._clock()
-        ready = [m for m in models if now >= self._cooldown_until.get(m, 0.0)]
+        pairs = [(m, k) for m in models for k in order]
+        ready = [p for p in pairs if now >= self._cooldown_until.get((p[1], p[0]), 0.0)]
         if not ready:
-            soonest = min(models, key=lambda m: self._cooldown_until[m])
-            wait = max(self._cooldown_until[soonest] - now, 0.0)
-            msg = "every configured model is resting after a recent failure"
-            if soonest in self._cooldown_rate:  # a real 429: the limiter must back off too
+            soonest = min(pairs, key=lambda p: self._cooldown_until[(p[1], p[0])])
+            wait = max(self._cooldown_until[(soonest[1], soonest[0])] - now, 0.0)
+            msg = "every configured model and key is resting after a recent failure"
+            if (
+                soonest[1],
+                soonest[0],
+            ) in self._cooldown_rate:  # a real 429: the limiter must back off too
                 raise LLMRateLimited(msg, wait)
             raise LLMTransient(f"{msg}; try again in {wait:.0f} s")
         last: LLMError | None = None
-        for i, model in enumerate(ready):
+        for i, (model, k) in enumerate(ready):
+            if k in self._dead:
+                continue
+            slot = (k, model)
             try:
-                resp = self._generate_with(model, request)
+                resp = self._generate_with(model, request, k)
             except LLMRateLimited as exc:
-                self._cooldown_until[model] = self._clock() + (exc.retry_after_s or 30.0)
-                self._cooldown_rate.add(model)
+                self._cooldown_until[slot] = self._clock() + (exc.retry_after_s or 30.0)
+                self._cooldown_rate.add(slot)
                 last = exc
-                self._log_next(model, ready, i, exc)
+                self._log_next(model, k, ready, i, exc)
                 continue
             except LLMTransient as exc:
-                self._cooldown_until[model] = self._clock() + TRANSIENT_COOLDOWN_S
-                self._cooldown_rate.discard(model)
+                self._cooldown_until[slot] = self._clock() + TRANSIENT_COOLDOWN_S
+                self._cooldown_rate.discard(slot)
                 last = exc
-                self._log_next(model, ready, i, exc)
+                self._log_next(model, k, ready, i, exc)
                 continue
+            except LLMUnavailable as exc:
+                if n == 1 or "rejected" not in str(exc):
+                    raise
+                self._dead.add(k)  # this key is refused: another one may still work
+                last = exc
+                log.warning("an API key was rejected; trying the next one", extra={"key": k + 1})
+                continue
+            if k != self._active:
+                log.info("switched to API key", extra={"key": k + 1, "of": n})
+                self._active = k
             if i:
                 log.info(
-                    "answered by a fallback model", extra={"model": model, "primary": models[0]}
+                    "answered by a reserve",
+                    extra={"model": model, "primary": models[0], "key": k + 1},
                 )
             return resp
         assert last is not None
         raise last
 
     @staticmethod
-    def _log_next(model: str, ready: list[str], i: int, exc: LLMError) -> None:
+    def _log_next(model: str, key: int, ready: list, i: int, exc: LLMError) -> None:
         log.warning(
             "model call failed, trying the next one" if i + 1 < len(ready) else "model call failed",
-            extra={"model": model, "error": str(exc)},
+            extra={"model": model, "key": key + 1, "error": str(exc)},
         )
 
-    def _generate_with(self, model: str, request: LLMRequest) -> LLMResponse:
+    def _generate_with(
+        self, model: str, request: LLMRequest, key_index: int | None = None
+    ) -> LLMResponse:
         t0 = self._clock()
         body = self.build_body(request, model)
-        resp = self._send("POST", f"models/{model}:generateContent", body)
+        resp = self._send("POST", f"models/{model}:generateContent", body, key_index)
         if resp.status == 400 and "thinkingConfig" in body["generationConfig"]:
             # this model does not take a thinking budget: remember it and ask again without
             self._no_thinking.add(model)
@@ -326,7 +384,10 @@ class GeminiProvider:
                 extra={"model": model, "api_message": self._redact(_error_message(resp))},
             )
             resp = self._send(
-                "POST", f"models/{model}:generateContent", self.build_body(request, model)
+                "POST",
+                f"models/{model}:generateContent",
+                self.build_body(request, model),
+                key_index,
             )
         self._raise_for_status(resp, model=model)
         data = resp.json()

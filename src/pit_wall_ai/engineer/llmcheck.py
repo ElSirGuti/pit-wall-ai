@@ -58,6 +58,18 @@ def run_llm_check(
     if extra:
         out("fallback models: " + ", ".join(extra))
     out(f"endpoint: {cfg.base_url}")
+    if provider.key_count > 1:
+        out(
+            f"API keys: {provider.key_count} (the first is used until it hits its quota; "
+            "the others are reserves). Checking each one (the key itself is never printed):"
+        )
+        for i in range(provider.key_count):
+            try:
+                r = provider._send("GET", "models?pageSize=1", key_index=i)
+                state = "accepted" if 200 <= r.status < 300 else f"answered {r.status}"
+            except LLMError as exc:
+                state = f"not reachable ({exc})"
+            out(f"  key {i + 1}: {state}")
     out(f"what is sent: the one-line prompt {PING_USER!r}. No telemetry, no personal data.")
 
     try:

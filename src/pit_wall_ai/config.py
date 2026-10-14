@@ -90,8 +90,26 @@ class LLMConfig(_Model):
     rate_limit: RateLimitConfig = RateLimitConfig()
 
     def api_key(self, env: Mapping[str, str] | None = None) -> str | None:
-        """The key from the environment (never stored on the object)."""
-        return (env if env is not None else os.environ).get(self.api_key_env) or None
+        """The first key from the environment (never stored on the object)."""
+        keys = self.api_keys(env)
+        return keys[0] if keys else None
+
+    def api_keys(self, env: Mapping[str, str] | None = None) -> list[str]:
+        """Every key given, in order of use: ``NAME``, ``NAME_2`` ... ``NAME_9`` and ``NAME_LIST`` (commas).
+
+        More than one is a reserve: when the first is over its quota the next one is used.
+        """
+        e = env if env is not None else os.environ
+        found: list[str] = []
+        names = [self.api_key_env, *(f"{self.api_key_env}_{n}" for n in range(2, 10))]
+        for name in names:
+            v = (e.get(name) or "").strip()
+            if v:
+                found.append(v)
+        for v in (e.get(f"{self.api_key_env}_LIST") or "").split(","):
+            if v.strip():
+                found.append(v.strip())
+        return list(dict.fromkeys(found))
 
 
 # ── engineer (rule-based alerts + voice) ─────────────────────────────────────────────────────────────

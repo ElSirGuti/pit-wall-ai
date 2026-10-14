@@ -165,3 +165,32 @@ call). Traps: 6 / 6 in every pass. Impossible questions: every answer the model 
   wheel/lap/corner/unit, not a wrong *interpretation* of a correct number.
 * The free tier was overloaded now and then (503, read timeouts): the reserve model answered, and a
   degraded answer is retried once in the evaluation.
+
+## Several API keys (reserve keys)
+
+For a long race, more than one key can be given. The first is used until it hits its quota; then the
+request goes to the next key **for the same model** (a reserve key has the same quality), and only when every
+key is resting does a fallback model get tried.
+
+```
+# .env  (git-ignored)
+GEMINI_API_KEY=first
+GEMINI_API_KEY_2=second
+GEMINI_API_KEY_3=third
+# or all in one line:
+GEMINI_API_KEY_LIST=second,third
+```
+
+* `NAME`, `NAME_2` ... `NAME_9` and `NAME_LIST` (comma separated) are read in that order; duplicates are
+  dropped. `NAME` is `llm.api_key_env` (default `GEMINI_API_KEY`).
+* The key in use is kept while it works (a race spends one key at a time). A key that answers 429 rests for
+  the time the API asks (at least an hour when the message is a *daily* quota), then it is tried again.
+* A key the API **rejects** (401/403) is dropped for the rest of the run; the others go on. If every key is
+  rejected the chat says the model is unavailable.
+* `pit-wall llm-check` lists each key as `key 1: accepted`, `key 2: answered 403`... and never prints one.
+* Keys never appear in errors, logs or the output of any command.
+
+**A caution on terms.** Quotas are per project. Providers' terms differ on getting extra allowance by
+creating several accounts or projects, and some forbid it. This mechanism is meant for keys you are entitled
+to use (for example a personal key plus a work or paid key as reserve). Read the provider's terms before
+filling the list with free-tier keys from many accounts: that is your decision and your responsibility.
