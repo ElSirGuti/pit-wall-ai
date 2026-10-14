@@ -325,6 +325,15 @@ class AudioConfig(_Model):
     keep_audio: bool = False  # keep the last utterances on disk for debugging (never committed)
 
 
+class RadioConfig(_Model):
+    """How the conversation shares the channel with the alerts (phase 6, step 4)."""
+
+    priority: Literal["first_to_start", "driver"] = "first_to_start"
+    ack_after_s: float = Field(
+        1.5, ge=0.0, le=10.0
+    )  # "one moment" when the answer takes longer (0 = never)
+
+
 class SttConfig(_Model):
     """Speech recognition (phase 6). Where it runs is a user setting: iRacing is CPU-hungry, AC is not."""
 
@@ -348,6 +357,7 @@ class AppConfig(_Model):
     input: InputConfig = InputConfig()
     audio: AudioConfig = AudioConfig()
     stt: SttConfig = SttConfig()
+    radio: RadioConfig = RadioConfig()
 
 
 class ConfigError(ValueError):

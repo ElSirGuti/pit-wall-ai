@@ -7,7 +7,7 @@ import tempfile
 from collections.abc import Callable
 from pathlib import Path
 
-from ..audio.capture import read_wav
+from ..audio.capture import read_audio
 from ..config import AppConfig
 from ..voice import tts as T
 from . import (
@@ -89,7 +89,7 @@ def cmd_stt_test(
         errs, words, lats, rtfs = [], 0, [], []
         repeat = max(1, getattr(a, "repeat", 1))
         for idx, (path, ref) in enumerate(samples * repeat):
-            u = read_wav(path)
+            u = read_audio(path)
             if idx == 0:
                 tr.transcribe(u.pcm, hotwords=hot)  # the first call pays for kernel set-up
             t = tr.transcribe(u.pcm, hotwords=hot)

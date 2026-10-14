@@ -87,6 +87,10 @@ class SpeechOutput:
         self._q.put(rec)
         return rec
 
+    def cancel(self) -> None:
+        """Cut what is being said and drop what waits (the cut happens on the speech thread)."""
+        self.say("", interrupt=True, meta={"rule": "cancel"})
+
     def stop(self, timeout: float = 2.0) -> None:
         self._q.put(_STOP)
         if self._thread is not None:
@@ -124,6 +128,9 @@ class SpeechOutput:
 
     def _play(self, backend: TtsBackend, rec: SpeechRecord) -> None:
         try:
+            if not rec.text:  # a cancel: stop whatever is playing, say nothing
+                backend.stop()
+                return
             self._speaking.set()
             rec.called_t = self._clock()
             backend.speak(rec.text, interrupt=rec.interrupt)

@@ -273,6 +273,21 @@ def write_wav(path: str | Path, u: Utterance) -> None:
         w.writeframes(u.pcm.astype("<i2").tobytes())
 
 
+def read_audio(path: str | Path) -> Utterance:
+    """A WAV, or any audio file a phone makes (m4a, aac, mp3, ogg, opus, 3gp...), as 16 kHz mono."""
+    if Path(path).suffix.lower() == ".wav":
+        try:
+            return read_wav(path)
+        except (wave.Error, ValueError):
+            pass  # a float or 24-bit WAV: let the decoder read it
+    try:
+        from faster_whisper.audio import decode_audio
+    except ImportError as exc:  # pragma: no cover
+        raise ValueError("reading this file needs faster-whisper: pip install -e .[stt]") from exc
+    x = decode_audio(str(path), sampling_rate=SAMPLE_RATE)
+    return Utterance(np.clip(x * 32768.0, -32768, 32767).astype(np.int16), SAMPLE_RATE)
+
+
 def read_wav(path: str | Path) -> Utterance:
     with wave.open(str(path), "rb") as w:
         n, ch, sw, rate = w.getnframes(), w.getnchannels(), w.getsampwidth(), w.getframerate()

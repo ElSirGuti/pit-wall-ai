@@ -16,6 +16,13 @@ vocabulario hacen falta ("psi", números, nombres de curvas).
 5. Para medir: `pit-wall stt-test frases/A/*.wav --ref "..." --ref "..." --device both`, o usa el texto de
    referencia de abajo en el mismo orden.
 
+### Grabar con el teléfono
+
+Sirve cualquier grabadora del móvil (notas de voz): el programa lee `.m4a`, `.aac`, `.mp3`, `.ogg`, `.opus`,
+`.3gp` y `.wav` y los convierte solo. Nombra los archivos por el número de la frase (`06.m4a`) y déjalos en
+`frases/telefono/` (dentro del repositorio, no se sube). Con el móvil a unos 20 a 30 cm, como un micrófono de
+casco. Dime cuáles has dejado y los mido: `pit-wall stt-test frases/telefono/*.m4a --ref "..." --device both`.
+
 ## Las frases (referencia en el mismo orden que el número)
 
 ### Combustible y vueltas

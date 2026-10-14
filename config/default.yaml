@@ -184,3 +184,7 @@ stt:                    # phase 6: speech recognition (pip install -e ".[stt]");
   beam_size: 1          # 1 = fastest
   language: null        # null = the engineer's language
   model_dir: null       # where models are stored; null = the Hugging Face cache
+
+radio:                  # phase 6: the conversation and the alerts share one channel
+  priority: first_to_start  # first_to_start: whoever starts talking first wins | driver: your button cuts the engineer
+  ack_after_s: 1.5      # say "one moment" when the answer takes longer than this (0 = never)

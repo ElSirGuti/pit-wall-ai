@@ -124,6 +124,17 @@ def _parser() -> argparse.ArgumentParser:
     dv = sub.add_parser("devices", help="list the microphones and the audio outputs")
     dv.add_argument("--config", help="YAML config")
 
+    vo = sub.add_parser(
+        "voice", help="push-to-talk conversation (live, or simulated with --file/--wav)"
+    )
+    vo.add_argument("--config", help="YAML config")
+    vo.add_argument("--file", help="recording to answer about (simulated mode)")
+    vo.add_argument("--wav", action="append", help="a spoken question as a WAV file (repeatable)")
+    vo.add_argument("--session", default="practice")
+    vo.add_argument(
+        "--tts", choices=["console", "real"], default=None, help="console prints the voice"
+    )
+    vo.add_argument("--stt-device", choices=["auto", "cpu", "cuda"], help="override stt.device")
     tc = sub.add_parser("tyre-corners", help="which corners work the tyres hardest (estimate)")
     tc.add_argument("--config", help="YAML config")
     tc.add_argument("file", help="recording (.pwrec.gz, .ld, .csv)")
@@ -595,6 +606,12 @@ def _cmd_tyre_corners(cfg: AppConfig, a: argparse.Namespace) -> int:
     return cmd_tyre_corners(cfg, a)
 
 
+def _cmd_voice(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .voice.cli_voice import cmd_voice
+
+    return cmd_voice(cfg, a)
+
+
 def _cmd_voices(cfg: AppConfig, a: argparse.Namespace) -> int:
     from .audio.cli_audio import cmd_voices
 
@@ -737,6 +754,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "mic-test": _cmd_mic_test,
             "voices": _cmd_voices,
             "stt-test": _cmd_stt_test,
+            "voice": _cmd_voice,
             "tyre-corners": _cmd_tyre_corners,
             "bindings": _cmd_bindings,
             "input-test": _cmd_input_test,

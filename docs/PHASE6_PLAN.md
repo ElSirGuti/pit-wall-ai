@@ -121,7 +121,7 @@ documented and unused.
 | 1 | bindings + `pit-wall input-test`, `FakeBackend`, WinMM/hook spike on the G29, keyboard and mouse | **implemented**; the G29 is seen and the keyboard hook verified with an injected key; **pending: a real press of the wheel with G HUB running** (`docs/PENDIENTES.md`) |
 | 2 | audio capture + `pit-wall mic-test` | levels, 3 s recording, device selection, pre-roll and tail verified |
 | 3 (**implemented; measured on the PC with synthetic phrases, see 7.1**) | `Transcriber` interface + faster-whisper backend + `pit-wall stt-test file.wav` | latency and word error rate on the author's own phrases, CPU vs GPU, **and the effect on the game's frame rate** |
-| 4 | `pit-wall voice`: button -> STT -> chat -> speech with priorities and barge-in | works end to end on a replayed session; critical alert cuts an answer; a press cuts speech |
+| 4 (**implemented, simulated end to end; live with the wheel pending**, see 7.2) | `pit-wall voice`: button -> STT -> chat -> speech with priorities and barge-in | works end to end on a replayed session; critical alert cuts an answer; a press cuts speech |
 | 5 | evaluation: 30 to 40 spoken questions, end-to-end latency report; Gemini Live spike | numbers reported, decision on Live recorded |
 | 6 | README ES/EN, `docs/VOICE.md`, pending list updated | |
 
@@ -207,6 +207,20 @@ engine noise), so they measure speed and gross errors only:
 * **Not measured yet**: the effect on the game's frame rate (needs the author, the game and the wheel) and the
   accuracy with the author's voice and microphone. The 0.4 s GPU latency is the reason to prefer the GPU in
   AC; in iRacing the CPU may be the better choice: that is what `stt.device` is for.
+
+### 7.2 Step 4: the voice turn (2026-10-14)
+
+`pit-wall voice` runs button -> utterance -> recognition -> chat -> speech. Radio rules (decided with the
+author): whoever starts first wins (`radio.priority`), critical alerts always go out, an acknowledgement
+("Un momento.") is spoken when the answer takes longer than `radio.ack_after_s`, `acknowledge` cuts a
+non-critical message. The rule alerts wait while the driver talks or an answer is prepared (the engineer
+already keeps pending alerts and drops the stale ones).
+
+Simulated end to end on this PC (`pit-wall voice --file lfm_carrera.pwrec.gz --wav ... --stt-device cuda`,
+four questions synthesised with Sabina): from the end of the utterance to the answer ready, **0.39 to
+0.51 s** (recognition about 0.4 s, local chat 0.01 s) on the GPU. Not included: the time the voice takes to
+start (about the `say` latency measured in phase 3) and the cloud model when a question needs it (seconds).
+Not verified: the live path (wheel button, microphone, game telemetry together), which needs the author.
 
 ---
 

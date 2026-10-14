@@ -400,3 +400,25 @@ def test_the_command_voice_needs_an_output_placeholder_and_reports_a_failing_com
 def test_say_command_accepts_a_voice_and_an_output_override(capsys):
     rc = main(["say", "--voice", "console-only-test", "--device", "none", "hola"])
     assert rc in (0, 1)  # the point: the new options are accepted by the parser
+
+
+def test_a_phone_recording_in_another_format_is_read_as_16k_mono(tmp_path):
+    av = pytest.importorskip("av")
+    from pit_wall_ai.audio.capture import read_audio
+
+    t = np.arange(16000) / 16000
+    wav = tmp_path / "a.wav"
+    write_wav(wav, Utterance((np.sin(2 * np.pi * 300 * t) * 8000).astype(np.int16)))
+    m4a = tmp_path / "a.m4a"
+    inp, out = av.open(str(wav)), av.open(str(m4a), "w")
+    st = out.add_stream("aac", rate=16000)
+    st.layout = "mono"
+    for fr in inp.decode(audio=0):
+        fr.pts = None
+        for p in st.encode(fr):
+            out.mux(p)
+    for p in st.encode(None):
+        out.mux(p)
+    out.close()
+    u = read_audio(m4a)
+    assert u.rate == SAMPLE_RATE and 0.9 < u.duration_s < 1.3 and u.peak > 0.1

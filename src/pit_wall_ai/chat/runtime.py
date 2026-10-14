@@ -31,7 +31,12 @@ class _SilentSpeaker:
 
 class ChatRuntime:
     def __init__(
-        self, cfg: AppConfig, *, live: bool, clock: Callable[[], float] = time.perf_counter
+        self,
+        cfg: AppConfig,
+        *,
+        live: bool,
+        clock: Callable[[], float] = time.perf_counter,
+        speaker=None,
     ):
         self.cfg = cfg
         self.live = live
@@ -41,7 +46,7 @@ class ChatRuntime:
         self.track = TrackAnalysis(cfg.analysis)
         self.engineer = Engineer(
             cfg.engineer,
-            _SilentSpeaker(),
+            speaker or _SilentSpeaker(),
             rules=build_rules(cfg.engineer, cfg.analysis, self.track),
         )
         self.engine.add_sample_hook(
