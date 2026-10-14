@@ -192,4 +192,5 @@ stt:                    # phase 6: speech recognition (pip install -e ".[stt]");
 
 radio:                  # phase 6: the conversation and the alerts share one channel
   priority: first_to_start  # first_to_start: whoever starts talking first wins | driver: your button cuts the engineer
+  quiet_ends_on_speech: true  # "no molestes" lasts until you speak again (false: until "ya puedes hablar")
   ack_after_s: 1.5      # say "one moment" when the answer takes longer than this (0 = never)

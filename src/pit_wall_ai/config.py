@@ -339,6 +339,8 @@ class RadioConfig(_Model):
     """How the conversation shares the channel with the alerts (phase 6, step 4)."""
 
     priority: Literal["first_to_start", "driver"] = "first_to_start"
+    # "do not bother me": any later word of the driver ends it (False: only "you can talk" does)
+    quiet_ends_on_speech: bool = True
     ack_after_s: float = Field(
         1.5, ge=0.0, le=10.0
     )  # "one moment" when the answer takes longer (0 = never)

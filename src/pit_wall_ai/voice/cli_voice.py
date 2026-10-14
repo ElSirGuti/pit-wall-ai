@@ -105,6 +105,8 @@ def cmd_voice(
         language=cfg.engineer.language,
         ack_after_s=cfg.radio.ack_after_s,
         hotwords=lambda: hotwords_for(runtime),
+        engineer=runtime.engineer,
+        quiet_ends_on_speech=cfg.radio.quiet_ends_on_speech,
         on_turn=lambda t: None,
     )
     try:

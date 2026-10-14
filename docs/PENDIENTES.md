@@ -117,6 +117,13 @@ Ver `docs/PHASE6_PLAN.md`, sección "Preguntas para el autor". Lo que necesitar�
 * idea nueva (2026-10-14): **desgaste de neumáticos por curva** con consejo para reducirlo, ver
   `docs/PHASE8_PLAN.md` 3.4; espera tu aprobación del plan y una grabación de al menos 8 vueltas.
 
+## Para probar el modelo en la nube
+
+* poner la clave en `.env` (archivo ignorado por git): `GEMINI_API_KEY=...` (una clave nueva, ya que la
+  anterior debía rotarse), y ejecutar `pit-wall llm-check` y después `pit-wall eval --file ...`;
+* el estilo del ingeniero (`engineer.persona`) solo se puede juzgar con el modelo, así que conviene probar
+  2 o 3 estilos con las mismas preguntas.
+
 ## Sesión única de mediciones
 
 Todo lo que falta medir con tu PC está ordenado en **`docs/SESION_MEDICION.md`** para hacerlo en una sola

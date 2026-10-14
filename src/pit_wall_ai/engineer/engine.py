@@ -79,6 +79,7 @@ class EngineerStats:
     dropped_policy: int = 0
     dropped_expired: int = 0
     dropped_muted: int = 0
+    dropped_quiet: int = 0
 
 
 class Engineer:
@@ -102,6 +103,15 @@ class Engineer:
         self._clock = clock
         self._last_said_t = -1e9
         self._session_started_t: float | None = None
+        self.quiet = False  # the driver asked not to be disturbed: only critical alerts go out
+
+    def set_quiet(self, on: bool) -> None:
+        """ "Do not bother me": drop what waits and everything below CRITICAL until it is switched off."""
+        self.quiet = on
+        if on:
+            self.stats.dropped_quiet += len(self.pending)
+            self.pending.clear()
+        log.info("engineer quiet mode", extra={"quiet": on})
 
     # -- policy -----------------------------------------------------------------------------------
     def _policy(self, session: str) -> PolicyConfig:
@@ -157,6 +167,9 @@ class Engineer:
             if muted:
                 self.stats.dropped_muted += 1
                 self._drop(a, "muted")
+            elif self.quiet and a.priority < Priority.CRITICAL:
+                self.stats.dropped_quiet += 1
+                self._drop(a, "quiet")
             elif not self._allowed(a, state.session):
                 self.stats.dropped_policy += 1
                 self._drop(a, f"policy:{state.session}")

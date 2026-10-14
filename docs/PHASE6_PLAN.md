@@ -212,6 +212,15 @@ engine noise), so they measure speed and gross errors only:
 mis-hearings (`stt/postfix.py`, applied before the question reaches the chat; it grows only from real
 recordings). Spoken corner numbers ("curva seis") are understood by the corner lookup.
 
+### 7.3 "Do not bother me" (requested 2026-10-14)
+
+A spoken order ("no molestes ahorita", "silencio", "ahora no") or the `mute_engineer` button puts the
+engineer in **quiet mode**: the pending alerts are dropped and everything below CRITICAL stays unsaid, while
+critical alerts still go out. It ends when the driver speaks again (`radio.quiet_ends_on_speech: true`) or
+with "ya puedes hablar"; with the setting off only the order ends it. Spoken orders are matched only on short
+utterances (at most 8 words) so a long question that contains "silencio" is not taken as an order
+(`chat/commands.py`). Verified with fakes; not yet heard on the real voice.
+
 ### 7.2 Step 4: the voice turn (2026-10-14)
 
 `pit-wall voice` runs button -> utterance -> recognition -> chat -> speech. Radio rules (decided with the

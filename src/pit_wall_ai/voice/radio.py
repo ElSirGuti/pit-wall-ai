@@ -30,6 +30,7 @@ from typing import Protocol
 import numpy as np
 
 from ..audio.capture import Utterance
+from ..chat.commands import parse as parse_command
 from ..stt import SttUnavailable, Transcriber
 from ..stt.postfix import fix as fix_transcript
 
@@ -43,12 +44,16 @@ PHRASES = {
         "nothing": "No te he entendido, repítelo.",
         "stt_down": "No puedo entenderte ahora mismo.",
         "busy": "",
+        "quiet": "Entendido, en silencio. Solo te aviso si es crítico.",
+        "resume": "Vale, vuelvo a avisarte.",
     },
     "en": {
         "ack": "One moment.",
         "nothing": "I did not catch that, say it again.",
         "stt_down": "I cannot understand you right now.",
         "busy": "",
+        "quiet": "Understood, quiet. I will only call you for something critical.",
+        "resume": "Okay, I am back on the alerts.",
     },
 }
 
@@ -76,6 +81,7 @@ class VoiceTurn:
     chat_s: float = 0.0
     total_s: float = 0.0
     ack_said: bool = False
+    heard_command: str = ""
     error: str = ""
     notes: list[str] = field(default_factory=list)
 
@@ -135,6 +141,8 @@ class VoiceSession:
         clock: Callable[[], float] = time.perf_counter,
         on_turn: Callable[[VoiceTurn], None] | None = None,
         history: int = 100,
+        engineer=None,
+        quiet_ends_on_speech: bool = True,
     ) -> None:
         self.radio = radio
         self.transcriber = transcriber
@@ -144,6 +152,8 @@ class VoiceSession:
         self.hotwords = hotwords
         self._clock = clock
         self.on_turn = on_turn
+        self.engineer = engineer  # has ``quiet`` and ``set_quiet(bool)``
+        self.quiet_ends_on_speech = quiet_ends_on_speech
         self.turns: deque[VoiceTurn] = deque(maxlen=history)
         self._pcm: queue.Queue = queue.Queue()
         self._thread: threading.Thread | None = None
@@ -177,6 +187,8 @@ class VoiceSession:
                     self._recorder.release()
                 # the thinking state starts now, so the rule alerts keep waiting until the answer is out
                 self.radio.set_state(THINKING)
+        elif action == "mute_engineer" and phase == "tap" and self.engineer is not None:
+            self._set_quiet(not self.engineer.quiet)
         elif action == "acknowledge" and phase == "tap":
             cancel = getattr(self.radio.speech, "cancel", None)
             if cancel is not None and self.radio.speech.busy:
@@ -231,6 +243,16 @@ class VoiceSession:
                 ack_timer.cancel()
                 self._speak(self.phrases["nothing"], turn)
                 return self._finish(turn, t0)
+            command = parse_command(text)
+            if command is not None and self.engineer is not None:
+                ack_timer.cancel()
+                self._set_quiet(command == "quiet")
+                turn.heard_command = command
+                self._speak(self.phrases[command if command == "quiet" else "resume"], turn)
+                return self._finish(turn, t0)
+            if self.engineer is not None and self.engineer.quiet and self.quiet_ends_on_speech:
+                self._set_quiet(False)  # "until I talk to you again"
+                turn.notes.append("quiet mode ended: the driver spoke")
             t = self._clock()
             reply = self.ask(text)
             turn.chat_s = self._clock() - t
@@ -243,6 +265,10 @@ class VoiceSession:
             ack_timer.cancel()
 
     # -- internals ------------------------------------------------------------------------------------
+    def _set_quiet(self, on: bool) -> None:
+        if self.engineer is not None:
+            self.engineer.set_quiet(on)
+
     def _ack(self, turn: VoiceTurn) -> None:
         if self.radio.state == THINKING and not turn.answer:
             turn.ack_said = True
