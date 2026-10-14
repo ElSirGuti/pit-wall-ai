@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 import time
 from collections.abc import Callable
@@ -23,6 +24,8 @@ def _build(cfg: AppConfig, a: argparse.Namespace):
     from ..telemetry.poller import TelemetryPoller
 
     live = not a.file
+    # the missing-game warning is noise in a conversation: the answer to "where do I lose time" says it
+    logging.getLogger("pit_wall_ai.analysis.trackctx").setLevel(logging.ERROR)
     runtime = ChatRuntime(cfg, live=live)
     poller = None
     if a.file:
