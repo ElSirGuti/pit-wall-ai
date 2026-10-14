@@ -152,6 +152,8 @@ Propuesta en `docs/MCP_PLAN.md`, sin código. Lo que necesito de ti:
   la voz local mientras conversas con el asistente;
 * decir si el valor por defecto de `mcp.local_voice` te parece bien: `critical` (la voz local solo dice los
   críticos mientras hablas con el asistente); las otras opciones son `on`, `off` y `auto`;
+* decir qué avisos rutinarios quieres que la voz local siga diciendo en modo MCP además de los críticos
+  (`mcp.local_voice_always`; propuesta por defecto: solo `lap_summary`, el resumen de vuelta);
 * aprobar o corregir el plan (sección 4) antes del paso 1.
 
 ## Ya cerrado

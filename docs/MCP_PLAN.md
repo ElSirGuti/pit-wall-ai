@@ -56,6 +56,12 @@ instructions tell the client to read `say` verbatim and not to add numbers of it
   | `off` | nothing: the alerts are only available to the assistant (`recent_alerts`), which reads them if asked |
   | `auto` | `on` while no MCP client is connected, `critical` while one is |
 
+  **Who says "lap 2, three tenths up" at the end of a lap?** The local voice, not the assistant: the lap
+  summary is a rule alert of medium priority, so with `critical` it would be silenced too. That is why the
+  setting has a companion list, `mcp.local_voice_always: [lap_summary]` (default): the rules named there
+  are spoken in every mode except `off`, on top of the critical ones. The driver chooses which routine
+  alerts stay (lap summary, braking hint, fuel warning...) and which are left to the assistant.
+
   The setting can also be changed by voice through the assistant (`set_quiet`, the existing "no molestes")
   and by the wheel's `mute_engineer` button, which overrides it until pressed again. With `off` the driver
   gets no warning of a puncture unless the assistant is asked: the README says so next to the setting.
