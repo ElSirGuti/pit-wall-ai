@@ -44,6 +44,7 @@ class Case:
     category: str  # local | open | impossible | trap
     question: str
     mentions: tuple[str, ...] = ()  # fact keys whose value the reply must state
+    any_of: tuple[str, ...] = ()  # at least one of these must be stated (a paraphrase is fine)
     refuse: bool = False
     expect_source: str | None = None
     needs: tuple[str, ...] = ()  # fact keys that must exist for the case to make sense
@@ -148,7 +149,7 @@ CASES: tuple[Case, ...] = (
         "open-alert",
         "open",
         "explícame el último aviso que diste",
-        ("alerts.A0.text",),
+        any_of=("alerts.A0.values.lap", "laps.best.time_s"),
         needs=("alerts.A0.text",),
     ),
     Case(
@@ -273,6 +274,8 @@ def judge(case: Case, reply: ChatReply, sheet: FactSheet) -> tuple[str, list[str
     for key in case.mentions:
         if not _states_fact(reply.text, sheet, key):
             reasons.append(f"does not state {key}")
+    if case.any_of and not any(_states_fact(reply.text, sheet, k) for k in case.any_of):
+        reasons.append("states none of: " + ", ".join(case.any_of))
     if reply.violations:
         reasons.append("grounding: " + "; ".join(f"{v.kind} {v.text!r}" for v in reply.violations))
     if reply.source in ("degraded", "unavailable"):

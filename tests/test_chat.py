@@ -670,3 +670,46 @@ def test_the_live_delta_sentence_keeps_its_full_stop():
     )
     _, a, _ = ask("¿cuál fue mi última vuelta?", inp)
     assert a.text.endswith("Delta en vivo: +0,98 s contra la referencia.")
+
+
+# -- clause-aware attribution and elided references (false positives found in the first real evaluation) ----
+def lap_corner_sheet() -> FactSheet:
+    s = FactSheet()
+    for n, loss in ((11, 0.38), (4, 0.27)):
+        sub = Subject("corner", str(n))
+        s.alias(sub, f"curva {n}", f"corner {n}")
+        s.add(Fact(f"analysis.corners.C{n}.time_diff_s", loss, "s", sub, (loss, round(loss, 1))))
+    for n, t in ((1, 96.324), (2, 85.444), (3, 84.913)):
+        sub = Subject("lap", str(n))
+        s.alias(sub, f"vuelta {n}", f"lap {n}")
+        s.add(Fact(f"laps.recent.L{n}.time_s", t, "s", sub, (t, round(t * 1000))))
+    return s
+
+
+def test_each_number_is_read_in_its_own_clause():
+    s = lap_corner_sheet()
+    ok = "En la vuelta 2 perdiste 0.38 s en la curva 11 y 0.27 s en la curva 4."
+    assert G.check(ok, s).ok, G.check(ok, s).violations
+    swapped = "En la vuelta 2 perdiste 0.38 s en la curva 4 y 0.27 s en la curva 11."
+    rep = G.check(swapped, s)
+    assert [v.kind for v in rep.violations] == ["misattributed", "misattributed"]
+
+
+def test_a_bare_la_2_after_a_lap_is_that_lap():
+    s = lap_corner_sheet()
+    ok = "Hiciste la vuelta 1 con 96,324 s, la 2 con 85,444 s y la 3 con 84,913 s."
+    assert G.check(ok, s).ok, G.check(ok, s).violations
+    wrong = "Hiciste la vuelta 1 con 96,324 s, la 2 con 84,913 s y la 3 con 85,444 s."
+    rep = G.check(wrong, s)
+    assert [v.kind for v in rep.violations] == ["misattributed", "misattributed"]
+
+
+def test_the_elided_number_is_a_reference_not_a_claim():
+    rep = G.check("La vuelta 1 y la 2 fueron lentas.", lap_corner_sheet())
+    assert rep.ok and rep.checked == 0
+
+
+def test_a_number_without_a_subject_in_its_clause_falls_back_to_the_sentence():
+    s = lap_corner_sheet()
+    assert G.check("En la curva 11 pierdes 0.38 s y frenas igual.", s).ok
+    assert not G.check("En la curva 4 pierdes 0.38 s y frenas igual.", s).ok

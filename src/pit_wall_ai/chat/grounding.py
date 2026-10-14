@@ -171,7 +171,26 @@ def _mentions(sheet: FactSheet, folded: str) -> list[tuple[int, int, Subject]]:
         if any(ks <= s and e <= ke and (ke - ks) > (e - s) for ks, ke, _ in kept):
             continue
         kept.append((s, e, sub))
+    kept = _with_elided(kept, folded, sheet)
     return kept
+
+
+_ELIDED = re.compile(r"(?<![a-z0-9])(?:la|el|las|los)\s+(\d{1,2})(?![a-z0-9])")
+
+
+def _with_elided(kept, folded: str, sheet: FactSheet):
+    """ "... la vuelta 1 con 96,3 s, la 2 con 85,4 s": a bare ``la 2`` after an explicit mention of a lap is
+    that lap again (the noun is left out). Only a subject that exists in the sheet is accepted."""
+    extra = []
+    for m in _ELIDED.finditer(folded):
+        before = [t for t in kept if t[1] <= m.start()]
+        if not before:
+            continue
+        kind = max(before, key=lambda t: t[1])[2].kind
+        sub = Subject(kind, str(int(m.group(1))))
+        if sub in sheet.aliases and not any(s <= m.start() < e for s, e, _ in kept):
+            extra.append((m.start(), m.end(), sub))
+    return sorted([*kept, *extra])
 
 
 def check(reply: str, sheet: FactSheet, question: str = "") -> GroundingReport:
@@ -182,6 +201,7 @@ def check(reply: str, sheet: FactSheet, question: str = "") -> GroundingReport:
     for sentence in (s.strip() for s in _SENTENCE.split(reply) if s.strip()):
         folded = _fold(sentence)
         mentions = _mentions(sheet, folded)
+        clauses = _clauses(sentence)
         for num in _numbers(sentence):
             # a number that is part of a subject mention ("curva 6", "vuelta 12") is a reference, not a claim
             if any(s <= num.start and num.end <= e for s, e, _ in mentions):
@@ -211,7 +231,7 @@ def check(reply: str, sheet: FactSheet, question: str = "") -> GroundingReport:
                     )
                 )
                 continue
-            if any(_subject_fits(f, num, mentions) for f in unit_ok):
+            if any(_subject_fits(f, num, mentions, clauses) for f in unit_ok):
                 continue
             wrong = next(f for f in unit_ok if f.subject is not None)
             report.violations.append(
@@ -235,20 +255,43 @@ def _nearest(num: _Number, mentions, kind: str) -> str:
     return "something else" if m is None else _who(m)
 
 
-def _nearest_mention(num: _Number, mentions, kind: str) -> Subject | None:
+_CLAUSE_BREAK = re.compile(r",(?!\d)|;|\s+y\s+|\s+and\s+|\s+pero\s+|\s+but\s+", re.IGNORECASE)
+
+
+def _clauses(sentence: str) -> list[tuple[int, int]]:
+    """Spans of the sentence split at commas, "y", "and", "pero": each number is read in its own clause."""
+    out, start = [], 0
+    for m in _CLAUSE_BREAK.finditer(sentence):
+        out.append((start, m.start()))
+        start = m.end()
+    out.append((start, len(sentence)))
+    return out
+
+
+def _nearest_mention(
+    num: _Number, mentions, kind: str, clauses: list[tuple[int, int]] | None = None
+) -> Subject | None:
     same = [(s, e, sub) for s, e, sub in mentions if sub.kind == kind]
     if not same:
         return None
+    if clauses:
+        # the clause of the number: "... 0,38 s en la curva 11 y 0,27 s en la curva 4" has one subject each
+        for a, b in clauses:
+            if a <= num.start and num.end <= b:
+                inside = [t for t in same if a <= t[0] and t[1] <= b]
+                if inside:
+                    same = inside
+                break
     c = (num.start + num.end) / 2
     return min(same, key=lambda t: abs((t[0] + t[1]) / 2 - c))[2]
 
 
-def _subject_fits(fact: Fact, num: _Number, mentions) -> bool:
+def _subject_fits(fact: Fact, num: _Number, mentions, clauses=None) -> bool:
     """A fact without a subject always fits; one with a subject fits when the sentence does not talk about
     that kind of subject at all, or when the mention nearest to the number is that very subject."""
     if fact.subject is None:
         return True
-    near = _nearest_mention(num, mentions, fact.subject.kind)
+    near = _nearest_mention(num, mentions, fact.subject.kind, clauses)
     return near is None or near == fact.subject
 
 
