@@ -101,6 +101,7 @@ pit-wall dump-shm --watch 60 --json report.json
 pit-wall run --voice                 # Spanish, Sabina if installed
 pit-wall run --voice --language en
 pit-wall run --mute                  # same rules, printed instead of spoken
+pit-wall tyre-corners race.pwrec.gz   # which corners work the tyres hardest (estimate, validated or not)
 pit-wall say "Box this lap"          # test the voice and see its latency
 pit-wall rules                       # active rules, thresholds and per-session policies
 ```

@@ -1,0 +1,117 @@
+"""Tyre load by corner: windows, phases, the validation gate, incident laps."""
+
+from __future__ import annotations
+
+import math
+
+import pytest
+
+from pit_wall_ai.analysis import tyre_corners as TC
+from pit_wall_ai.analysis.track_geometry import Corner, SubApex
+from pit_wall_ai.telemetry.snapshot import Snapshot
+
+
+def corner(n, start, apex, end):
+    return Corner(
+        number=n,
+        start_fraction=0,
+        apex_fraction=0,
+        end_fraction=0,
+        start_m=start,
+        apex_m=apex,
+        end_m=end,
+        min_radius_m=50,
+        direction="left",
+        severity="medium",
+        kind="single",
+        sub_apexes=[SubApex(fraction=0, distance_m=apex, radius_m=50, direction="left")],
+    )
+
+
+CORNERS = [corner(1, 100, 150, 200), corner(2, 400, 450, 500)]
+
+
+def test_a_position_belongs_to_the_corner_whose_window_contains_it():
+    assert TC.corner_of(150, CORNERS) == 1
+    assert TC.corner_of(90, CORNERS) == 1  # the braking zone before the corner
+    assert TC.corner_of(205, CORNERS) == 1  # the run-out
+    assert TC.corner_of(300, CORNERS) is None
+    assert TC.corner_of(430, CORNERS) == 2
+
+
+def test_phases():
+    assert TC.phase_of(0.5, 0.0, 0.0) == "brake"
+    assert TC.phase_of(0.0, 0.8, 0.2) == "throttle"
+    assert TC.phase_of(0.0, 0.1, 0.3) == "turn"
+    assert TC.phase_of(0.0, 0.1, 0.0) is None
+
+
+def lap(n, f, r, drop):
+    return TC.LapLoad(n, {}, f, r, (drop,) * 4, 1000)
+
+
+def test_validation_refuses_few_laps_and_a_flat_wear_channel():
+    v = TC.validate([lap(i, 100, 100, 0.0) for i in range(8)])
+    assert not v.ok and "barely wears" in v.reason
+    v = TC.validate([lap(i, 100, 100, 0.5) for i in range(3)])
+    assert not v.ok and "complete laps" in v.reason
+
+
+def test_validation_accepts_a_proxy_that_follows_the_wear():
+    laps = [lap(i, 100 + 10 * i, 100, 0.2 + 0.03 * i) for i in range(8)]
+    v = TC.validate(laps)
+    assert v.ok and v.r is not None and v.r > 0.99
+
+
+def test_validation_rejects_a_proxy_that_does_not_follow_the_wear():
+    loads = [100, 140, 90, 150, 95, 130, 105, 125]
+    drops = [0.5, 0.2, 0.55, 0.25, 0.5, 0.3, 0.2, 0.45]
+    v = TC.validate([lap(i, f, 0, d) for i, (f, d) in enumerate(zip(loads, drops, strict=True))])
+    assert not v.ok and v.r is not None and v.r < TC.MIN_R and math.isfinite(v.r)
+
+
+def test_incident_laps_are_left_out():
+    laps = [lap(i, 100, 100, 0.1) for i in range(6)] + [lap(9, 800, 900, 0.1)]
+    keep, dropped = TC.drop_incident_laps(laps)
+    assert dropped == [9] and len(keep) == 6
+
+
+def test_ranking_shares_add_up_and_name_the_dominant_phase():
+    cl1 = TC.CornerLoad(1)
+    cl1.front.update(brake=6.0, turn=1.0, throttle=1.0)
+    cl2 = TC.CornerLoad(2)
+    cl2.front.update(brake=1.0, turn=1.0, throttle=1.0)
+    rows = TC.ranking([TC.LapLoad(1, {1: cl1, 2: cl2}, 11, 0, (0,) * 4, 10)])
+    assert [r[0] for r in rows] == [1, 2]
+    assert rows[0][1] == pytest.approx(8 / 11) and rows[0][2] == "brake"
+    assert sum(r[1] for r in rows) == pytest.approx(1.0)
+    assert ("front", "brake") in TC.ADVICE_ES
+
+
+def test_a_lap_from_snapshots_is_attributed_to_the_corner_and_phase():
+    snaps = []
+    t = 0.0
+    for i in range(1200):
+        pos = i / 1200
+        m = pos * 1000
+        braking = 60 <= m <= 140
+        snaps.append(
+            Snapshot(
+                t=t,
+                source="test",
+                packet_id=i,
+                completed_laps=1,
+                normalized_pos=pos,
+                speed_kmh=100.0,
+                brake=0.8 if braking else 0.0,
+                wheel_slip=(0.5,) * 4 if braking else (0.0,) * 4,
+                wheel_load=(3000.0,) * 4,
+                tyre_wear=(99.0,) * 4,
+            )
+        )
+        t += 0.05
+    laps = TC.lap_loads(snaps, CORNERS, 1000.0)
+    assert len(laps) == 1
+    cl = laps[0].corners[1]
+    assert cl.dominant("front") == "brake" and cl.front["brake"] > 0
+    assert 2 not in laps[0].corners

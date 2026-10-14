@@ -87,7 +87,8 @@ def cmd_stt_test(
             continue
         out(f"\n[{dev_name}] model {tr.model_name}, loaded in {load_s:.1f} s")
         errs, words, lats, rtfs = [], 0, [], []
-        for idx, (path, ref) in enumerate(samples):
+        repeat = max(1, getattr(a, "repeat", 1))
+        for idx, (path, ref) in enumerate(samples * repeat):
             u = read_wav(path)
             if idx == 0:
                 tr.transcribe(u.pcm, hotwords=hot)  # the first call pays for kernel set-up
@@ -101,7 +102,8 @@ def cmd_stt_test(
                 errs.append(w * n)
                 words += n
                 line += f"  WER {w * 100:.0f} %"
-            out(line)
+            if idx < len(samples):  # the repeats only add load; they are not printed again
+                out(line)
         if lats:
             srt = sorted(lats)
             out(

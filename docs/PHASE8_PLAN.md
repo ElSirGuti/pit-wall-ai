@@ -156,7 +156,7 @@ inputs for improvement: the user is told before the first rival-related request.
   (n = 41 corners); try a stiffer rear anti-roll bar" and *not* a sweeping claim from one session.
 * The profile is stored locally and can be wiped.
 
-### 3.4 Tyre wear by corner and how to reduce it (idea of 2026-10-14, not approved yet)
+### 3.4 Tyre wear by corner and how to reduce it (approved 2026-10-14; analysis implemented, voice use gated)
 
 Target conversation:
 
@@ -190,6 +190,15 @@ trend) is a value **per tyre and per lap**, not per corner. Attributing it to co
 * **Risks**: the proxy may not follow the real wear model of the car; a cause diagnosed from slip alone can
   be wrong when the car is a different setup; advice must stay conservative and be learnt against the ledger
   of section 3.3.
+
+**Status (2026-10-14).** `pit-wall tyre-corners FILE` computes the index per corner, axle and phase (brake /
+turn / throttle) from `wheel_slip x wheel_load`, leaves out incident laps (load above twice the median) and
+runs the validation gate (`analysis/tyre_corners.py`). On the author's three recordings (MX-5 Cup, Magione) the
+gate **refuses**: the measured wear moved 0.25 points over 9 laps (the tyres stop wearing after lap 4: the
+channel is flat), so there is nothing to validate against. The ranking is printed as an estimate and the
+engineer does **not** say it. It is enabled by one recording with a car that really wears the tyres
+(`docs/SESION_MEDICION.md`, block 3). The proxy units are not slip ratio: `wheel_slip` in this car's data is
+0.04 braking and 0.12 coasting at the median, so thresholds are relative (shares), never absolute.
 
 ### 3.3 The learning loop: a ledger of suggestions and what happened
 

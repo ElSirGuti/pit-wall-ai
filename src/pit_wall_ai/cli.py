@@ -124,12 +124,24 @@ def _parser() -> argparse.ArgumentParser:
     dv = sub.add_parser("devices", help="list the microphones and the audio outputs")
     dv.add_argument("--config", help="YAML config")
 
+    tc = sub.add_parser("tyre-corners", help="which corners work the tyres hardest (estimate)")
+    tc.add_argument("--config", help="YAML config")
+    tc.add_argument("file", help="recording (.pwrec.gz, .ld, .csv)")
+    tc.add_argument("--session", default="practice")
+    tc.add_argument("--ac-dir", action="append", help="AC folder (repeatable)")
+    tc.add_argument("--top", type=int, default=6, help="how many corners to list")
     st = sub.add_parser("stt-test", help="speech recognition: latency, accuracy, cpu vs gpu")
     st.add_argument("--config", help="YAML config")
     st.add_argument("files", nargs="*", help="wav files (none: synthesised phrases)")
     st.add_argument("--ref", action="append", help="reference text of each file, in order")
     st.add_argument("--device", choices=["cpu", "cuda", "both"], default="cpu")
     st.add_argument("--model", help="tiny | base | small | medium (default: stt.model)")
+    st.add_argument(
+        "--repeat",
+        type=int,
+        default=1,
+        help="run the set this many times (sustained load, to see the effect on the game fps)",
+    )
     st.add_argument("--hotword", action="append", help="extra words to bias the recogniser")
     mt = sub.add_parser("mic-test", help="record a few seconds and show the level")
     mt.add_argument("--config", help="YAML config")
@@ -577,6 +589,12 @@ def _cmd_stt_test(cfg: AppConfig, a: argparse.Namespace) -> int:
     return cmd_stt_test(cfg, a)
 
 
+def _cmd_tyre_corners(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .analysis.cli_tyres import cmd_tyre_corners
+
+    return cmd_tyre_corners(cfg, a)
+
+
 def _cmd_voices(cfg: AppConfig, a: argparse.Namespace) -> int:
     from .audio.cli_audio import cmd_voices
 
@@ -719,6 +737,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "mic-test": _cmd_mic_test,
             "voices": _cmd_voices,
             "stt-test": _cmd_stt_test,
+            "tyre-corners": _cmd_tyre_corners,
             "bindings": _cmd_bindings,
             "input-test": _cmd_input_test,
             "chat": _cmd_chat,

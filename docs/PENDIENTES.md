@@ -117,6 +117,12 @@ Ver `docs/PHASE6_PLAN.md`, sección "Preguntas para el autor". Lo que necesitar�
 * idea nueva (2026-10-14): **desgaste de neumáticos por curva** con consejo para reducirlo, ver
   `docs/PHASE8_PLAN.md` 3.4; espera tu aprobación del plan y una grabación de al menos 8 vueltas.
 
+## Sesión única de mediciones
+
+Todo lo que falta medir con tu PC está ordenado en **`docs/SESION_MEDICION.md`** para hacerlo en una sola
+sentada: micrófono y voces, frases (`docs/FRASES_VOZ.md`), fps con el reconocedor en CPU y GPU, y una sesión de
+pista con coche de desgaste real, banderas, daños y penalizaciones. Lo de arriba se resuelve con ese guion.
+
 ## Ya cerrado
 
 * ~~Pregunta "¿cuánto tiempo queda?" en carrera sin límite~~ (2026-10-15): ahora dice que la sesión no tiene
