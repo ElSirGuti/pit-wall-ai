@@ -52,7 +52,11 @@ engineer:               # phase 3: rule alerts spoken by the race engineer
   language: es          # es | en : text AND voice language
   startup_quiet_s: 5    # silence right after a session starts / restarts
   voice:
-    backend: sapi       # sapi = Windows voices (pip install -e ".[voice]") | console = print only | none
+    backend: sapi       # sapi = Windows voices (pip install -e ".[voice]") | command = your own synthesiser
+                        # | console = print only | none
+    output_device: null # part of the audio output name (a headset...); `pit-wall devices` lists them
+    command: null       # for backend: command, e.g. 'piper --model C:/voices/es.onnx --output_file {out} {stdin}'
+                        # {text} = the sentence as an argument, {stdin} = send it on standard input, {out} = the WAV
     name: null          # e.g. Sabina; null = first installed voice of the language
     rate: 1             # SAPI speed -10..10, 0 = normal
     volume: 100
@@ -163,3 +167,10 @@ input:                  # phase 6: buttons bound to actions (see docs/INPUT_BIND
   poll_hz: 200          # joystick polling; keyboard and mouse are event driven
   bindings: {}          # use `pit-wall bind push_to_talk` (writes config/bindings.yaml); or by hand, e.g.
                         #   push_to_talk: [{kind: joy, device: "046d:c24f", button: 7}, {kind: key, key: F9}]
+
+audio:                  # phase 6: the microphone for push-to-talk
+  input_device: null    # part of the microphone name (a headset, the desk mic...); `pit-wall devices` lists them
+  preroll_ms: 200       # audio kept from before the button went down (the first syllable)
+  tail_ms: 150          # and after it went up
+  min_utterance_ms: 300 # shorter than this is an accidental touch and is dropped
+  keep_audio: false     # keep the last utterances on disk to debug the recognition (never committed)

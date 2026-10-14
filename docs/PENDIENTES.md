@@ -107,6 +107,9 @@ Ver `docs/PHASE6_PLAN.md`, sección "Preguntas para el autor". Lo que necesitar�
 
 * ~~decidir qué botón será el push-to-talk y con qué micrófono hablas~~ (respondido: configurable; el botón lo asignas tú con `pit-wall bind`);
 * decidir cómo quieres que se comporte un aviso medio mientras te contesta el ingeniero (ver el ejemplo en el plan);
+* ~~cómo se comporta un aviso medio mientras contesta el ingeniero~~ (decidido: gana el que empieza primero; los críticos siempre salen);
+* en casa, con el paquete de voz instalado (`pip install -e ".[voice]"`): ejecutar `pit-wall devices`, `pit-wall mic-test --device seiren` (o el casco) y `pit-wall voices --test`, y anotar qué micrófono, qué salida y qué voz prefieres para ponerlos en `config/local.yaml`;
+* si quieres otra voz: bájala en Configuración de Windows > Hora e idioma > Voz > Agregar voces, y vuelve a ejecutar `pit-wall voices`;
 * grabar unas **30 a 40 frases habladas** (preguntas típicas, con números y nombres de curvas) para medir el
   reconocimiento de voz con tu voz y tu micrófono; idealmente algunas con el coche sonando de fondo.
 

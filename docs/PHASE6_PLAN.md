@@ -171,6 +171,20 @@ author's approval** before the next.
    always go out, an immediate acknowledgement phrase hides the latency, and an `acknowledge` action
    exists.
 
+6. **Radio contention (decided 2026-10-16): whoever starts first wins.** If the engineer is already
+   transmitting, the driver's PTT does not cut it (a short "busy" tone, the question is kept and sent when the
+   channel frees); if the driver is already talking, an incoming alert waits. **Critical alerts always go
+   out** (they may interrupt a non-critical message). Setting: `radio.priority: first_to_start | driver`,
+   default `first_to_start`. Not implemented yet (step 4).
+7. **Volunteered events (decided):** by default only **critical and important** ones are spoken on their own;
+   the rest are available on request. Setting: `engineer.talkativeness` (to design in 6b).
+8. **Voices (requested 2026-10-16):** any voice installed in Windows is selectable by name
+   (`engineer.voice.name`), including ones the user downloaded (Settings > Time & language > Speech > Add
+   voices); other engines through `engineer.voice.backend: command`. `pit-wall voices` lists them and
+   `pit-wall voices --test [--voice X] [--device Y]` plays a sample with each so they can be judged by ear;
+   `pit-wall say --voice X --device Y "text"` tests one. Step 2 status: listing verified on this PC;
+   audible playback and microphone recording need the author at the PC.
+
 Also from the author: brake temperature is not simulated by every car of Assetto Corsa (a Kunos forum
 statement of 2017 lists the Cobra, the F40 and some classic Porsches). It matches what was measured here
 (a flat sensor on two cars) and is handled without a list of cars: a sensor that does not move is ignored.

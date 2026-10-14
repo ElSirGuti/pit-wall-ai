@@ -87,6 +87,10 @@ def _parser() -> argparse.ArgumentParser:
     common(say)
     say.add_argument("text", nargs="?", help="what to say (default: a test phrase)")
     say.add_argument("--language", choices=["es", "en"], help="language / voice")
+    say.add_argument("--voice", help="part of the name of the voice to use (see `pit-wall voices`)")
+    say.add_argument(
+        "--device", help="part of the name of the audio output (see `pit-wall devices`)"
+    )
 
     sub.add_parser(
         "rules", help="list the alert rules, their thresholds and the session policies"
@@ -116,6 +120,21 @@ def _parser() -> argparse.ArgumentParser:
         help="session kind for .ld/.csv logs, which do not say (default practice)",
     )
     chat.add_argument("--wait", type=float, default=5.0, help="seconds to wait for live telemetry")
+
+    dv = sub.add_parser("devices", help="list the microphones and the audio outputs")
+    dv.add_argument("--config", help="YAML config")
+
+    mt = sub.add_parser("mic-test", help="record a few seconds and show the level")
+    mt.add_argument("--config", help="YAML config")
+    mt.add_argument("--device", help="part of the microphone name (default: audio.input_device)")
+    mt.add_argument("--seconds", type=float, default=3.0, help="how long to record (3)")
+    mt.add_argument("--out", help="also save the recording as a WAV file")
+
+    vc = sub.add_parser("voices", help="list the installed voices and test them by ear")
+    vc.add_argument("--config", help="YAML config")
+    vc.add_argument("--test", action="store_true", help="play a sample with each voice")
+    vc.add_argument("--voice", help="only the voices whose name contains this")
+    vc.add_argument("--device", help="part of the name of the audio output to play on")
 
     bd = sub.add_parser("bind", help="assign a button (any device) to an action by pressing it")
     bd.add_argument("--config", help="YAML config")
@@ -296,6 +315,8 @@ def _make_speech(cfg: AppConfig, *, mute: bool = False) -> SpeechOutput:
             voice_name=v.name,
             rate=v.rate,
             volume=v.volume,
+            output_device=v.output_device,
+            command=v.command,
         )
     )
 
@@ -320,6 +341,11 @@ def _start_engineer(
 
 
 def _cmd_say(cfg: AppConfig, a: argparse.Namespace) -> int:
+    if a.voice or a.device:  # a one-off test of another voice or output
+        v = cfg.engineer.voice.model_copy(
+            update={k: val for k, val in (("name", a.voice), ("output_device", a.device)) if val}
+        )
+        cfg = cfg.model_copy(update={"engineer": cfg.engineer.model_copy(update={"voice": v})})
     lang = cfg.engineer.language
     text = a.text or M.say(lang, "test")
     speech = _make_speech(cfg)
@@ -526,6 +552,24 @@ def _cmd_chat(cfg: AppConfig, a: argparse.Namespace) -> int:
     return cmd_chat(cfg, a)
 
 
+def _cmd_devices(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .audio.cli_audio import cmd_devices
+
+    return cmd_devices(cfg, a)
+
+
+def _cmd_mic_test(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .audio.cli_audio import cmd_mic_test
+
+    return cmd_mic_test(cfg, a)
+
+
+def _cmd_voices(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .audio.cli_audio import cmd_voices
+
+    return cmd_voices(cfg, a)
+
+
 def _cmd_bind(cfg: AppConfig, a: argparse.Namespace) -> int:
     from .input.cli_input import cmd_bind
 
@@ -658,6 +702,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             "eval": _cmd_eval,
             "trim": _cmd_trim,
             "bind": _cmd_bind,
+            "devices": _cmd_devices,
+            "mic-test": _cmd_mic_test,
+            "voices": _cmd_voices,
             "bindings": _cmd_bindings,
             "input-test": _cmd_input_test,
             "chat": _cmd_chat,

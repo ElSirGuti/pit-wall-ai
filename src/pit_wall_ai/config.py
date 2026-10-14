@@ -105,9 +105,13 @@ class CalmConfig(_Model):
 
 
 class VoiceConfig(_Model):
-    backend: Literal["sapi", "console", "none"] = (
-        "sapi"  # sapi = Windows voices; console = print only
+    backend: Literal["sapi", "command", "console", "none"] = (
+        "sapi"  # sapi = Windows voices; command = your own synthesiser; console = print only
     )
+    # Part of the name of the audio output the voice speaks through (a headset, speakers...); None = default.
+    # `pit-wall devices` lists them. For backend: command, `command` is the template (see default.yaml).
+    output_device: str | None = None
+    command: str | None = None
     name: str | None = None  # e.g. "Sabina"; None = first voice of the language
     rate: int = Field(1, ge=-10, le=10)  # SAPI speed, 0 = normal
     volume: int = Field(100, ge=0, le=100)
@@ -309,6 +313,18 @@ class InputConfig(_Model):
     bindings: dict[str, list[dict]] = Field(default_factory=dict)
 
 
+class AudioConfig(_Model):
+    """The microphone for push-to-talk (phase 6). 16 kHz mono is what the recogniser wants."""
+
+    input_device: str | None = (
+        None  # part of the name; None = the system default. `pit-wall devices`
+    )
+    preroll_ms: int = Field(200, ge=0, le=2000)  # audio kept from before the button went down
+    tail_ms: int = Field(150, ge=0, le=2000)  # audio kept after it went up
+    min_utterance_ms: int = Field(300, ge=50)  # shorter than this is an accidental touch
+    keep_audio: bool = False  # keep the last utterances on disk for debugging (never committed)
+
+
 class AppConfig(_Model):
     telemetry: TelemetryConfig = TelemetryConfig()
     logging: LoggingConfig = LoggingConfig()
@@ -317,6 +333,7 @@ class AppConfig(_Model):
     analysis: AnalysisConfig = AnalysisConfig()
     chat: ChatConfig = ChatConfig()
     input: InputConfig = InputConfig()
+    audio: AudioConfig = AudioConfig()
 
 
 class ConfigError(ValueError):

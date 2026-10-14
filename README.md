@@ -176,7 +176,7 @@ Capture used: Assetto Corsa 1.16.4, shared-memory 1.7, LFM practice server, Toyo
 | 3 | Rule-based alert engine with local TTS | done ([docs](docs/ENGINEER.md)); thresholds conservative, to calibrate |
 | 4 | Braking analysis per corner vs the best lap (track geometry generated locally) | **in progress** ([docs](docs/TRACK_GEOMETRY.md)): geometry, numbering, per-corner comparison and the spoken hint are in; to be checked live and against the real circuits' numbering |
 | 5 | Text chat with Gemini using a compact telemetry summary, plan in [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md) (including questions such as "which corner is that?", answered from the geometry) | planned |
-| 6 | Full voice: push-to-talk bindable to any button of any device (keyboard, mouse, gamepad, wheel, button box; [plan](docs/INPUT_BINDINGS.md)), STT, spoken answers | planned ([plan](docs/PHASE6_PLAN.md)) |
+| 6 | Full voice (buttons done; microphone and voice/output selection coded: `pit-wall devices`, `mic-test`, `voices --test`): push-to-talk bindable to any button of any device (keyboard, mouse, gamepad, wheel, button box; [plan](docs/INPUT_BINDINGS.md)), STT, spoken answers | planned ([plan](docs/PHASE6_PLAN.md)) |
 | 6b | The engineer as a character: radio protocol (half-duplex, ACK, acknowledgement phrase), profiles and personas, names, conversation memory | planned, see [docs/ENGINEER_EXPERIENCE_PLAN.md](docs/ENGINEER_EXPERIENCE_PLAN.md) |
 | 7 | Post-session debrief with Gemini | planned |
 | 8 | Race preparation: strategy plan with an editable practice checklist, rivals brief, setup and driving-style suggestions | planned, see [docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md) |
