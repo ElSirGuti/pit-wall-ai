@@ -1,7 +1,7 @@
 # Phase 5 plan: text chat with Gemini
 
-Status: **plan, waiting for approval** (rule of the project: plan and risks first, then implementation).
-Nothing in this file is implemented. Statements about Gemini's API and quotas come from a web search
+Status: **approved 2026-10-14; steps 1 and 2 implemented against simulated answers** (see section 11). The
+rest is not implemented. Statements about Gemini's API and quotas come from a web search
 (2026-10-14) and from the author's earlier notes; they are marked *to verify* and are checked by the
 `llm-check` command of step 1 before anything depends on them.
 
@@ -72,6 +72,11 @@ behind the same interface. *Both to verify against the current API reference dur
 | which corner is that | `find_corner` + `describe_corner` | "Prima Esse, que es la curva 11, la última" |
 | current tyre temperatures/pressures | latest snapshot | per wheel, with the unit |
 | what was that alert | alert log (rule + values) | says the measured numbers, not a story |
+| session type and state | `SessionState` | practice / qualify / race / hotlap, phase, time left |
+| tyre state | latest snapshot + tracker | core temperatures, pressures, wear, per wheel; only verified fields |
+| brake state | latest snapshot | pedal and, **only when the sensor moves**, temperatures (flat sensors are reported as no reliable data) |
+| best lap and delta | `LapTracker` | best lap, last lap, delta to the best, live delta |
+| penalties | `snap.penalty_time` | unit still to be confirmed live: said with that caveat until then |
 
 Everything else is an open question for the model, with the context attached.
 
@@ -128,8 +133,8 @@ Everything else is an open question for the model, with the context attached.
 
 | Step | Content | Done when |
 |---|---|---|
-| 1 | `pit-wall llm-check`: lists models for the key, 3 calls, prints what it learned (latency, 429 hint) | the author's key works and the numbers are in `docs/LLM.md` |
-| 2 | `GeminiProvider` + HTTP fakes | contract tests pass; real call works |
+| 1 | `pit-wall llm-check`: lists models for the key, 3 calls, prints what it learned (latency, 429 hint) | **done against simulated answers**; pending: the author's key and the numbers in `docs/LLM.md` |
+| 2 | `GeminiProvider` + HTTP fakes | **done against simulated answers** (tests/test_gemini.py); pending: the real call |
 | 3 | `ContextBuilder` + golden tests | size and content verified on real sessions |
 | 4 | `IntentRouter` + local answers | table of questions passes; latency under 50 ms |
 | 5 | `GroundingCheck` | violations are caught in tests |
@@ -150,15 +155,48 @@ Everything else is an open question for the model, with the context attached.
 | Language mixing (es/en) | one configured language; the prompt fixes it; tests in both |
 | Context stale during a lap | timestamp in the context; the answer says "hace N s" when the data is older than 5 s |
 
-## 10. Decisions needed from the author
+## 10. Decisions (2026-10-14)
 
-1. **Transport:** plain HTTPS (recommended) or the `google-genai` SDK.
-2. **Consent:** `llm.allow_cloud: false` by default, as proposed?
-3. **First deliverable:** terminal chat only (voice is phase 6). Agreed?
-4. **A Gemini API key** in `.env` (free, from AI Studio), and a look at the AI Studio quota page so the
-   numbers can be written down (or paste what it shows).
-5. **The local-answers table** of section 3: anything to add or remove?
-6. **Default language** of the chat: Spanish (as the alerts)?
+1. **Transport:** plain HTTPS, no new dependency; the provider stays behind `LLMProvider` so it can be swapped.
+2. **Consent:** `llm.allow_cloud` is `false` by default and **the chat says so clearly** when it is off (it
+   works with the local answers and tells the user how to turn the cloud model on).
+3. **First deliverable:** terminal chat only, no voice.
+4. **Key:** the author puts it in `.env` the same evening; until then everything runs on simulated answers.
+5. **Local answers:** the table of section 3, which must include tyre and brake state, session type, best lap
+   and delta and penalties (added).
+6. **Language:** Spanish by default, configurable.
+
+### Conditions that bind the steps below
+
+* **Grounding accepts equivalent formats and roundings** (`1,9` = `1.9`, `1.90`, "1 coma 9"; a value rounded to
+  the precision the context carries) **and is tested on a correct number attached to the wrong place**: the
+  check is necessary, not sufficient (section 4), so there are explicit cases where the number exists in the
+  context but belongs to another corner, wheel or lap, and the evaluation set measures how often the model
+  does it.
+* **The evaluation set includes questions the context cannot answer** (weather, rivals' state, anything not
+  in the summary): the correct answer is "no tengo ese dato". It is reported separately because it is where
+  models fail most.
+* **The model name lives only in the YAML.** If it does not exist the error says which models the key accepts
+  (implemented: see section 11).
+
+## 11. Status of steps 1 and 2
+
+**Implemented** (simulated answers only; **nothing has been exercised against the real service**):
+
+* `engineer/gemini.py`: `GeminiProvider` over `urllib`, an injectable `HttpTransport`, `list_models`,
+  `generateContent` request/response mapping, 429 with `Retry-After` or `RetryInfo`, key rejection, safety
+  blocks, empty answers, network errors; the key goes in a header and is redacted from every error text.
+* The model name is read only from `llm.model`; a test fails if a model name appears in source other than
+  `config.py`. A 404 triggers a model listing and the error names the models the key can use.
+* `llm.allow_cloud` (default false) is enforced inside the provider; the message explains what would be sent
+  and that the free tier may use it.
+* `pit-wall llm-check [--calls N] [--allow-cloud]`: models, latency, tokens, 429 hints; sends only the
+  one-line prompt "Reply with the single word: ok".
+* The limiter now uses the client's clock (the 429 cool-down is testable and consistent).
+
+**To verify with the key** (all marked in `gemini.py`): request and response field names, the model list
+endpoint and its pagination, the exact 429 body, the name of the default model in the YAML, and the free-tier
+numbers.
 
 ---
 

@@ -72,6 +72,8 @@ def available_providers() -> list[str]:
 
 
 def create_provider(cfg: LLMConfig) -> LLMProvider:
+    from . import gemini  # noqa: F401  (registers the provider)
+
     try:
         return _REGISTRY[cfg.provider.lower()](cfg)
     except KeyError:

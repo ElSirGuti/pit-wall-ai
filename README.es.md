@@ -111,6 +111,11 @@ Cómo se decide cada mensaje, las reglas y la latencia medida: [docs/ENGINEER.md
 curvas, la comparación de frenadas, el aviso hablado y cómo se verificó la alineación con la posición del juego
 (error bajo 0,5 m en Magione, Imola y Spa): [docs/TRACK_GEOMETRY.md](docs/TRACK_GEOMETRY.md).
 
+```bash
+# Fase 5: comprobar el modelo en la nube (desactivado por defecto; ver docs/LLM.md)
+pit-wall llm-check --allow-cloud
+```
+
 `pit-wall --help` lista todas las opciones. Las comprobaciones: `pytest` y `ruff check src tests`.
 
 ## Configuración

@@ -32,7 +32,7 @@ class LLMClient:
     ) -> None:
         self.provider = provider
         self.cfg = cfg
-        self.limiter = limiter or AdaptiveRateLimiter(cfg.rate_limit)
+        self.limiter = limiter or AdaptiveRateLimiter(cfg.rate_limit, clock=clock)
         self._clock = clock
         self._cache: OrderedDict[str, tuple[float, LLMResponse]] = OrderedDict()
         self._lock = threading.Lock()

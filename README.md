@@ -109,6 +109,11 @@ See [docs/ENGINEER.md](docs/ENGINEER.md) for how a message is decided, the rules
 [docs/TRACK_GEOMETRY.md](docs/TRACK_GEOMETRY.md) for the corner geometry, the braking comparison, the spoken hint
 and how the alignment with the game's lap position was verified (error below 0.5 m on Magione, Imola, Spa).
 
+```bash
+# Phase 5: check the cloud model (off by default; see docs/LLM.md)
+pit-wall llm-check --allow-cloud
+```
+
 `pit-wall --help` lists every option. Run the checks with `pytest` and `ruff check src tests`.
 
 ## Configuration

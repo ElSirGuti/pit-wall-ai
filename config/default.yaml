@@ -20,9 +20,13 @@ logging:
   json_logs: false      # true = one JSON object per line
   file: null            # also write JSON lines to this file
 
-llm:                    # used from phase 5; the provider is swappable
-  provider: mock        # mock (offline) | gemini (phase 5)
-  model: gemini-2.5-flash
+llm:                    # phase 5; the provider is swappable
+  provider: mock        # mock (offline) | gemini (HTTPS to Google, needs the key and allow_cloud)
+  allow_cloud: false    # nothing is sent to a cloud model unless true. The free tier may use what is sent
+                        # (the compact session summary and your question) to improve Google's products.
+  model: gemini-2.5-flash  # the only place a model name lives; `pit-wall llm-check` lists the valid ones
+  base_url: https://generativelanguage.googleapis.com/v1beta
+  temperature: 0.2
   api_key_env: GEMINI_API_KEY
   timeout_s: 8
   max_output_tokens: 300

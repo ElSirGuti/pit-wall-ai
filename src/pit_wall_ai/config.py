@@ -68,8 +68,13 @@ class RateLimitConfig(_Model):
 
 
 class LLMConfig(_Model):
-    provider: str = "mock"  # "gemini" arrives in phase 5; "mock" works offline
-    model: str = "gemini-2.5-flash"
+    provider: str = "mock"  # "mock" works offline; "gemini" talks to Google over HTTPS
+    # Nothing is sent to a cloud model unless this is true (the free tier may use inputs to improve
+    # Google's products). With it false only the mock provider and the local answers work.
+    allow_cloud: bool = False
+    model: str = "gemini-2.5-flash"  # the ONLY place a model name lives; `pit-wall llm-check` lists valid ones
+    base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+    temperature: float = Field(0.2, ge=0, le=2)
     api_key_env: str = "GEMINI_API_KEY"
     timeout_s: float = Field(8.0, gt=0)
     max_output_tokens: int = Field(300, ge=16)

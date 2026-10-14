@@ -92,6 +92,17 @@ def _parser() -> argparse.ArgumentParser:
         "rules", help="list the alert rules, their thresholds and the session policies"
     ).add_argument("--config", help="YAML config")
 
+    chk = sub.add_parser(
+        "llm-check", help="test the configured cloud model: models the key can use, latency, 429"
+    )
+    chk.add_argument("--config", help="YAML config")
+    chk.add_argument("--calls", type=int, default=3, help="how many test calls (default 3)")
+    chk.add_argument(
+        "--allow-cloud",
+        action="store_true",
+        help="allow the cloud call for this run only (the YAML flag stays as it is)",
+    )
+
     cor = sub.add_parser(
         "corners", help="list the numbered corners of a track from the game's racing line"
     )
@@ -424,6 +435,12 @@ def _print_lap_comparison(g, names, result, cfg) -> None:
             )
 
 
+def _cmd_llm_check(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .engineer.llmcheck import run_llm_check
+
+    return run_llm_check(cfg.llm, calls=max(1, a.calls), allow_cloud=a.allow_cloud)
+
+
 def _cmd_corners(cfg: AppConfig, a: argparse.Namespace) -> int:
     from .analysis.tracks import resolve
 
@@ -504,6 +521,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "say": _cmd_say,
             "rules": _cmd_rules,
             "corners": _cmd_corners,
+            "llm-check": _cmd_llm_check,
         }[args.cmd]
         return handler(cfg, args)
     except ConfigError as exc:
