@@ -457,14 +457,14 @@ def _cmd_corners(cfg: AppConfig, a: argparse.Namespace) -> int:
     assert g is not None and res.candidate is not None
     print(
         f"{track}{'/' + res.layout if res.layout else ''}: line {g.length_m:.0f} m"
-        f"{f' (game {length:.0f} m)' if length else ''}, {len(g.corners)} corners, {res.reason}"
+        f"{f' (game {length:.0f} m)' if length else ''}, {len(g.apexes)} corners ({len(g.corners)} groups), {res.reason}"
     )
     print(f"source: {res.candidate.path}")
     from .analysis.circuit_names import corner_names
 
     names = corner_names(g, track)
     print(" #  dir    kind      sev     Rmin   start    apex     end   (m along the line)  name")
-    for c in g.corners:
+    for c in g.apexes:
         print(
             f"{c.number:2d}  {c.direction:5s}  {c.kind:8s}  {c.severity:6s} {c.min_radius_m:5.0f}"
             f"  {c.start_m:6.0f}  {c.apex_m:6.0f}  {c.end_m:6.0f}   {names.get(c.number, '')}"

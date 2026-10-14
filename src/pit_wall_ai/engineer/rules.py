@@ -569,7 +569,7 @@ class BrakingHintRule(Rule):
                     extra={
                         "track": st.track,
                         "layout": self._res.layout,
-                        "corners": len(self._res.geometry.corners),
+                        "corners": len(self._res.geometry.apexes),
                         "source": str(self._res.candidate.path),
                     },
                 )
@@ -605,7 +605,7 @@ class BrakingHintRule(Rule):
             worst = B.worst_corner(B.compare_lap(geometry, lap, ref, b), b)
             if worst is None:
                 continue
-            corner = next(c for c in geometry.corners if c.number == worst.corner)
+            corner = next(c for c in geometry.apexes if c.number == worst.corner)
             name = self._names.get(corner.number)
             verified = ctx.snap.static.track in self.analysis.verified_numbering
             where = M.where_phrase(

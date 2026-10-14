@@ -1,7 +1,7 @@
 """Corner names of the circuits that have an own table (``data/circuits.json``).
 
-Names are attached to the geometric corners by position, only when a table corner falls inside the corner's
-extent (or within ``TOLERANCE`` of its apex). A corner without a name keeps its number only; nothing is
+Names are attached to the apexes of the geometry by position, only when a table corner is within
+``TOLERANCE`` of the apex. A corner without a name keeps its number only; nothing is
 guessed. A track with an empty table (Magione, Monza...) gets no names at all.
 """
 
@@ -12,9 +12,9 @@ import re
 from functools import lru_cache
 from importlib import resources
 
-from .track_geometry import Corner, TrackGeometry
+from .track_geometry import TrackGeometry
 
-TOLERANCE = 0.012  # fraction of the lap (~85 m at Spa) between a table apex and the geometric apex
+TOLERANCE = 0.015  # fraction of the lap (~100 m at Spa, ~37 m at Magione) between a table apex and the geometric one
 
 
 @lru_cache(maxsize=1)
@@ -36,25 +36,24 @@ def circuit_for(track: str) -> dict | None:
     return None
 
 
-def _inside(f: float, a: float, b: float, pad: float = 0.0) -> bool:
-    a, b = (a - pad) % 1.0, (b + pad) % 1.0
-    return (a <= f <= b) if a <= b else (f >= a or f <= b)
-
-
 def corner_names(geometry: TrackGeometry, track: str | None = None) -> dict[int, str]:
-    """{corner number: name} for the geometric corners that contain a table corner."""
+    """{apex number: name}: each table corner is given to the nearest apex within ``TOLERANCE`` of the lap.
+
+    Two table corners that fall on the same apex are joined ("Les Combes / Malmedy"); an apex that no
+    table corner is near keeps its number alone.
+    """
     circuit = circuit_for(track or geometry.track)
     if circuit is None:
         return {}
     names: dict[int, list[str]] = {}
+    apexes = geometry.apexes
     for entry in circuit.get("corners", []):
         f = float(entry["apex_fraction"])
-        best: tuple[float, Corner] | None = None
-        for c in geometry.corners:
-            if _inside(f, c.start_fraction, c.end_fraction, pad=TOLERANCE / 2):
-                d = abs(((f - c.apex_fraction) + 0.5) % 1.0 - 0.5)
-                if best is None or d < best[0]:
-                    best = (d, c)
+        best, best_d = None, TOLERANCE
+        for c in apexes:
+            d = abs(((f - c.apex_fraction) + 0.5) % 1.0 - 0.5)
+            if d <= best_d:
+                best, best_d = c, d
         if best is not None:
-            names.setdefault(best[1].number, []).append(entry["name"])
+            names.setdefault(best.number, []).append(entry["name"])
     return {n: " / ".join(v) for n, v in names.items()}

@@ -263,10 +263,14 @@ def test_names_are_attached_only_where_the_table_has_a_corner_inside():
         track="spa",
     )
     names = circuit_names.corner_names(g)
-    assert names == {1: "La Source", 2: "Eau Rouge / Raidillon", 3: "Les Combes / Malmedy"}
+    assert names == {
+        1: "La Source",
+        2: "Eau Rouge / Raidillon",
+        3: "Les Combes",
+    }  # Malmedy is 0.03 away
     assert circuit_names.circuit_for("fn_imola")["id"] == "imola"
     assert circuit_names.circuit_for("some_mod_track") is None
-    g.track = "magione"
+    g.track = "monza"
     assert circuit_names.corner_names(g) == {}  # an empty table gives no names
 
 
@@ -306,3 +310,75 @@ def test_normalized_pos_matches_the_racing_line_on_a_real_magione_race():
     err = np.abs(np.array(err))
     assert len(err) > 1000
     assert np.percentile(err, 95) < 0.5 and err.max() < 1.0
+
+
+def test_a_complex_is_numbered_per_apex_and_each_apex_can_take_its_own_name():
+    import numpy as np
+
+    from pit_wall_ai.analysis.circuit_names import corner_names
+    from pit_wall_ai.analysis.track_geometry import Corner, SubApex, TrackGeometry
+
+    L = 6946.0
+    subs = [
+        SubApex(2420 / L, 2420.0, 63.0, "right", 2354.0, 2500.0),  # Les Combes
+        SubApex(2626 / L, 2626.0, 90.0, "left", 2560.0, 2722.0),  # Malmedy
+    ]
+    complex_ = Corner(
+        1,
+        2354 / L,
+        2420 / L,
+        2722 / L,
+        2354.0,
+        2420.0,
+        2722.0,
+        63.0,
+        "right",
+        "medium",
+        "chicane",
+        subs,
+    )
+    single = Corner(
+        2,
+        3000 / L,
+        3050 / L,
+        3174 / L,
+        3000.0,
+        3050.0,
+        3174.0,
+        50.0,
+        "right",
+        "slow",
+        "single",
+        [SubApex(3050 / L, 3050.0, 50.0, "right")],
+    )
+    from pit_wall_ai.analysis.track_geometry import RacingLine
+
+    line = RacingLine(np.array([0.0, L]), np.zeros(2), np.array([0.0, L]), True, 0.0)
+    g = TrackGeometry(
+        line=line,
+        corners=[complex_, single],
+        step_m=2.0,
+        distance_m=np.zeros(1),
+        curvature=np.zeros(1),
+        track="spa",
+    )
+    assert [(c.number, round(c.apex_m)) for c in g.apexes] == [(1, 2420), (2, 2626), (3, 3050)]
+    assert [c.direction for c in g.apexes] == ["right", "left", "right"]
+    assert (g.apexes[0].start_m, g.apexes[0].end_m) == (2354.0, 2500.0)
+    assert [c.number for c in g.corners] == [1, 2]  # the grouped view is unchanged
+    assert corner_names(g) == {1: "Les Combes", 2: "Malmedy", 3: "Rivage"}
+
+
+@pytest.mark.real_data
+def test_magione_has_eleven_numbered_corners_and_the_long_straight_ends_at_curvone():
+    res = tracks.resolve("magione", "", length_m=2455.7)
+    if not res.ok:
+        pytest.skip(f"Magione is not installed: {res.reason}")
+    apexes = res.geometry.apexes
+    names = circuit_names.corner_names(res.geometry, "magione")
+    assert len(apexes) == 11 and len(names) == 11  # the 11 numbers of the circuit map
+    assert (
+        names[6] == "Curvone" and 1700 < apexes[5].apex_m < 1760
+    )  # braking after the long straight
+    assert apexes[4].apex_m < 1000 < 1600 < apexes[5].start_m  # ~800 m without a corner before it
+    assert names[1] == "Curva Traliccio" and names[11] == "Prima Esse"

@@ -197,7 +197,7 @@ def test_a_corner_that_crosses_the_start_line_is_skipped():
     wrapped = corner(9, 2900, 20, 80)  # start > end: it wraps
     g = geometry(wrapped, corner(1, 480, 500, 540))
     got = lap_corner_metrics(g, lap(1, {500: 400}), CFG)
-    assert set(got) == {1}
+    assert list(got) == [2]  # the wrapped corner is number 1 (smallest apex) and is skipped
 
 
 # -- which lap is the reference -------------------------------------------------------------------------

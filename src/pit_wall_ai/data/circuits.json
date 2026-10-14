@@ -381,7 +381,64 @@
    ],
    "length_m": 2507,
    "confidence": "medium",
-   "corners": []
+   "corners": [
+    {
+     "order": 1,
+     "name": "Curva Traliccio",
+     "apex_fraction": 0.1026
+    },
+    {
+     "order": 2,
+     "name": "Curva Vecchi Box",
+     "apex_fraction": 0.2077
+    },
+    {
+     "order": 3,
+     "name": "Curva Esse Tornantino",
+     "apex_fraction": 0.3071
+    },
+    {
+     "order": 4,
+     "name": "Tornantino",
+     "apex_fraction": 0.3324
+    },
+    {
+     "order": 5,
+     "name": "Curva Muro",
+     "apex_fraction": 0.3707
+    },
+    {
+     "order": 6,
+     "name": "Curvone",
+     "apex_fraction": 0.703
+    },
+    {
+     "order": 7,
+     "name": "Curva 7",
+     "apex_fraction": 0.7446
+    },
+    {
+     "order": 8,
+     "name": "Curva Monte Sperello",
+     "apex_fraction": 0.8032
+    },
+    {
+     "order": 9,
+     "name": "Curva Zampini",
+     "apex_fraction": 0.8472
+    },
+    {
+     "order": 10,
+     "name": "Seconda Esse",
+     "apex_fraction": 0.8741
+    },
+    {
+     "order": 11,
+     "name": "Prima Esse",
+     "apex_fraction": 0.8945
+    }
+   ],
+   "note": "11 corners numbered as in the circuit map supplied by the author (2026-10-14); apex fractions are the 11 apexes of the game's racing line. Corner 7 has no name on the map."
   },
   {
    "id": "monaco",

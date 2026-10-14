@@ -191,7 +191,7 @@ def lap_corner_metrics(
         return {}
     out: dict[int, CornerMetrics] = {}
     prev_apex = 0.0
-    for c in geometry.corners:
+    for c in geometry.apexes:
         if not usable(c):
             continue
         out[c.number] = corner_metrics(lap.trace, geometry.length_m, c, prev_apex, cfg)
@@ -209,7 +209,7 @@ def compare_lap(
     lm = lap_corner_metrics(geometry, lap, cfg)
     rm = lap_corner_metrics(geometry, ref, cfg)
     out: list[CornerComparison] = []
-    for c in geometry.corners:
+    for c in geometry.apexes:
         if c.number not in lm or c.number not in rm:
             continue
         a, b = lm[c.number], rm[c.number]

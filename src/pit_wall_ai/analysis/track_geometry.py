@@ -22,7 +22,8 @@ from __future__ import annotations
 
 import math
 import struct
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+from functools import cached_property
 from pathlib import Path
 
 import numpy as np
@@ -116,6 +117,8 @@ class SubApex:
     distance_m: float
     radius_m: float
     direction: str  # left | right
+    start_m: float | None = None  # extent of this apex alone (where the curvature rises / falls)
+    end_m: float | None = None
 
 
 @dataclass
@@ -197,6 +200,47 @@ class TrackGeometry:
     @property
     def length_m(self) -> float:
         return self.line.length_m
+
+    @cached_property
+    def apexes(self) -> list[Corner]:
+        """One entry per apex, numbered along the lap: **the numbering of the circuit**.
+
+        ``corners`` groups close apexes into complexes (a chicane, an esse); the circuit's own numbers
+        are per apex (Magione: 11 numbered corners = the 11 apexes of its 5 complexes, checked against
+        the track map by the author). Analysis, names and the spoken hints use this list.
+        """
+        out: list[Corner] = []
+        for c in self.corners:
+            subs = sorted(c.sub_apexes, key=lambda s: s.distance_m)
+            if len(subs) <= 1:
+                out.append(replace(c))
+                continue
+            length = self.length_m
+            for s in subs:
+                start = s.start_m if s.start_m is not None else c.start_m
+                end = s.end_m if s.end_m is not None else c.end_m
+                r = s.radius_m
+                sev = "slow" if r < SLOW_RADIUS_M else "medium" if r < MEDIUM_RADIUS_M else "fast"
+                out.append(
+                    Corner(
+                        number=0,
+                        start_fraction=start / length,
+                        apex_fraction=s.fraction,
+                        end_fraction=end / length,
+                        start_m=start,
+                        apex_m=s.distance_m,
+                        end_m=end,
+                        min_radius_m=r,
+                        direction=s.direction,
+                        severity=sev,
+                        kind="single",
+                        sub_apexes=[s],
+                    )
+                )
+        out.sort(key=lambda c: c.apex_m)
+        for i, c in enumerate(out, 1):
+            c.number = i
+        return out
 
     def corner_at(self, fraction: float) -> Corner | None:
         """The corner whose start..end contains ``fraction`` (wrap aware)."""
@@ -380,6 +424,8 @@ def _segment(
                 distance_m=float(e["d"]),
                 radius_m=float(e["radius"]),
                 direction="left" if e["sign"] > 0 else "right",
+                start_m=float(dist[e["s0"] % n]),
+                end_m=float(dist[e["s1"] % n]),
             )
             for e in g
         ]

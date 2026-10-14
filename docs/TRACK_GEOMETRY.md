@@ -49,12 +49,20 @@ of them (correlation 0.71). `curvature` is signed so a **left** turn is positive
 
 ## Numbering
 
-Corners are numbered along the lap from the start line, as the **geometry** sees them: a chicane or a
-double apex counts once. That is not necessarily the circuit's official numbering (Magione comes out with
-5, the real circuit has about ten named corners). Names come from the author's own table
-(`src/pit_wall_ai/data/circuits.json`) and are attached only where a table corner falls inside a geometric
-one; a corner without a name keeps its number alone. Until you confirm a circuit's numbering, the voice
-will not say corner numbers for it.
+The geometry finds **apexes** (peaks of curvature) and groups the close ones into *complexes* (a chicane, an
+esse). The circuit's own numbers are per apex, so corners are **numbered per apex along the lap** from the
+start line; the grouping is shown only as the number of groups.
+
+Checked against a real circuit map on 2026-10-14: Magione's map has 11 numbered corners and the geometry has
+exactly 11 apexes (in 5 groups: 1 + 1 + 3 + 2 + 4); corner 6 (Curvone) is at 1726 m, right after
+the ~800 m straight, which is the braking point the author identified as "the one after the long straight".
+The names come from that map (corner 7 has none).
+
+Other circuits are numbered the same way and **not verified** until the author checks them against the real
+circuit: Spa comes out with 18 apexes (the official numbering may differ). Names come from the author's own
+table (`src/pit_wall_ai/data/circuits.json`) and are given to the nearest apex within 1.5 % of the lap; an
+apex without a name keeps its number alone. The voice says a name when there is one, a number only for
+circuits listed in `analysis.verified_numbering`, and otherwise describes the stretch.
 
 ## Braking per corner (phase 4, step 2)
 
