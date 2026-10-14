@@ -132,6 +132,26 @@ Todo lo que falta medir con tu PC está ordenado en **`docs/SESION_MEDICION.md`*
 sentada: micrófono y voces, frases (`docs/FRASES_VOZ.md`), fps con el reconocedor en CPU y GPU, y una sesión de
 pista con coche de desgaste real, banderas, daños y penalizaciones. Lo de arriba se resuelve con ese guion.
 
+## Idiomas (alemán e inglés)
+
+* instalar una voz alemana en Windows (Configuración > Hora e idioma > Voz > Agregar voces > "Deutsch
+  (Deutschland)", trae Hedda y Katja) y ejecutar `pit-wall voices --test` para elegirla;
+* poner `engineer.language: de` en `config/local.yaml` y leer las frases alemanas de `docs/FRASES_VOZ.md`
+  (con el móvil, en `frases/telefono/`) para medir el reconocimiento en alemán; lo mismo con `en`;
+* decirme si el reconocimiento en alemán con el modelo `small` es suficiente o conviene `medium`;
+* cuando quieras alemán sin nube: pedir la traducción de las respuestas locales (unas 25 funciones de
+  `chat/local.py`).
+
+## Modo MCP (para quien no tiene clave de API)
+
+Propuesta en `docs/MCP_PLAN.md`, sin código. Lo que necesito de ti:
+
+* la documentación de los MCP que has desarrollado (convenciones de nombres de herramientas, respuestas
+  cortas y largas, errores, consentimiento y registro), para que éste se parezca a los tuyos;
+* decir qué cliente usarías (Claude Desktop u otro) y si quieres que las alertas críticas sigan saliendo por
+  la voz local mientras conversas con el asistente;
+* aprobar o corregir el plan (sección 4) antes del paso 1.
+
 ## Ya cerrado
 
 * ~~Pregunta "¿cuánto tiempo queda?" en carrera sin límite~~ (2026-10-15): ahora dice que la sesión no tiene
