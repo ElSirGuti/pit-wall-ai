@@ -150,6 +150,8 @@ Propuesta en `docs/MCP_PLAN.md`, sin código. Lo que necesito de ti:
   cortas y largas, errores, consentimiento y registro), para que éste se parezca a los tuyos;
 * decir qué cliente usarías (Claude Desktop u otro) y si quieres que las alertas críticas sigan saliendo por
   la voz local mientras conversas con el asistente;
+* decir si el valor por defecto de `mcp.local_voice` te parece bien: `critical` (la voz local solo dice los
+  críticos mientras hablas con el asistente); las otras opciones son `on`, `off` y `auto`;
 * aprobar o corregir el plan (sección 4) antes del paso 1.
 
 ## Ya cerrado

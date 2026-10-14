@@ -47,6 +47,18 @@ instructions tell the client to read `say` verbatim and not to add numbers of it
   alerts keep going out through pit-wall-ai's own local voice (SAPI), exactly as in phase 3, and the assistant
   can be asked "what did the engineer just say" (`recent_alerts`). Two voices in the same ears is the cost;
   the radio rules (first to start wins, critical always go out) already cover the local one.
+* **The local voice is a setting** (requested by the author): `mcp.local_voice`.
+
+  | Value | The local voice (SAPI) says |
+  |---|---|
+  | `on` | every rule alert, as without MCP |
+  | `critical` (default) | only the critical alerts: the assistant can take the conversation, the car can still shout |
+  | `off` | nothing: the alerts are only available to the assistant (`recent_alerts`), which reads them if asked |
+  | `auto` | `on` while no MCP client is connected, `critical` while one is |
+
+  The setting can also be changed by voice through the assistant (`set_quiet`, the existing "no molestes")
+  and by the wheel's `mute_engineer` button, which overrides it until pressed again. With `off` the driver
+  gets no warning of a puncture unless the assistant is asked: the README says so next to the setting.
 * Latency of a turn is the client's (seconds): fine in the pits and on straights, not for a decision inside a
   corner. The rule alerts are unaffected.
 
@@ -78,8 +90,8 @@ instructions tell the client to read `say` verbatim and not to add numbers of it
 * Tool answers that are too long make the client's voice read a lot: every tool has a short mode by default.
 * Users may expect the proactive behaviour of the full engineer from the assistant: the README must say that
   the alerts are the local voice's and the assistant is the pit wall's chat.
-* Two assistants talking at once (the local voice and the client's): the local voice is silent in this mode
-  unless `engineer.enabled` is true and the user wants it.
+* Two assistants talking at once (the local voice and the client's): solved by `mcp.local_voice`, with
+  `critical` as the default so a safety alert is never lost silently.
 
 ## 6. What the author can contribute
 
