@@ -53,3 +53,6 @@ config/local.yaml
 /eval_report*.md
 config/bindings.yaml
 /frases/
+
+# Private reference material from the author (never committed)
+/docs/private/
