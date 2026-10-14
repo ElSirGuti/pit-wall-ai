@@ -1,0 +1,403 @@
+"""The compact summary of the session that the chat works from (and the model receives).
+
+Built from the same objects the dashboard and the engineer use. Only fields whose unit status is *verified* or
+*plausible* in the README table are included; a sensor that does not move (brake temperature on some cars) is
+left out and replaced by a note, so the model is never invited to reason about a number that means nothing.
+
+Everything goes through :class:`FactSheet`, so each number keeps the identity it belongs to (see ``facts.py``).
+"""
+
+from __future__ import annotations
+
+import math
+import re
+from collections import deque
+from collections.abc import Sequence
+from dataclasses import dataclass, field
+
+from ..analysis import braking as B
+from ..analysis.laps import CurrentLap, LapRecord
+from ..analysis.trackctx import TrackInfo
+from ..config import AppConfig
+from ..engineer.engine import AlertRecord
+from ..engineer.rules import FuelRule
+from ..session.detector import SessionState
+from ..telemetry.snapshot import CORNERS, Snapshot
+from .facts import Fact, FactSheet, Subject, norm
+
+WHEEL_ALIASES = {
+    "FL": (
+        "fl",
+        "delantero izquierdo",
+        "delantera izquierda",
+        "front left",
+        "neumatico delantero izquierdo",
+    ),
+    "FR": (
+        "fr",
+        "delantero derecho",
+        "delantera derecha",
+        "front right",
+        "neumatico delantero derecho",
+    ),
+    "RL": (
+        "rl",
+        "trasero izquierdo",
+        "trasera izquierda",
+        "rear left",
+        "neumatico trasero izquierdo",
+    ),
+    "RR": ("rr", "trasero derecho", "trasera derecha", "rear right", "neumatico trasero derecho"),
+}
+RECENT_LAPS = 5
+TOP_CORNERS = 4
+RECENT_ALERTS = 5
+BRAKE_ALIVE_RANGE_C = 8.0  # the same criterion as the brake-temperature rule
+
+
+@dataclass
+class BrakeWatch:
+    """Remembers the range of each brake temperature, to tell a live sensor from a flat one."""
+
+    window: int = 600
+    _hist: dict[str, deque] = field(default_factory=dict)
+
+    def update(self, snap: Snapshot) -> None:
+        for i, w in enumerate(CORNERS):
+            self._hist.setdefault(w, deque(maxlen=self.window)).append(snap.brake_temp[i])
+
+    def alive(self, wheel: str) -> bool:
+        h = self._hist.get(wheel)
+        return bool(h) and (max(h) - min(h)) >= BRAKE_ALIVE_RANGE_C
+
+
+@dataclass
+class ChatInputs:
+    snap: Snapshot | None
+    state: SessionState
+    laps: Sequence[LapRecord]
+    current: CurrentLap | None
+    best: LapRecord | None
+    cfg: AppConfig
+    alerts: Sequence[AlertRecord] = ()
+    track: TrackInfo | None = None
+    brakes: BrakeWatch | None = None
+    now: float | None = None  # same clock as ``snap.t``
+
+
+def _r(v: float, nd: int) -> float:
+    return round(float(v), nd)
+
+
+def _time_numbers(ms: float) -> tuple[float, ...]:
+    """The renderings of a lap time a correct answer may use: seconds and milliseconds."""
+    return (round(ms / 1000.0, 3), float(ms))
+
+
+def corner_aliases(number: int, name: str | None) -> list[str]:
+    out = [f"curva {number}", f"corner {number}", f"turn {number}"]
+    if name:
+        out.append(name)
+        out.append(re.sub(r"^curva\s+", "", name, flags=re.IGNORECASE))
+    return out
+
+
+def _lap_flags(lap: LapRecord) -> list[str]:
+    return [
+        n for n, on in (("out", lap.out_lap), ("in", lap.in_lap), ("suspect", lap.suspect)) if on
+    ]
+
+
+def build_facts(inp: ChatInputs) -> FactSheet:
+    sheet = FactSheet(lang=inp.cfg.engineer.language)
+    snap, st = inp.snap, inp.state
+    add = sheet.add
+
+    # -- session ---------------------------------------------------------------------------------------
+    add(Fact("session.kind", st.session))
+    add(Fact("session.phase", st.phase))
+    if st.track:
+        add(Fact("session.track", st.track))
+    if st.car:
+        add(Fact("session.car", st.car))
+    if st.session_time_left_s is not None and math.isfinite(st.session_time_left_s):
+        add(Fact("session.time_left_s", _r(st.session_time_left_s, 0), "s"))
+    if st.position > 0:
+        add(Fact("session.position", st.position))
+    add(Fact("session.laps_completed", st.completed_laps))
+    if snap is not None and snap.tyre_compound:
+        add(Fact("session.compound", snap.tyre_compound))
+    if snap is not None and inp.now is not None:
+        add(Fact("data_age_s", _r(max(0.0, inp.now - snap.t), 1), "s"))
+
+    # -- laps ------------------------------------------------------------------------------------------
+    timed = [lap for lap in inp.laps if lap.time_ms > 0]
+    best = inp.best
+    if best is not None:
+        sub = Subject("lap", str(best.number))
+        add(Fact("laps.best.lap", best.number, subject=sub))
+        add(
+            Fact(
+                "laps.best.time_s",
+                _r(best.time_ms / 1000, 3),
+                "s",
+                sub,
+                _time_numbers(best.time_ms),
+            )
+        )
+    if timed:
+        last = timed[-1]
+        sub = Subject("lap", str(last.number))
+        add(Fact("laps.last.lap", last.number, subject=sub))
+        add(
+            Fact(
+                "laps.last.time_s",
+                _r(last.time_ms / 1000, 3),
+                "s",
+                sub,
+                _time_numbers(last.time_ms),
+            )
+        )
+        if best is not None and best.number != last.number:
+            d = last.time_ms - best.time_ms
+            add(
+                Fact(
+                    "laps.last.delta_to_best_s",
+                    _r(d / 1000, 3),
+                    "s",
+                    sub,
+                    (round(d / 1000, 3), round(abs(d) / 1000, 3), float(d), abs(float(d))),
+                )
+            )
+        flags = _lap_flags(last)
+        if flags:
+            add(Fact("laps.last.flags", ",".join(flags)))
+    for lap in timed[-RECENT_LAPS:]:
+        sub = Subject("lap", str(lap.number))
+        k = f"laps.recent.L{lap.number}"
+        add(Fact(f"{k}.time_s", _r(lap.time_ms / 1000, 3), "s", sub, _time_numbers(lap.time_ms)))
+        if best is not None and best.number != lap.number:
+            d = lap.time_ms - best.time_ms
+            add(
+                Fact(
+                    f"{k}.delta_to_best_s",
+                    _r(d / 1000, 3),
+                    "s",
+                    sub,
+                    (round(d / 1000, 3), round(abs(d) / 1000, 3)),
+                )
+            )
+        if _lap_flags(lap):
+            add(Fact(f"{k}.flags", ",".join(_lap_flags(lap))))
+        sheet.alias(sub, f"vuelta {lap.number}", f"lap {lap.number}")
+    for lap in ([best] if best else []) + timed[-1:]:
+        sheet.alias(Subject("lap", str(lap.number)), f"vuelta {lap.number}", f"lap {lap.number}")
+    cur = inp.current
+    if cur is not None:
+        add(Fact("laps.current.lap", cur.number))
+        if cur.delta_ms is not None:
+            d = cur.delta_ms / 1000
+            add(
+                Fact(
+                    "laps.current.live_delta_s",
+                    _r(d, 2),
+                    "s",
+                    numbers=(round(d, 2), round(abs(d), 2)),
+                )
+            )
+
+    # -- fuel ------------------------------------------------------------------------------------------
+    if snap is not None and snap.fuel > 0:
+        add(Fact("fuel.litres", _r(snap.fuel, 1), "L"))
+        per_lap = _fuel_per_lap(inp)
+        if per_lap:
+            add(
+                Fact(
+                    "fuel.per_lap_l",
+                    _r(per_lap, 2),
+                    "L",
+                    numbers=(round(per_lap, 2), round(per_lap, 1)),
+                )
+            )
+            left = snap.fuel / per_lap
+            add(Fact("fuel.laps_left", _r(left, 1), "laps"))
+
+    # -- tyres and brakes ---------------------------------------------------------------------------------
+    if snap is not None:
+        for i, w in enumerate(CORNERS):
+            sub = Subject("wheel", w)
+            sheet.alias(sub, *WHEEL_ALIASES[w])
+            if snap.tyre_core_temp[i] > 0:
+                add(Fact(f"tyres.{w}.core_c", _r(snap.tyre_core_temp[i], 0), "C", sub))
+            if snap.tyre_pressure[i] > 0:
+                add(Fact(f"tyres.{w}.pressure_psi", _r(snap.tyre_pressure[i], 1), "psi", sub))
+            if snap.tyre_wear[i] > 0:
+                add(Fact(f"tyres.{w}.wear_pct", _r(snap.tyre_wear[i], 1), "%", sub))
+        any_alive = False
+        for i, w in enumerate(CORNERS):
+            if inp.brakes is not None and inp.brakes.alive(w):
+                any_alive = True
+                add(Fact(f"brakes.{w}.temp_c", _r(snap.brake_temp[i], 0), "C", Subject("wheel", w)))
+        if not any_alive:
+            add(
+                Fact("brakes.note", "no reliable temperature: the sensor of this car does not move")
+            )
+        if snap.penalty_time:
+            add(Fact("penalties.time_s", _r(snap.penalty_time, 1), "s"))
+            add(Fact("penalties.unit_verified", False))
+
+    # -- the last lap against the best, corner by corner ------------------------------------------------
+    _add_analysis(inp, sheet)
+
+    # -- what the engineer said recently ------------------------------------------------------------------
+    for j, rec in enumerate(list(inp.alerts)[-RECENT_ALERTS:][::-1]):
+        k = f"alerts.A{j}"
+        add(Fact(f"{k}.rule", rec.rule))
+        add(Fact(f"{k}.text", rec.text))
+        add(Fact(f"{k}.outcome", rec.outcome))
+        if inp.now is not None:
+            add(Fact(f"{k}.age_s", _r(max(0.0, inp.now - rec.t), 0), "s"))
+        for name, v in rec.values.items():
+            if isinstance(v, int | float) and not isinstance(v, bool):
+                add(
+                    Fact(
+                        f"{k}.values.{name}",
+                        _r(v, 2),
+                        numbers=(round(float(v), 2), round(float(v), 1)),
+                    )
+                )
+        sheet.extra_numbers += [
+            float(x.replace(",", ".")) for x in re.findall(r"\d+(?:[.,]\d+)?", rec.text)
+        ]
+    return sheet
+
+
+def _fuel_per_lap(inp: ChatInputs) -> float | None:
+    class _T:  # FuelRule.per_lap only needs the tracker's lap list
+        laps = list(inp.laps)
+
+    return FuelRule(inp.cfg.engineer.rules.fuel).per_lap(_T())  # type: ignore[arg-type]
+
+
+def _add_analysis(inp: ChatInputs, sheet: FactSheet) -> None:
+    info = inp.track
+    if info is None or info.geometry is None:
+        if info is not None and info.reason:
+            sheet.add(Fact("analysis.unavailable", info.reason))
+        return
+    geometry, b = info.geometry, inp.cfg.analysis.braking
+    candidates = [lap for lap in inp.laps if B.comparable(lap) and lap.time_ms > 0]
+    for lap in reversed(candidates):
+        ref = B.reference_lap(list(inp.laps), lap)
+        if ref is None or not B.representative(lap, ref):
+            continue
+        comps = B.compare_lap(geometry, lap, ref, b)
+        if not comps:
+            continue
+        sheet.add(Fact("analysis.lap", lap.number, subject=Subject("lap", str(lap.number))))
+        sheet.add(
+            Fact("analysis.reference_lap", ref.number, subject=Subject("lap", str(ref.number)))
+        )
+        for c in geometry.apexes:
+            nm = info.names.get(c.number)
+            sheet.alias(Subject("corner", str(c.number)), *corner_aliases(c.number, nm))
+        found = B.worst_issue(comps, b)
+        if found is not None:
+            kind, w = found
+            sub = Subject("corner", str(w.corner))
+            sheet.add(Fact("analysis.worst.corner", w.corner, subject=sub))
+            if info.names.get(w.corner):
+                sheet.add(Fact("analysis.worst.name", info.names[w.corner], subject=sub))
+            sheet.add(Fact("analysis.worst.kind", kind))
+            if w.brake_earlier_m is not None:
+                v = w.brake_earlier_m
+                sheet.add(
+                    Fact(
+                        "analysis.worst.brake_earlier_m",
+                        _r(v, 0),
+                        "m",
+                        sub,
+                        (round(v, 0), round(abs(v), 0), round(v, 1), round(abs(v), 1)),
+                    )
+                )
+            if w.time_diff_s is not None:
+                sheet.add(
+                    Fact(
+                        "analysis.worst.time_loss_s",
+                        _r(w.time_diff_s, 2),
+                        "s",
+                        sub,
+                        (round(w.time_diff_s, 2), round(w.time_diff_s, 1)),
+                    )
+                )
+            if w.min_speed_delta_kmh is not None:
+                v = w.min_speed_delta_kmh
+                sheet.add(
+                    Fact(
+                        "analysis.worst.min_speed_delta_kmh",
+                        _r(v, 0),
+                        "km/h",
+                        sub,
+                        (round(v, 0), round(abs(v), 0)),
+                    )
+                )
+        ranked = sorted(
+            (c for c in comps if c.time_diff_s is not None),
+            key=lambda c: c.time_diff_s,
+            reverse=True,
+        )[:TOP_CORNERS]
+        for c in ranked:
+            sub = Subject("corner", str(c.corner))
+            k = f"analysis.corners.C{c.corner}"
+            sheet.add(
+                Fact(
+                    f"{k}.time_diff_s",
+                    _r(c.time_diff_s, 2),
+                    "s",
+                    sub,
+                    (
+                        round(c.time_diff_s, 2),
+                        round(c.time_diff_s, 1),
+                        round(abs(c.time_diff_s), 2),
+                    ),
+                )
+            )
+            if c.brake_earlier_m is not None:
+                v = c.brake_earlier_m
+                sheet.add(
+                    Fact(
+                        f"{k}.brake_earlier_m",
+                        _r(v, 0),
+                        "m",
+                        sub,
+                        (round(v, 0), round(abs(v), 0), round(v, 1), round(abs(v), 1)),
+                    )
+                )
+            if c.min_speed_delta_kmh is not None:
+                v = c.min_speed_delta_kmh
+                sheet.add(
+                    Fact(
+                        f"{k}.min_speed_delta_kmh",
+                        _r(v, 0),
+                        "km/h",
+                        sub,
+                        (round(v, 0), round(abs(v), 0)),
+                    )
+                )
+        return
+    sheet.add(Fact("analysis.unavailable", "no valid reference lap of the same compound yet"))
+
+
+def compact_context(sheet: FactSheet) -> dict:
+    """The nested dict that goes to the model; ``size_estimate`` says how large it is in tokens."""
+    return sheet.context()
+
+
+def size_estimate(ctx: dict) -> int:
+    """A rough token count (four characters per token) of the compact JSON."""
+    import json
+
+    return len(json.dumps(ctx, ensure_ascii=False, separators=(",", ":"))) // 4
+
+
+__all__ = ["BrakeWatch", "ChatInputs", "build_facts", "compact_context", "size_estimate", "norm"]

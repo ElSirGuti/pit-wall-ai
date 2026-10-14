@@ -258,9 +258,7 @@ class GeminiProvider:
             },
         }
         budget = self.thinking_budget_for(model)
-        if (
-            budget is not None
-        ):  # some models accept it, some answer 400 (see docs/LLM.md)
+        if budget is not None:  # some models accept it, some answer 400 (see docs/LLM.md)
             body["generationConfig"]["thinkingConfig"] = {"thinkingBudget": budget}
         if request.system.strip():
             body["systemInstruction"] = {"parts": [{"text": request.system.strip()}]}

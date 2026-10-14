@@ -12,7 +12,30 @@ import unicodedata
 
 from .track_geometry import Corner, TrackGeometry
 
-_ARTICLES = {"la", "el", "los", "las", "de", "del", "the", "a", "esa", "ese"}
+_ARTICLES = {
+    "la",
+    "el",
+    "los",
+    "las",
+    "de",
+    "del",
+    "the",
+    "a",
+    "esa",
+    "ese",
+    "cual",
+    "es",
+    "que",
+    "donde",
+    "esta",
+    "where",
+    "is",
+    "which",
+    "what",
+    "one",
+    "un",
+    "una",
+}
 LONG_STRAIGHT_M = (
     400.0  # a stretch without a corner at least this long counts as "the long straight"
 )

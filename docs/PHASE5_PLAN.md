@@ -1,7 +1,6 @@
 # Phase 5 plan: text chat with Gemini
 
-Status: **approved 2026-10-14; steps 1 and 2 implemented against simulated answers** (see section 11). The
-rest is not implemented. Statements about Gemini's API and quotas come from a web search
+Status: **approved 2026-10-14; steps 1 to 5 implemented** (sections 11 and 12). Steps 6 and 7 are not. Statements about Gemini's API and quotas come from a web search
 (2026-10-14) and from the author's earlier notes; they are marked *to verify* and are checked by the
 `llm-check` command of step 1 before anything depends on them.
 
@@ -135,9 +134,9 @@ Everything else is an open question for the model, with the context attached.
 |---|---|---|
 | 1 | `pit-wall llm-check`: lists models for the key, 3 calls, prints what it learned (latency, 429 hint) | **done against simulated answers**; pending: the author's key and the numbers in `docs/LLM.md` |
 | 2 | `GeminiProvider` + HTTP fakes | **done against simulated answers** (tests/test_gemini.py); pending: the real call |
-| 3 | `ContextBuilder` + golden tests | size and content verified on real sessions |
-| 4 | `IntentRouter` + local answers | table of questions passes; latency under 50 ms |
-| 5 | `GroundingCheck` | violations are caught in tests |
+| 3 | `ContextBuilder` + golden tests | **done** (chat/context.py): built on a real race recording, under 1 500 tokens |
+| 4 | `IntentRouter` + local answers | **done** (chat/local.py): table of questions passes; every local answer passes its own grounding check |
+| 5 | `GroundingCheck` | **done** (chat/grounding.py): formats, roundings, wrong wheel / corner / lap / unit are caught in tests |
 | 6 | `ChatSession` + `pit-wall chat` / `pit-wall ask` (live or `--file`) | end-to-end on a replayed race |
 | 7 | evaluation set, latency report, docs (README ES/EN, `docs/CHAT.md`) | numbers reported to the author |
 
@@ -200,6 +199,35 @@ Everything else is an open question for the model, with the context attached.
 **To verify with the key** (all marked in `gemini.py`): request and response field names, the model list
 endpoint and its pagination, the exact 429 body, the name of the default model in the YAML, and the free-tier
 numbers.
+
+## 12. Status of steps 3, 4 and 5
+
+All three work **without a network** and are covered by `tests/test_chat.py` (about 70 cases).
+
+* **Context** (`chat/context.py`, `chat/facts.py`): the compact JSON is built from a *fact sheet* in which each
+  number keeps its identity (a wheel, a corner, a lap, a unit). Fields without a reliable meaning are left
+  out: a flat brake-temperature sensor becomes a note, an unverified penalty unit is flagged. The braking
+  analysis of the last lap against the best valid lap is included when the track geometry is available, and
+  says why when it is not.
+* **Local answers** (`chat/local.py`): fuel and laps left, last/best lap and delta, tyres, brakes, session
+  type and position, penalties, where time is lost, which corner is that (name, number, ordinal, ambiguity
+  asks back), what the last alert was, and data that can never be in the context (weather, rivals) answered
+  as "no tengo ese dato" without spending quota. Answers are written from the same fact sheet the model would
+  receive.
+* **Grounding** (`chat/grounding.py`): accepts `1,9` / `1.9` / `1 coma 9`, roundings, `1:24,9`, seconds and
+  milliseconds, the missing sign of a delta; flags a number that is in no fact (`unsupported`), a correct
+  number attached to another wheel, corner or lap (`misattributed`, resolved by the nearest mention in the
+  sentence) and a correct number with the unit of another quantity (`unit`). `sanitize` drops only the
+  offending sentences and refuses honestly if nothing is left.
+
+**Known limits**
+
+* Words are not checked, only digits ("casi dos vueltas" is the local layer's own phrasing).
+* The nearest-mention rule can be fooled by a sentence that names a subject far from its number; the
+  evaluation set (step 7) measures that on the real model.
+* The router is keyword based: a question phrased unusually goes to the model, which is the safe side.
+* Not done yet: the chat session itself (history, the call to the model with this context and the grounding
+  check on its reply, the notice when `allow_cloud` is off) and the evaluation set: steps 6 and 7.
 
 ---
 

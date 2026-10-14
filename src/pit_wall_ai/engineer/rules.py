@@ -19,9 +19,9 @@ from collections import deque
 from dataclasses import dataclass
 
 from ..analysis import braking as B
-from ..analysis.circuit_names import corner_names, numbering_verified
+from ..analysis.circuit_names import numbering_verified
 from ..analysis.laps import LapTracker
-from ..analysis.tracks import Resolution, resolve
+from ..analysis.trackctx import TrackAnalysis
 from ..config import AnalysisConfig, EngineerConfig
 from ..events import Event, LapCompleted, SectorCompleted, SessionChanged
 from ..session.detector import SessionState
@@ -538,61 +538,34 @@ def _r(v: float | None) -> float | None:
 class BrakingHintRule(Rule):
     """After a lap: the corner where this lap braked differently from the best valid lap AND lost the most.
 
-    One alert per lap at most, never in a race (the policy drops it), only when both thresholds of
-    ``analysis.braking`` are reached. The text states the measured braking-point difference first and does
-    not say why. It needs the racing line of the track in the local game install; without it the rule
-    stays silent and says why once in the log.
+    One alert per lap at most, never in a race (the policy drops it), only when a threshold of
+    ``analysis.braking`` is reached. A braking-point difference is said first; a big time loss with nothing
+    to compare is said as time and slowest speed. It needs the racing line of the track in the local game
+    install; without it the rule stays silent and says why once in the log.
     """
 
     id = "braking_hint"
     priority = Priority.MEDIUM
     ttl_s = 30.0
 
-    def __init__(self, cfg, analysis: AnalysisConfig) -> None:
+    def __init__(self, cfg, analysis: AnalysisConfig, track: TrackAnalysis | None = None) -> None:
         super().__init__(cfg)
         self.analysis = analysis
-        self._key: tuple | None = None
-        self._res: Resolution | None = None
-        self._names: dict[int, str] = {}
+        self.track = track or TrackAnalysis(analysis)
 
     def _geometry(self, snap: Snapshot):
-        st = snap.static
-        key = (st.track, st.track_configuration, round(st.track_length_m))
-        if key != self._key:
-            self._key = key
-            self._res = resolve(
-                st.track,
-                st.track_configuration,
-                length_m=st.track_length_m or None,
-                configured=self.analysis.ac_dirs,
-            )
-            if self._res.ok:
-                self._names = corner_names(self._res.geometry, st.track)
-                log.info(
-                    "braking analysis ready",
-                    extra={
-                        "track": st.track,
-                        "layout": self._res.layout,
-                        "corners": len(self._res.geometry.apexes),
-                        "source": str(self._res.candidate.path),
-                    },
-                )
-            else:
-                self._names = {}
-                log.warning(
-                    "braking analysis off for this track",
-                    extra={
-                        "track": st.track,
-                        "layout": st.track_configuration,
-                        "reason": self._res.reason,
-                    },
-                )
-        return self._res.geometry if self._res and self._res.ok else None
+        info = self.track.for_static(snap.static)
+        return info.geometry if info is not None else None
+
+    @property
+    def _names(self) -> dict[int, str]:
+        info = self.track._info
+        return info.names if info is not None else {}
 
     def evaluate(self, ctx):
         out = []
         if any(isinstance(e, SessionChanged) for e in ctx.events):
-            self._key = None  # a new session may be another track
+            self.track.reset()  # a new session may be another track
         for e in ctx.events:
             if not isinstance(e, LapCompleted) or e.lap is None:
                 continue
@@ -662,7 +635,11 @@ class BrakingHintRule(Rule):
         return out
 
 
-def build_rules(cfg: EngineerConfig, analysis: AnalysisConfig | None = None) -> list[Rule]:
+def build_rules(
+    cfg: EngineerConfig,
+    analysis: AnalysisConfig | None = None,
+    track: TrackAnalysis | None = None,
+) -> list[Rule]:
     r = cfg.rules
     analysis = analysis or AnalysisConfig()
     table = [
@@ -682,5 +659,5 @@ def build_rules(cfg: EngineerConfig, analysis: AnalysisConfig | None = None) -> 
     ]
     built: list[Rule] = [cls(rc) for rc, cls in table if rc.enabled]
     if r.braking_hint.enabled:
-        built.append(BrakingHintRule(r.braking_hint, analysis))
+        built.append(BrakingHintRule(r.braking_hint, analysis, track))
     return built

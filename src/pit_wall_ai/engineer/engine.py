@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import logging
 import time
+from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol
@@ -59,6 +60,18 @@ class CalmDetector:
 
 
 @dataclass
+class AlertRecord:
+    """What the chat can say about an alert: when, which rule, the words and the numbers, what happened."""
+
+    t: float
+    rule: str
+    text: str
+    priority: str
+    values: dict
+    outcome: str = "fired"  # fired | said | dropped:<reason>
+
+
+@dataclass
 class EngineerStats:
     fired: int = 0
     spoken: int = 0
@@ -83,6 +96,8 @@ class Engineer:
         self.rules = rules if rules is not None else build_rules(cfg, analysis)
         self.calm = CalmDetector(cfg.calm)
         self.pending: dict[str, Alert] = {}
+        self.recent: deque[AlertRecord] = deque(maxlen=20)
+        self._records: dict[str, AlertRecord] = {}
         self.stats = EngineerStats()
         self._clock = clock
         self._last_said_t = -1e9
@@ -123,6 +138,9 @@ class Engineer:
                 log.exception("rule failed", extra={"rule": rule.id})
         for a in fired:
             self.stats.fired += 1
+            rec = AlertRecord(snap.t, a.rule, a.text, a.priority.name, dict(a.values))
+            self.recent.append(rec)
+            self._records[a.key] = rec
             log.info(
                 "alert fired",
                 extra={
@@ -167,6 +185,8 @@ class Engineer:
     def _say(self, a: Alert, snap: Snapshot, *, interrupt: bool) -> None:
         self._last_said_t = snap.t
         self.stats.spoken += 1
+        if a.key in self._records:
+            self._records[a.key].outcome = "said"
         if interrupt:
             self.stats.interrupted += 1
         self.speaker.say(a.text, interrupt=interrupt, meta={"rule": a.rule, "key": a.key})
@@ -182,8 +202,9 @@ class Engineer:
             },
         )
 
-    @staticmethod
-    def _drop(a: Alert, reason: str) -> None:
+    def _drop(self, a: Alert, reason: str) -> None:
+        if a.key in self._records:
+            self._records[a.key].outcome = f"dropped:{reason}"
         log.info(
             "alert dropped",
             extra={
