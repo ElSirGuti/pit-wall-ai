@@ -728,3 +728,25 @@ def test_axle_and_side_aggregates_are_facts_so_a_comparison_is_grounded():
     ok = "La presión media del eje delantero es 27,25 psi y la del trasero 26,9 psi: 0,35 psi más delante."
     assert G.check(ok, sheet).ok, G.check(ok, sheet).violations
     assert not G.check("El eje delantero tiene 1,5 psi más que el trasero.", sheet).ok
+
+
+# -- how much time is left ------------------------------------------------------------------------------------
+def test_time_left_is_its_own_intent_and_honest_about_a_race_without_a_clock():
+    r = L.route("¿cuánto tiempo queda?")
+    assert r is not None and r.intents == (L.Intent.TIME_LEFT,)
+    assert L.route("how much time is left").intents == (L.Intent.TIME_LEFT,)
+    sheet = build_facts(synthetic_inputs())  # the synthetic static is not a timed race
+    es = L.answer(r, sheet, lang="es").text
+    assert "no tiene límite de tiempo" in es
+    sheet_t = FactSheet()
+    sheet_t.add(Fact("session.time_left_s", 754.0, "s"))
+    assert L.answer(r, sheet_t, lang="es").text == "Quedan 12:34."
+    unknown = FactSheet()
+    assert "no me da el tiempo restante" in L.answer(r, unknown, lang="es").text
+
+
+def test_the_session_question_no_longer_answers_the_time_question():
+    r = L.route("¿en qué sesión estoy?")
+    assert r.intents == (L.Intent.SESSION,)
+    sheet = build_facts(synthetic_inputs())
+    assert "Quedan" not in L.answer(r, sheet, lang="es").text

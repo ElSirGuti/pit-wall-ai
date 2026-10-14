@@ -125,6 +125,8 @@ def build_facts(inp: ChatInputs) -> FactSheet:
     if st.position > 0:
         add(Fact("session.position", st.position))
     add(Fact("session.laps_completed", st.completed_laps))
+    if snap is not None:
+        add(Fact("session.timed", bool(snap.static.is_timed_race)))
     if snap is not None and snap.tyre_compound:
         add(Fact("session.compound", snap.tyre_compound))
     if snap is not None and inp.now is not None:

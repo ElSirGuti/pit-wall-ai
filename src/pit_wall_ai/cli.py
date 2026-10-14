@@ -117,6 +117,22 @@ def _parser() -> argparse.ArgumentParser:
     )
     chat.add_argument("--wait", type=float, default=5.0, help="seconds to wait for live telemetry")
 
+    tr = sub.add_parser(
+        "trim", help="cut a window of a recording into a small .pwrec.gz at a lower rate"
+    )
+    tr.add_argument("--config", help="YAML config")
+    tr.add_argument("--file", required=True, help="the recording to cut")
+    tr.add_argument("--out", required=True, help="output .pwrec.gz")
+    tr.add_argument("--from", dest="start", type=float, default=0.0, help="start, seconds")
+    tr.add_argument("--to", dest="end", type=float, help="end, seconds (default: to the end)")
+    tr.add_argument("--rate", type=float, default=10.0, help="samples per second to keep (10)")
+    tr.add_argument(
+        "--session",
+        choices=["practice", "qualify", "race", "hotlap"],
+        default="practice",
+        help="session kind for .ld/.csv logs, which do not say",
+    )
+
     ev = sub.add_parser(
         "eval",
         help="run the chat evaluation set on a recording (needs the cloud model for most cases)",
@@ -494,6 +510,17 @@ def _cmd_chat(cfg: AppConfig, a: argparse.Namespace) -> int:
     return cmd_chat(cfg, a)
 
 
+def _cmd_trim(cfg: AppConfig, a: argparse.Namespace) -> int:
+    import os
+
+    from .telemetry.trim import trim
+
+    n = trim(a.file, a.out, start_s=a.start, end_s=a.end, rate_hz=a.rate, session=a.session)
+    size = os.path.getsize(a.out) / 1024
+    print(f"{n} samples written to {a.out} ({size:.0f} KB)")
+    return 0 if n else 1
+
+
 def _cmd_eval(cfg: AppConfig, a: argparse.Namespace) -> int:
     from .chat.cli_chat import cmd_eval
 
@@ -595,6 +622,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "llm-check": _cmd_llm_check,
             "ask": _cmd_ask,
             "eval": _cmd_eval,
+            "trim": _cmd_trim,
             "chat": _cmd_chat,
         }[args.cmd]
         return handler(cfg, args)

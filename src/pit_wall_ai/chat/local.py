@@ -37,6 +37,7 @@ class Intent(StrEnum):
     SESSION = "session"
     UNKNOWN_DATA = "unknown_data"
     NOT_YET = "not_yet"  # setup and race strategy: planned for phase 8
+    TIME_LEFT = "time_left"
 
 
 # keyword tables: every entry is a normalised phrase searched as whole words
@@ -123,8 +124,6 @@ _KEYS: dict[Intent, tuple[str, ...]] = {
         "which session",
         "session type",
         "en que estoy",
-        "cuanto tiempo queda",
-        "time left",
         "mi posicion",
         "my position",
         "en que posicion",
@@ -186,6 +185,16 @@ _KEYS[Intent.NOT_YET] = (
     "tyre strategy",
     "estrategia de neumaticos",
 )
+_KEYS[Intent.TIME_LEFT] = (
+    "cuanto tiempo queda",
+    "cuanto falta",
+    "cuanto queda de sesion",
+    "cuanto queda de carrera",
+    "time left",
+    "how much time",
+    "how long is left",
+    "when does it end",
+)
 _FORCE_MODEL = (
     "resumeme",
     "resumen",
@@ -214,6 +223,7 @@ _ORDER = (
     Intent.BRAKES,
     Intent.LAPS,
     Intent.SESSION,
+    Intent.TIME_LEFT,
     Intent.NOT_YET,
     Intent.UNKNOWN_DATA,
 )
@@ -684,6 +694,27 @@ def _last_alert(sheet, lang, track, routed, th):
     return f"{when}the alert was “{text}”, from the {rule} rule.{said}", keys
 
 
+def _time_left(sheet, lang, track, routed, th):
+    left = sheet.value("session.time_left_s")
+    if left is not None and left > 0:
+        mm, ss = divmod(int(left), 60)
+        return (f"Quedan {mm}:{ss:02d}." if lang == "es" else f"{mm}:{ss:02d} left."), [
+            "session.time_left_s"
+        ]
+    timed = sheet.value("session.timed")
+    if timed is False:
+        return (
+            "Esta sesión no tiene límite de tiempo: no hay un tiempo restante que dar."
+            if lang == "es"
+            else "This session has no time limit: there is no time left to give."
+        ), ["session.timed"]
+    return (
+        "El juego no me da el tiempo restante de esta sesión."
+        if lang == "es"
+        else "The game does not give me the time left of this session."
+    ), []
+
+
 def _not_yet(sheet, lang, track, routed, th):
     if lang == "es":
         return (
@@ -720,4 +751,5 @@ _BUILDERS = {
     Intent.LAST_ALERT: _last_alert,
     Intent.UNKNOWN_DATA: _unknown,
     Intent.NOT_YET: _not_yet,
+    Intent.TIME_LEFT: _time_left,
 }
