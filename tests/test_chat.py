@@ -713,3 +713,18 @@ def test_a_number_without_a_subject_in_its_clause_falls_back_to_the_sentence():
     s = lap_corner_sheet()
     assert G.check("En la curva 11 pierdes 0.38 s y frenas igual.", s).ok
     assert not G.check("En la curva 4 pierdes 0.38 s y frenas igual.", s).ok
+
+
+def test_axle_and_side_aggregates_are_facts_so_a_comparison_is_grounded():
+    ctx = build_facts(synthetic_inputs()).context()["tyres"]["axles"]
+    # FL 82, FR 98, RL 85, RR 91 degrees; 27.1, 27.4, 26.8, 27.0 psi
+    assert ctx["front_core_c"] == 90.0 and ctx["rear_core_c"] == 88.0
+    assert ctx["front_minus_rear_core_c"] == 2.0
+    assert ctx["front_pressure_psi"] == 27.25 and ctx["rear_pressure_psi"] == 26.9
+    assert ctx["front_minus_rear_pressure_psi"] == 0.35
+    assert ctx["left_core_c"] == 83.5 and ctx["right_core_c"] == 94.5
+    assert ctx["left_minus_right_core_c"] == -11.0
+    sheet = build_facts(synthetic_inputs())
+    ok = "La presión media del eje delantero es 27,25 psi y la del trasero 26,9 psi: 0,35 psi más delante."
+    assert G.check(ok, sheet).ok, G.check(ok, sheet).violations
+    assert not G.check("El eje delantero tiene 1,5 psi más que el trasero.", sheet).ok

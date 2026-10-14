@@ -37,7 +37,8 @@ SYSTEM = {
         "Si te piden un dato concreto que no está en CONTEXT responde: No tengo ese dato. Si te piden un "
         "resumen, cuenta con lo que SÍ hay y no añadas esa frase como relleno. No inventes el clima, los "
         "rivales ni nada que no veas. No des consejos de reglaje ni de estrategia de carrera: aún no están "
-        "disponibles. Si CONTEXT dice que no hay análisis de frenadas, dilo."
+        "disponibles. Si CONTEXT dice que no hay análisis de frenadas, dilo. Para comparar ejes o lados "
+        "usa los valores de tyres.axles."
     ),
     "en": (
         "You are the race engineer of a simracing driver and you speak over the radio. Answer in English, in "
@@ -46,7 +47,7 @@ SYSTEM = {
         "CONTEXT answer: I do not have that data. If asked for a summary, use what IS there and do not add "
         "that sentence as filler. Do not invent weather, rivals or anything you "
         "cannot see. Do not give setup or race strategy advice: they are not available yet. If CONTEXT says "
-        "there is no braking analysis, say so."
+        "there is no braking analysis, say so. To compare axles or sides use the tyres.axles values."
     ),
 }
 

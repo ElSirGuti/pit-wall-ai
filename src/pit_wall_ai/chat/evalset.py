@@ -142,7 +142,7 @@ CASES: tuple[Case, ...] = (
         "open-axle",
         "open",
         "¿hay diferencia de presión entre el eje delantero y el trasero?",
-        ("tyres.FL.pressure_psi", "tyres.RL.pressure_psi"),
+        any_of=("tyres.axles.front_minus_rear_pressure_psi", "tyres.axles.front_pressure_psi"),
         model_only=True,
     ),
     Case(

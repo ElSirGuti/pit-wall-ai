@@ -233,6 +233,7 @@ def build_facts(inp: ChatInputs) -> FactSheet:
                 add(Fact(f"tyres.{w}.pressure_psi", _r(snap.tyre_pressure[i], 1), "psi", sub))
             if snap.tyre_wear[i] > 0:
                 add(Fact(f"tyres.{w}.wear_pct", _r(snap.tyre_wear[i], 1), "%", sub))
+        _add_axles(sheet, snap)
         any_alive = False
         for i, w in enumerate(CORNERS):
             if inp.brakes is not None and inp.brakes.alive(w):
@@ -270,6 +271,42 @@ def build_facts(inp: ChatInputs) -> FactSheet:
             float(x.replace(",", ".")) for x in re.findall(r"\d+(?:[.,]\d+)?", rec.text)
         ]
     return sheet
+
+
+def _add_axles(sheet: FactSheet, snap: Snapshot) -> None:
+    """Averages and differences by axle and side: a derived number is a fact too, or the grounding check
+    would (rightly) remove it from an answer, and the model would refuse a question it could answer."""
+    for name, vals, unit, nd in (
+        ("pressure_psi", snap.tyre_pressure, "psi", 1),
+        ("core_c", snap.tyre_core_temp, "C", 0),
+    ):
+        if not all(v > 0 for v in vals):
+            continue
+        fl, fr, rl, rr = vals
+        nd += 1  # an extra decimal: an average of two values needs it to stay exact
+        # the differences are taken from the rounded averages so that what is said adds up (27.2 - 26.9 = 0.3)
+        groups = {
+            "front": round((fl + fr) / 2, nd),
+            "rear": round((rl + rr) / 2, nd),
+            "left": round((fl + rl) / 2, nd),
+            "right": round((fr + rr) / 2, nd),
+        }
+        for g, v in groups.items():
+            sheet.add(
+                Fact(
+                    f"tyres.axles.{g}_{name}", _r(v, nd), unit, numbers=(round(v, nd), round(v, 0))
+                )
+            )
+        for a, b in (("front", "rear"), ("left", "right")):
+            d = round(groups[a] - groups[b], nd)
+            sheet.add(
+                Fact(
+                    f"tyres.axles.{a}_minus_{b}_{name}",
+                    _r(d, nd),
+                    unit,
+                    numbers=(round(d, nd), round(abs(d), nd), round(abs(d), 0)),
+                )
+            )
 
 
 def _fuel_per_lap(inp: ChatInputs) -> float | None:
