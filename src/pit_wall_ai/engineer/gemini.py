@@ -258,7 +258,7 @@ class GeminiProvider:
 
     def generate(self, request: LLMRequest) -> LLMResponse:
         """The configured model first; if it is overloaded or times out, the ``fallback_models`` in order."""
-        models = [self.cfg.model, *self.cfg.fallback_models]
+        models = list(dict.fromkeys([self.cfg.model, *self.cfg.fallback_models]))
         last: LLMTransient | None = None
         for i, model in enumerate(models):
             try:

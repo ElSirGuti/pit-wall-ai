@@ -88,3 +88,21 @@ Reading, with the caution that these are 5 to 10 calls each in a few minutes:
 * The default is now the alias with `gemini-3.5-flash` as the reserve. This is a choice from a very small
   sample, not a proven ranking; a longer run at a different hour is needed (`llm-check --calls 20`).
 * No 429 appeared in 20 calls: the per-minute limit was not reached by these runs, so it is still unknown.
+
+## Fourth real run (2026-10-14): the rate limit and the thinking budget
+
+| Run | Result |
+|---|---|
+| default alias `gemini-flash-lite-latest`, 20 calls back to back | **17 ok, then 3 x 429 "retry in 30 s"**; median 750 ms, one call at 3969 ms, one at 1281 ms |
+| `gemini-3.5-flash` with `--thinking-budget 0`, 5 calls | 5 ok, **no thinking tokens**, median 891 ms (was 1484 ms with thinking) |
+
+* **The alias resolves to `gemini-3.5-flash-lite`** (reported by the API in `modelVersion`).
+* **`gemini-3.5-flash` was answered by `gemini-3.6-flash`**: that name is itself a moving pointer.
+* **The 429 came after 17 requests in about 16 s** and carried a 30 s retry hint. That says only that the
+  limit is *at least* 17 requests in that span; the real per-minute and per-day numbers are on the AI Studio
+  quota page and are still **not recorded here**. The default limiter (6 requests/minute at start, 10 at
+  most) stays well below what was accepted.
+* **`thinkingConfig.thinkingBudget: 0` is accepted and works** on this model (no 400, thinking gone,
+  roughly 40 % faster on a one-word answer). Not yet tried on the alias.
+* Two slow calls in 17 (3969 and 1281 ms) confirm that the occasional call exceeds 3 s even when the
+  median is 0.75 s: the chat needs the local answers, the cache and a timeout it can live with.

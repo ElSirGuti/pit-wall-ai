@@ -614,3 +614,14 @@ def test_llm_check_reports_the_model_that_really_answered_and_the_thinking_budge
     assert json.loads(t.calls[1]["body"])["generationConfig"]["thinkingConfig"] == {
         "thinkingBudget": 0
     }
+
+
+def test_a_fallback_equal_to_the_primary_is_not_tried_twice():
+    over = resp(503, {"error": {"message": "high demand"}})
+    p, t = provider(over, model="same", fallback_models=["same", "other"])
+    with pytest.raises(LLMError):
+        p.generate(REQ)
+    assert [c["url"].rsplit("/", 1)[1] for c in t.calls] == [
+        "same:generateContent",
+        "other:generateContent",
+    ]

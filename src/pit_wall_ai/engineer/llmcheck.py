@@ -54,8 +54,9 @@ def run_llm_check(
     out(f"model from the configuration: {cfg.model}")
     if cfg.thinking_budget is not None:
         out(f"thinking budget: {cfg.thinking_budget} tokens")
-    if cfg.fallback_models:
-        out("fallback models: " + ", ".join(cfg.fallback_models))
+    extra = [m for m in cfg.fallback_models if m != cfg.model]
+    if extra:
+        out("fallback models: " + ", ".join(extra))
     out(f"endpoint: {cfg.base_url}")
     out(f"what is sent: the one-line prompt {PING_USER!r}. No telemetry, no personal data.")
 
