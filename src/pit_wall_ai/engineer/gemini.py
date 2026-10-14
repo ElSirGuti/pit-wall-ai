@@ -86,6 +86,8 @@ class ModelInfo:
 
 
 _RETRY_DELAY = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*s\s*$")
+# "... Please update your code to use models/<name> ..." (what the API says when a model is retired)
+_SUGGESTED = re.compile(r"\buse\s+(?:models/)?([A-Za-z0-9][A-Za-z0-9._-]+)", re.IGNORECASE)
 
 
 def _retry_after(resp: HttpResponse) -> float | None:
@@ -200,11 +202,23 @@ class GeminiProvider:
                 f"available to this key could not be read either: {exc}"
             )
         shown = ", ".join(names[:20]) + (" ..." if len(names) > 20 else "")
+        m = _SUGGESTED.search(api_message)
+        suggestion = m.group(1) if m else ""
+        hint = ""
+        if suggestion:
+            where = (
+                "it is in this key's list"
+                if suggestion in names
+                else "it is NOT in this key's list"
+            )
+            hint = (
+                f" The API itself suggests {suggestion!r} ({where}): try llm.model: {suggestion}."
+            )
         if self.cfg.model in names:
             return (
                 f"model {self.cfg.model!r} is in this key's list but generateContent answered 404: "
-                f"{api_message}. It may be retired or not available for text generation. "
-                f"Try another with llm.model (or --model): {shown}"
+                f"{api_message}. It may be retired or not available for text generation.{hint} Set llm.model (or use --model) to another. "
+                f"Models: {shown}"
             )
         return (
             f"model {self.cfg.model!r} was not found ({api_message}). Models this key can use: "

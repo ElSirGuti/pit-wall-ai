@@ -63,10 +63,8 @@ def run_llm_check(
     usable = sorted(m.name for m in models if m.can_generate)
     if models:
         out(f"models this key can use for generateContent: {len(usable)}")
-        for name in usable[:25]:
+        for name in usable:
             out(f"  {'*' if name == cfg.model else ' '} {name}")
-        if len(usable) > 25:
-            out(f"  ... and {len(usable) - 25} more")
         if cfg.model not in usable:
             out(
                 f"the configured model {cfg.model!r} is NOT among them. "

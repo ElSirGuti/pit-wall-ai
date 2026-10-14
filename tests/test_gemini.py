@@ -422,3 +422,54 @@ def test_llm_check_can_try_another_model_for_one_run():
     assert code == 0
     assert "model from the configuration: other-one" in "\n".join(lines)
     assert t.calls[1]["url"].endswith("/models/other-one:generateContent")
+
+
+def test_a_retired_model_message_surfaces_the_suggestion_of_the_api():
+    # the real answer seen on 2026-10-14
+    api = (
+        "This model models/test-model is no longer available to new users. Please update your code to use "
+        "models/newer-flash for the latest features and improvements."
+    )
+    page = {
+        "models": [
+            {"name": "models/test-model", "supportedGenerationMethods": ["generateContent"]},
+            {"name": "models/newer-flash", "supportedGenerationMethods": ["generateContent"]},
+        ]
+    }
+    p, _ = provider(resp(404, {"error": {"message": api}}), resp(200, page), model="test-model")
+    with pytest.raises(LLMUnavailable) as e:
+        p.generate(REQ)
+    msg = str(e.value)
+    assert "no longer available to new users" in msg  # the API's own words
+    assert "The API itself suggests 'newer-flash' (it is in this key's list)" in msg
+    assert "llm.model: newer-flash" in msg
+
+
+def test_a_suggestion_that_the_key_does_not_list_is_flagged():
+    api = "Please update your code to use models/ghost-model."
+    page = {
+        "models": [{"name": "models/test-model", "supportedGenerationMethods": ["generateContent"]}]
+    }
+    p, _ = provider(resp(404, {"error": {"message": api}}), resp(200, page), model="test-model")
+    with pytest.raises(LLMUnavailable, match="NOT in this key's list"):
+        p.generate(REQ)
+
+
+def test_llm_check_lists_every_usable_model():
+    names = [f"model-{i:02d}" for i in range(40)]
+    page = {
+        "models": [
+            {"name": f"models/{n}", "supportedGenerationMethods": ["generateContent"]}
+            for n in names
+        ]
+    }
+    lines: list[str] = []
+    run_llm_check(
+        cfg(model="model-39"),
+        calls=1,
+        out=lines.append,
+        transport=FakeTransport(resp(200, page), resp(200, ok_body("ok"))),
+        api_key=KEY,
+    )
+    text = "\n".join(lines)
+    assert "more" not in text and "model-39" in text and "model-00" in text

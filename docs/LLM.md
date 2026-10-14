@@ -36,3 +36,14 @@ exists only in the YAML.
 | latency, median / max of 3 tiny calls | _pending_ |
 | quota seen in AI Studio | _pending_ |
 | 429 behaviour (retry hint) | _pending_ |
+
+## Found on the first real run (2026-10-14)
+
+* The key, the `models` listing and its pagination work as the code expects (46 models with `generateContent`).
+* The default model of the YAML, `gemini-2.5-flash`, **is still listed but answers 404** to `generateContent`:
+  *"no longer available to new users. Please update your code to use models/gemini-3.8-flash ... We recommend
+  you to use the Interactions API"*. Lesson: a model being in the list does not mean it can be used, and the
+  API names its replacement; `llm-check` now shows the API's own message and the model it suggests, and says
+  whether that one is in the key's list.
+* Google points to an **Interactions API** for new code. Whether `generateContent` stays supported for the
+  newer models is *to verify*; the provider interface isolates a future change of endpoint.
