@@ -23,6 +23,7 @@ log = logging.getLogger(__name__)
 HOLD_ACTIONS = {"push_to_talk"}
 TAP_ACTIONS = {
     "cancel",
+    "acknowledge",  # the wheel's ACK: confirm the engineer's message without speaking
     "repeat_last",
     "mute_engineer",
     "feedback_better",

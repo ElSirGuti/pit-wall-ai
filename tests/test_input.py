@@ -346,3 +346,10 @@ def test_the_global_keyboard_hook_sees_an_injected_key_and_passes_it_on():
         be.stop()
     assert [(e.input.code, e.pressed) for e in got] == [("F24", True), ("F24", False)]
     assert got[0].t > 0
+
+
+def test_the_acknowledge_action_is_a_tap_on_the_wheel_button():
+    m, calls = manager({"acknowledge": [{"kind": "joy", "device": G29, "button": 8}]})
+    m.feed(ev(PAD8, True))
+    m.feed(ev(PAD8, False))
+    assert calls == [("acknowledge", "tap")]

@@ -86,6 +86,21 @@ con una práctica abierta, y preguntar tras una vuelta: `¿cuánta gasolina qued
 `¿cuál es la curvone?`, `¿qué fue eso?`. Interesa sobre todo `¿dónde pierdo tiempo?` en vivo (en las pruebas
 solo se ha probado sobre grabaciones).
 
+### 5. Capturas para los eventos (banderas, daños, safety car)  ·  cuando puedas
+
+Ninguna regla de banderas ni de daños está activada porque **nunca se ha capturado un evento real**. Para cada
+una, una grabación corta con `pit-wall record` (basta un minuto alrededor del evento):
+
+* **bandera amarilla** y **bandera azul** (contra coches de la IA: ponte detrás de uno lento o deja que te
+  doblen);
+* **bandera negra / penalización** si puedes provocarla;
+* **un contacto que cause daño** (choca contra un muro a poca velocidad);
+* **safety car o penalización con Real Penalty activado**, y de esa sesión el archivo de log más reciente de
+  `...\assettocorsa\apps\python\RealPenalty\logs\` (se llama `session_<fecha>.log`).
+
+Con eso se activan las reglas con datos reales, y se decide si el safety car se lee del log de Real Penalty o
+con una app puente. Detalle en `docs/ENGINEER_EXPERIENCE_PLAN.md`, secciones 3 y 8.
+
 ## Para la Fase 6 (voz)
 
 Ver `docs/PHASE6_PLAN.md`, sección "Preguntas para el autor". Lo que necesitaré de ti:

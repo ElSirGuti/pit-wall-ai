@@ -164,8 +164,12 @@ author's approval** before the next.
    differs by game (iRacing is CPU-hungry). Settings: `stt.device: auto | cpu | cuda`, model size, threads,
    process priority. Step 3 compares them on this PC, including the effect on the frame rate.
 4. **Voice output:** selectable by name too (`voice.output_device`).
-5. **Alert vs answer policy** (a medium alert arrives while an answer plays): explained with an example,
-   answer pending.
+5. **Alert vs answer policy**: the author pointed to how the F1 radio works (half-duplex: one party talks at
+   a time, a collision garbles the message, the driver acknowledges with a word or the ACK button). The
+   policy of section 1.5 is replaced by the **channel model** of `docs/ENGINEER_EXPERIENCE_PLAN.md`
+   (section 1): the driver wins on PTT, the cut message is re-queued if still relevant, critical alerts
+   always go out, an immediate acknowledgement phrase hides the latency, and an `acknowledge` action
+   exists.
 
 Also from the author: brake temperature is not simulated by every car of Assetto Corsa (a Kunos forum
 statement of 2017 lists the Cobra, the F40 and some classic Porsches). It matches what was measured here
