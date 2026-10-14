@@ -117,12 +117,15 @@ Ver `docs/PHASE6_PLAN.md`, sección "Preguntas para el autor". Lo que necesitar�
 * idea nueva (2026-10-14): **desgaste de neumáticos por curva** con consejo para reducirlo, ver
   `docs/PHASE8_PLAN.md` 3.4; espera tu aprobación del plan y una grabación de al menos 8 vueltas.
 
-## Para probar el modelo en la nube
+## Modelo en la nube (probado 2026-10-14)
 
-* poner la clave en `.env` (archivo ignorado por git): `GEMINI_API_KEY=...` (una clave nueva, ya que la
-  anterior debía rotarse), y ejecutar `pit-wall llm-check` y después `pit-wall eval --file ...`;
-* el estilo del ingeniero (`engineer.persona`) solo se puede juzgar con el modelo, así que conviene probar
-  2 o 3 estilos con las mismas preguntas.
+* con la clave nueva en `.env`: `llm-check` 3/3 (mediana 0,78 s, `gemini-3.5-flash-lite`) y `pit-wall eval`
+  **34/34**, 21 respuestas del modelo sin afirmaciones eliminadas, latencia mediana 0,94 s, p95 1,09 s;
+* los cinco estilos de `engineer.persona` se notan en la redacción y mantienen las cifras;
+* **la clave se pegó en el chat: rótala cuando termines las pruebas** (solo está en `.env`, ignorado por git).
+
+Observación abierta: el modelo escribe 84.913 segundos donde el chat local escribe 1:24,913; conviene una
+regla en las instrucciones o una conversión del texto de los tiempos de vuelta.
 
 ## Sesión única de mediciones
 
