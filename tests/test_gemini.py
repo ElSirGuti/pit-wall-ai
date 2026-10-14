@@ -25,7 +25,7 @@ KEY = "SECRET-KEY-123"
 
 
 def cfg(**kw) -> LLMConfig:
-    base = dict(provider="gemini", allow_cloud=True, model="test-model")
+    base = dict(provider="gemini", allow_cloud=True, model="test-model", fallback_models=[])
     base.update(kw)
     return LLMConfig.model_validate(base)
 
@@ -280,7 +280,11 @@ def test_a_429_makes_the_client_return_none_and_back_off_then_recover():
         resp(429, {"error": {"message": "q"}}, {"retry-after": "30"}), resp(200, ok_body("vale"))
     )
     c = cfg()
-    client = LLMClient(GeminiProvider(c, transport=t, api_key=KEY), c, clock=lambda: clock["t"])
+    client = LLMClient(
+        GeminiProvider(c, transport=t, api_key=KEY, clock=lambda: clock["t"]),
+        c,
+        clock=lambda: clock["t"],
+    )
     assert client.ask(REQ) is None and client.last_skip_reason == "provider_429"
     assert client.ask(REQ) is None  # inside the cool-down: skipped without calling the network
     assert len(t.calls) == 1
@@ -586,7 +590,8 @@ def test_all_models_overloaded_raises_the_last_transient_error():
 def test_the_default_model_is_one_that_answered_on_the_real_service():
     # gemini-2.5-flash is retired for new users; the alias answered 5/5 in 0.6-0.7 s on 2026-10-14
     assert LLMConfig().model == "gemini-flash-lite-latest"
-    assert LLMConfig().fallback_models == ["gemini-3.5-flash"]
+    # the reserve is a model with its own 500/day (gemini-3.5-flash is served by a 20/day one)
+    assert LLMConfig().fallback_models == ["gemini-3.1-flash-lite"]
     assert LLMConfig().thinking_budget is None
 
 
@@ -625,3 +630,118 @@ def test_a_fallback_equal_to_the_primary_is_not_tried_twice():
         "same:generateContent",
         "other:generateContent",
     ]
+
+
+# -- quotas are per model: a 429 tries the reserve and the exhausted model is left alone ------------------------
+def build(script, *, clock, **kw):
+    t = FakeTransport(*script)
+    return GeminiProvider(cfg(**kw), transport=t, api_key=KEY, clock=clock), t
+
+
+def test_a_429_on_the_primary_is_answered_by_the_reserve_which_has_its_own_quota():
+    over = resp(429, {"error": {"message": "quota"}}, {"retry-after": "30"})
+    p, t = build(
+        [over, resp(200, ok_body("desde el otro cubo"))],
+        clock=lambda: 0.0,
+        model="primary",
+        fallback_models=["reserve"],
+    )
+    assert p.generate(REQ).text == "desde el otro cubo"
+    assert [c["url"].rsplit("/", 1)[1] for c in t.calls] == [
+        "primary:generateContent",
+        "reserve:generateContent",
+    ]
+
+
+def test_a_model_over_quota_is_not_called_again_until_its_retry_time():
+    now = {"t": 0.0}
+    over = resp(429, {"error": {"message": "quota"}}, {"retry-after": "30"})
+    p, t = build(
+        [over, resp(200, ok_body("uno")), resp(200, ok_body("dos")), resp(200, ok_body("tres"))],
+        clock=lambda: now["t"],
+        model="primary",
+        fallback_models=["reserve"],
+    )
+    p.generate(REQ)  # primary 429 -> reserve answers
+    p.generate(REQ)  # primary is cooling: only the reserve is called
+    assert [c["url"].rsplit("/", 1)[1] for c in t.calls][2:] == ["reserve:generateContent"]
+    now["t"] = 31.0
+    p.generate(REQ)  # the cool-down is over: primary is tried again first
+    assert t.calls[-1]["url"].endswith("/primary:generateContent")
+
+
+def test_when_every_model_is_cooling_down_no_request_is_made():
+    now = {"t": 0.0}
+    over = resp(429, {"error": {"message": "quota"}}, {"retry-after": "20"})
+    p, t = build([over], clock=lambda: now["t"], model="a", fallback_models=["b"])
+    with pytest.raises(LLMRateLimited):
+        p.generate(REQ)  # a and b both answer 429
+    calls = len(t.calls)
+    now["t"] = 5.0
+    with pytest.raises(LLMRateLimited) as e:
+        p.generate(REQ)
+    assert len(t.calls) == calls  # nothing was sent: failed requests would count against the quota
+    assert e.value.retry_after_s == pytest.approx(15.0)
+
+
+def test_an_overloaded_model_gets_a_short_rest_not_a_hammering():
+    now = {"t": 0.0}
+    p, t = build(
+        [resp(503, {"error": {"message": "high demand"}}), resp(200, ok_body("ok"))],
+        clock=lambda: now["t"],
+        model="a",
+        fallback_models=["b"],
+    )
+    p.generate(REQ)
+    p.generate(REQ)
+    assert [c["url"].rsplit("/", 1)[1] for c in t.calls] == [
+        "a:generateContent",
+        "b:generateContent",
+        "b:generateContent",
+    ]
+    now["t"] = 6.0
+    p.generate(REQ)
+    assert t.calls[-1]["url"].endswith("/a:generateContent")
+
+
+def test_the_defaults_leave_headroom_under_the_quotas_seen_on_ai_studio():
+    from pit_wall_ai.config import RateLimitConfig
+
+    rl = RateLimitConfig()
+    assert rl.max_rpm <= 15 * 0.8 + 1  # the Flash-Lite models showed 15 per minute
+    assert rl.daily_budget is not None and rl.daily_budget < 500
+
+
+# -- the thinking budget is per model, and a model that rejects it is retried without -----------------------------
+def test_a_model_that_rejects_the_thinking_budget_is_retried_without_it_and_remembered():
+    bad = resp(400, {"error": {"message": "Request contains an invalid argument."}})
+    p, t = provider(bad, resp(200, ok_body("ok")), resp(200, ok_body("otra")), thinking_budget=0)
+    assert p.generate(REQ).text == "ok"
+    first, retry = (json.loads(c["body"]) for c in t.calls[:2])
+    assert first["generationConfig"]["thinkingConfig"] == {"thinkingBudget": 0}
+    assert "thinkingConfig" not in retry["generationConfig"]
+    p.generate(REQ)  # remembered: the next call does not send it at all, so no 400 round trip
+    assert len(t.calls) == 3
+    assert "thinkingConfig" not in json.loads(t.calls[2]["body"])["generationConfig"]
+
+
+def test_a_400_without_a_thinking_budget_is_not_retried():
+    bad = resp(400, {"error": {"message": "Request contains an invalid argument."}})
+    p, t = provider(bad, resp(200, ok_body("no deberia")))
+    with pytest.raises(LLMError, match="400"):
+        p.generate(REQ)
+    assert len(t.calls) == 1
+
+
+def test_the_budget_can_be_set_per_model():
+    p, t = provider(
+        resp(200, ok_body()),
+        resp(200, ok_body()),
+        model="think-a",
+        thinking_budgets={"think-a": 0},
+        thinking_budget=None,
+    )
+    assert p.thinking_budget_for("think-a") == 0
+    assert p.thinking_budget_for("lite-b") is None
+    p2, _ = provider(resp(200, ok_body()), model="x", thinking_budget=64, thinking_budgets={"x": 0})
+    assert p2.thinking_budget_for("x") == 0 and p2.thinking_budget_for("y") == 64

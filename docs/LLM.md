@@ -106,3 +106,30 @@ Reading, with the caution that these are 5 to 10 calls each in a few minutes:
   roughly 40 % faster on a one-word answer). Not yet tried on the alias.
 * Two slow calls in 17 (3969 and 1281 ms) confirm that the occasional call exceeds 3 s even when the
   median is 0.75 s: the chat needs the local answers, the cache and a timeout it can live with.
+
+## Fifth real run (2026-10-14): the AI Studio quota page, and a model that rejects the thinking budget
+
+Quotas seen on the AI Studio rate-limit page (free tier, per model, requests per minute / tokens per minute
+/ requests per day):
+
+| Model | RPM | TPM | RPD |
+|---|---|---|---|
+| Gemini 3.5 Flash Lite (what `gemini-flash-lite-latest` resolves to) | 15 | 250 K | 500 |
+| Gemini 3.1 Flash Lite | 15 | 250 K | 500 |
+| Gemini 3.6 Flash (what `gemini-3.5-flash` resolves to) | 5 | 250 K | 20 |
+| Gemini 3.8 / 3.7 / 3 / 2.5 Flash | 5 | 250 K | 20 |
+| Gemini 2.5 Flash Lite | 10 | 250 K | 20 |
+| Gemma 4 26B / 31B | 30 | 16 K | 14.4 K |
+| 2.5 Pro, 3.1 Pro | 0 | 0 | 0 |
+
+* **Limits are per model**: the two Flash-Lite models have independent allowances, which makes one a real
+  reserve for the other. `gemini-3.5-flash` (5 per minute, 20 per day) is not.
+* **Failed requests count** (3.8 Flash showed 3/20 after three 503s), so retries and hammering cost quota.
+* The documented 15 per minute versus 17 accepted in the earlier burst is a small inconsistency not
+  explained here (the window is probably not a strict rolling minute).
+* The default reserve is therefore `gemini-3.1-flash-lite`, the daily budget default is 400, and a 429 on one
+  model makes the provider rest that model for the `Retry-After` and try the reserve at once.
+* **The Flash-Lite alias answered HTTP 400 ("Request contains an invalid argument") to
+  `thinkingBudget: 0`**, while `gemini-3.5-flash` accepted it. The budget is therefore per model
+  (`llm.thinking_budgets`), the global one is off by default, and a 400 on a request that carried a thinking
+  budget is retried once without it and remembered for that model.

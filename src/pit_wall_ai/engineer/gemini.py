@@ -36,6 +36,7 @@ from .llm import (
 
 log = logging.getLogger(__name__)
 KEY_HEADER = "x-goog-api-key"
+TRANSIENT_COOLDOWN_S = 5.0  # leave an overloaded model alone this long before trying it again
 
 
 @dataclass(frozen=True)
@@ -138,6 +139,8 @@ class GeminiProvider:
         self._key = key
         self._transport = transport or UrllibTransport()
         self._clock = clock
+        self._cooldown_until: dict[str, float] = {}
+        self._no_thinking: set[str] = set()  # models that answered 400 to a thinking budget
 
     # -- plumbing -----------------------------------------------------------------------------------
     def _headers(self) -> dict[str, str]:
@@ -234,7 +237,13 @@ class GeminiProvider:
         )
 
     # -- generation ---------------------------------------------------------------------------------
-    def build_body(self, request: LLMRequest) -> dict[str, Any]:
+    def thinking_budget_for(self, model: str) -> int | None:
+        if model in self._no_thinking:
+            return None
+        return self.cfg.thinking_budgets.get(model, self.cfg.thinking_budget)
+
+    def build_body(self, request: LLMRequest, model: str | None = None) -> dict[str, Any]:
+        model = model or self.cfg.model
         user = request.user.strip()
         if request.context:
             ctx = json.dumps(
@@ -248,29 +257,44 @@ class GeminiProvider:
                 "maxOutputTokens": request.max_output_tokens or self.cfg.max_output_tokens,
             },
         }
-        if self.cfg.thinking_budget is not None:  # field name to verify against the model in use
-            body["generationConfig"]["thinkingConfig"] = {
-                "thinkingBudget": self.cfg.thinking_budget
-            }
+        budget = self.thinking_budget_for(model)
+        if (
+            budget is not None
+        ):  # some models accept it, some answer 400 (see docs/LLM.md)
+            body["generationConfig"]["thinkingConfig"] = {"thinkingBudget": budget}
         if request.system.strip():
             body["systemInstruction"] = {"parts": [{"text": request.system.strip()}]}
         return body
 
     def generate(self, request: LLMRequest) -> LLMResponse:
-        """The configured model first; if it is overloaded or times out, the ``fallback_models`` in order."""
+        """The configured model first; if it is overloaded, times out or is over its quota, the
+        ``fallback_models`` in order. Quotas are per model, so a reserve has its own allowance.
+
+        A model that just failed is left alone for a while (its ``Retry-After`` on a 429, a few seconds on an
+        overload): failed requests count against the daily quota too, so hammering is expensive. When every
+        model is cooling down no request is made at all and the shortest wait is reported.
+        """
         models = list(dict.fromkeys([self.cfg.model, *self.cfg.fallback_models]))
-        last: LLMTransient | None = None
-        for i, model in enumerate(models):
+        now = self._clock()
+        ready = [m for m in models if now >= self._cooldown_until.get(m, 0.0)]
+        if not ready:
+            wait = min(self._cooldown_until[m] for m in models) - now
+            raise LLMRateLimited(
+                "every configured model is cooling down after a recent failure", max(wait, 0.0)
+            )
+        last: LLMError | None = None
+        for i, model in enumerate(ready):
             try:
                 resp = self._generate_with(model, request)
-            except LLMTransient as exc:
+            except LLMRateLimited as exc:
+                self._cooldown_until[model] = self._clock() + (exc.retry_after_s or 30.0)
                 last = exc
-                log.warning(
-                    "model call failed, trying the next one"
-                    if i + 1 < len(models)
-                    else "model call failed",
-                    extra={"model": model, "error": str(exc)},
-                )
+                self._log_next(model, ready, i, exc)
+                continue
+            except LLMTransient as exc:
+                self._cooldown_until[model] = self._clock() + TRANSIENT_COOLDOWN_S
+                last = exc
+                self._log_next(model, ready, i, exc)
                 continue
             if i:
                 log.info(
@@ -280,9 +304,27 @@ class GeminiProvider:
         assert last is not None
         raise last
 
+    @staticmethod
+    def _log_next(model: str, ready: list[str], i: int, exc: LLMError) -> None:
+        log.warning(
+            "model call failed, trying the next one" if i + 1 < len(ready) else "model call failed",
+            extra={"model": model, "error": str(exc)},
+        )
+
     def _generate_with(self, model: str, request: LLMRequest) -> LLMResponse:
         t0 = self._clock()
-        resp = self._send("POST", f"models/{model}:generateContent", self.build_body(request))
+        body = self.build_body(request, model)
+        resp = self._send("POST", f"models/{model}:generateContent", body)
+        if resp.status == 400 and "thinkingConfig" in body["generationConfig"]:
+            # this model does not take a thinking budget: remember it and ask again without
+            self._no_thinking.add(model)
+            log.warning(
+                "the model rejected the thinking budget; retrying without it",
+                extra={"model": model, "api_message": self._redact(_error_message(resp))},
+            )
+            resp = self._send(
+                "POST", f"models/{model}:generateContent", self.build_body(request, model)
+            )
         self._raise_for_status(resp, model=model)
         data = resp.json()
         feedback = data.get("promptFeedback") or {}

@@ -25,8 +25,10 @@ llm:                    # phase 5; the provider is swappable
   allow_cloud: false    # nothing is sent to a cloud model unless true. The free tier may use what is sent
                         # (the compact session summary and your question) to improve Google's products.
   model: gemini-flash-lite-latest  # the only place a model name lives; `pit-wall llm-check` lists the valid ones
-  fallback_models: [gemini-3.5-flash]   # tried in order when the model is overloaded (503) or times out, e.g. [gemini-3.5-flash]
-  thinking_budget: null # tokens the model may think before answering (they count in max_output_tokens)
+  fallback_models: [gemini-3.1-flash-lite]   # tried in order when the model is overloaded (503) or times out, e.g. [gemini-3.5-flash]
+  thinking_budget: null # tokens the model may think before answering, for every model (they count in
+                        # max_output_tokens). A model that rejects it (HTTP 400) is retried without it.
+  thinking_budgets: {}  # the same, per model; e.g. {gemini-3.5-flash: 0}. Wins over thinking_budget
   base_url: https://generativelanguage.googleapis.com/v1beta
   temperature: 0.2
   api_key_env: GEMINI_API_KEY
@@ -42,7 +44,8 @@ llm:                    # phase 5; the provider is swappable
     increase_step_rpm: 0.5
     decrease_factor: 0.5
     cooldown_after_429_s: 15
-    daily_budget: null  # hard cap of requests per day, or null
+    daily_budget: 400   # hard cap of requests per day, or null. Failed calls count against Google's
+                        # quota too; the Flash-Lite models showed 500/day and 15/min in AI Studio
 
 engineer:               # phase 3: rule alerts spoken by the race engineer
   enabled: false        # opt in: `pit-wall run --voice` (or true here)

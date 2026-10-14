@@ -56,9 +56,9 @@ class RateLimitConfig(_Model):
     increase_step_rpm: float = Field(0.5, gt=0)
     decrease_factor: float = Field(0.5, gt=0, lt=1)
     cooldown_after_429_s: float = Field(15.0, ge=0)
-    daily_budget: int | None = Field(
-        None, ge=1
-    )  # hard cap of requests per local day; None = no cap
+    # hard cap of requests per local day; None = no cap. Failed requests count against the provider's
+    # own daily quota too, so the default stays under the 500/day seen for the Flash-Lite models.
+    daily_budget: int | None = Field(400, ge=1)
 
     @model_validator(mode="after")
     def _ordered(self) -> RateLimitConfig:
@@ -74,10 +74,13 @@ class LLMConfig(_Model):
     allow_cloud: bool = False
     model: str = "gemini-flash-lite-latest"  # the ONLY place a model name lives; `pit-wall llm-check` lists valid ones
     # Tried in order when the model above is overloaded (503) or times out. Names only here, in YAML.
-    fallback_models: list[str] = Field(default_factory=lambda: ["gemini-3.5-flash"])
+    fallback_models: list[str] = Field(default_factory=lambda: ["gemini-3.1-flash-lite"])
     # Tokens the model may spend thinking before it answers (counted in the output budget). None = do not
     # send the setting; 0 = no thinking where the model allows it. Lower = faster, cheaper, shorter answers.
     thinking_budget: int | None = Field(None, ge=0)
+    # Per model, wins over thinking_budget. Not every model accepts the setting (the Flash-Lite alias
+    # answered 400 to 0 on 2026-10-14, gemini-3.5-flash accepted it): list only the ones that do.
+    thinking_budgets: dict[str, int] = Field(default_factory=dict)
     base_url: str = "https://generativelanguage.googleapis.com/v1beta"
     temperature: float = Field(0.2, ge=0, le=2)
     api_key_env: str = "GEMINI_API_KEY"
