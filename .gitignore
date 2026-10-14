@@ -52,3 +52,4 @@ config/local.yaml
 /*.pwrec
 /eval_report*.md
 config/bindings.yaml
+/frases/
