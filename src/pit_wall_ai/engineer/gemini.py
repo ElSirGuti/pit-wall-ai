@@ -141,6 +141,7 @@ class GeminiProvider:
         self._clock = clock
         self._cooldown_until: dict[str, float] = {}
         self._no_thinking: set[str] = set()  # models that answered 400 to a thinking budget
+        self._cooldown_rate: set[str] = set()  # resting because of a 429 (not an overload)
 
     # -- plumbing -----------------------------------------------------------------------------------
     def _headers(self) -> dict[str, str]:
@@ -276,21 +277,25 @@ class GeminiProvider:
         now = self._clock()
         ready = [m for m in models if now >= self._cooldown_until.get(m, 0.0)]
         if not ready:
-            wait = min(self._cooldown_until[m] for m in models) - now
-            raise LLMRateLimited(
-                "every configured model is cooling down after a recent failure", max(wait, 0.0)
-            )
+            soonest = min(models, key=lambda m: self._cooldown_until[m])
+            wait = max(self._cooldown_until[soonest] - now, 0.0)
+            msg = "every configured model is resting after a recent failure"
+            if soonest in self._cooldown_rate:  # a real 429: the limiter must back off too
+                raise LLMRateLimited(msg, wait)
+            raise LLMTransient(f"{msg}; try again in {wait:.0f} s")
         last: LLMError | None = None
         for i, model in enumerate(ready):
             try:
                 resp = self._generate_with(model, request)
             except LLMRateLimited as exc:
                 self._cooldown_until[model] = self._clock() + (exc.retry_after_s or 30.0)
+                self._cooldown_rate.add(model)
                 last = exc
                 self._log_next(model, ready, i, exc)
                 continue
             except LLMTransient as exc:
                 self._cooldown_until[model] = self._clock() + TRANSIENT_COOLDOWN_S
+                self._cooldown_rate.discard(model)
                 last = exc
                 self._log_next(model, ready, i, exc)
                 continue

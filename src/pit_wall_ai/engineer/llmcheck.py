@@ -96,7 +96,7 @@ def run_llm_check(
             limited.append(exc.retry_after_s)
             hint = f", retry in {exc.retry_after_s:g} s" if exc.retry_after_s else ", no retry hint"
             # our own rest after a recent failure is not the provider saying 429
-            if "cooling down" in str(exc):
+            if "resting" in str(exc):
                 out(f"call {i}: skipped, every model is resting after a failure{hint}")
             else:
                 out(f"call {i}: 429 rate limited{hint}")

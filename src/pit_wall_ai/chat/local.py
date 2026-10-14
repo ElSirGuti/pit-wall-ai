@@ -688,10 +688,10 @@ def _not_yet(sheet, lang, track, routed, th):
     if lang == "es":
         return (
             "Los consejos de reglaje y la estrategia de carrera todavía no están disponibles: "
-            "llegan en la fase 8. Ahora puedo hablarte de lo que mide el coche en esta sesión."
+            "llegan en una fase posterior del proyecto. Ahora puedo hablarte de lo que mide el coche en esta sesión."
         ), []
     return (
-        "Setup advice and race strategy are not available yet: they come in phase 8. "
+        "Setup advice and race strategy are not available yet: they come in a later phase. "
         "For now I can talk about what the car measures in this session."
     ), []
 

@@ -12,7 +12,7 @@ from pit_wall_ai.chat.session import SYSTEM, ChatSession, make_client
 from pit_wall_ai.cli import main
 from pit_wall_ai.config import AppConfig, LLMConfig
 from pit_wall_ai.engineer.client import LLMClient
-from pit_wall_ai.engineer.llm import LLMRateLimited, LLMRequest, LLMResponse
+from pit_wall_ai.engineer.llm import LLMRateLimited, LLMRequest, LLMResponse, LLMTransient
 
 from .test_chat import synthetic_inputs
 
@@ -212,3 +212,43 @@ def test_chat_reads_piped_questions_as_utf8_even_when_the_console_is_not(monkeyp
     rc = main(["chat", "--file", str(FIXTURE)])
     out = capsys.readouterr().out
     assert rc == 0 and "Última vuelta" in out and "[local" in out
+
+
+# -- the evaluation runner -------------------------------------------------------------------------------------
+def test_the_evaluation_judges_refusals_facts_and_retries_a_degraded_answer():
+    from pit_wall_ai.chat import evalset as E
+
+    replies = [
+        LLMTransient("overloaded"),  # the first model answer is degraded...
+        "No tengo ese dato. Quedan 20,0 litros.",  # ...the retry answers: a refusal that restates a fact
+        "No tengo ese dato.",
+        "Está a 98 °C.",  # states the right wheel's value
+    ]
+    s, _ = session(*replies, history_turns=0)
+    cases = (
+        E.Case("imp-1", "impossible", "¿cuánto cuesta el seguro?", refuse=True, model_only=True),
+        E.Case("imp-2", "impossible", "¿qué viento hace?", refuse=True, model_only=True),
+        E.Case("trap-1", "trap", "¿y el delantero derecho?", ("tyres.FR.core_c",), model_only=True),
+        E.Case("skip-1", "open", "¿?", ("tyres.XX.core_c",), model_only=True),
+    )
+    waits: list[float] = []
+    rep = E.run(s, cases, retries=1, retry_wait_s=7.0, sleep=waits.append)
+    assert [r.status for r in rep.results] == ["pass", "pass", "pass", "skip"]
+    assert 7.0 in waits  # it waited once before asking again
+    assert rep.summary()["passed"] == 3 and rep.summary()["skipped"] == 1
+    md = E.to_markdown(rep)
+    assert "imp-1" in md and "PASS" in md and "skip" in md
+
+
+def test_the_evaluation_fails_a_wrong_number_and_a_missing_refusal():
+    from pit_wall_ai.chat import evalset as E
+
+    s, _ = session("Hace 25 grados.", "El delantero derecho está a 82 °C.", history_turns=0)
+    cases = (
+        E.Case("imp", "impossible", "¿qué temperatura hace?", refuse=True, model_only=True),
+        E.Case("trap", "trap", "¿y el delantero derecho?", ("tyres.FR.core_c",), model_only=True),
+    )
+    rep = E.run(s, cases, retries=0)
+    assert [r.status for r in rep.results] == ["fail", "fail"]
+    assert any("grounding: unsupported" in why for why in rep.results[0].reasons)  # invented 25
+    assert any("grounding" in why or "does not state" in why for why in rep.results[1].reasons)

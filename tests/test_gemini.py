@@ -745,3 +745,31 @@ def test_the_budget_can_be_set_per_model():
     assert p.thinking_budget_for("lite-b") is None
     p2, _ = provider(resp(200, ok_body()), model="x", thinking_budget=64, thinking_budgets={"x": 0})
     assert p2.thinking_budget_for("x") == 0 and p2.thinking_budget_for("y") == 64
+
+
+def test_every_model_resting_after_an_overload_is_transient_not_a_rate_limit():
+    from pit_wall_ai.engineer.llm import LLMTransient
+
+    now = {"t": 0.0}
+    over = resp(503, {"error": {"message": "high demand"}})
+    p, t = build([over], clock=lambda: now["t"], model="a", fallback_models=["b"])
+    with pytest.raises(LLMTransient):
+        p.generate(REQ)  # both overloaded
+    calls = len(t.calls)
+    now["t"] = 1.0
+    with pytest.raises(LLMTransient) as e:  # resting: nothing is sent, and it is NOT a 429
+        p.generate(REQ)
+    assert len(t.calls) == calls and not isinstance(e.value, LLMRateLimited)
+    assert "resting" in str(e.value)
+
+
+def test_a_real_429_keeps_the_rate_limit_error_while_the_models_rest():
+    now = {"t": 0.0}
+    over = resp(429, {"error": {"message": "quota"}}, {"retry-after": "20"})
+    p, t = build([over], clock=lambda: now["t"], model="a", fallback_models=["b"])
+    with pytest.raises(LLMRateLimited):
+        p.generate(REQ)
+    now["t"] = 2.0
+    with pytest.raises(LLMRateLimited) as e:
+        p.generate(REQ)
+    assert e.value.retry_after_s == pytest.approx(18.0)

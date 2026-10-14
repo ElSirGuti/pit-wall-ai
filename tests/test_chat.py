@@ -569,7 +569,7 @@ def test_setup_and_strategy_questions_get_a_clear_not_yet_without_the_model(ques
     assert r is not None and r.intents == (L.Intent.NOT_YET,)
     sheet = FactSheet()
     es = L.answer(r, sheet, lang="es").text
-    assert "todavía no están disponibles" in es and "fase 8" in es
+    assert "todavía no están disponibles" in es and "fase posterior" in es
     assert "not available yet" in L.answer(r, sheet, lang="en").text
 
 

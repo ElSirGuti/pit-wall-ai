@@ -126,6 +126,7 @@ CASES: tuple[Case, ...] = (
         "¿cuánto consumo por vuelta llevo?",
         ("fuel.per_lap_l",),
         needs=("fuel.per_lap_l",),
+        model_only=True,
     ),
     Case(
         "open-enough",
@@ -134,12 +135,14 @@ CASES: tuple[Case, ...] = (
         ("fuel.laps_left",),
         needs=("fuel.laps_left",),
         note="the right answer is no: it must give the laps left",
+        model_only=True,
     ),
     Case(
         "open-axle",
         "open",
         "¿hay diferencia de presión entre el eje delantero y el trasero?",
         ("tyres.FL.pressure_psi", "tyres.RL.pressure_psi"),
+        model_only=True,
     ),
     Case(
         "open-alert",
@@ -264,11 +267,9 @@ def judge(case: Case, reply: ChatReply, sheet: FactSheet) -> tuple[str, list[str
     reasons: list[str] = []
     if case.expect_source and reply.source != case.expect_source:
         reasons.append(f"source {reply.source!r}, expected {case.expect_source!r}")
-    if case.refuse:
-        if not _refuses(reply.text):
-            reasons.append("did not say it does not have the data")
-        if any(ch.isdigit() for ch in reply.text):
-            reasons.append("gave a number although it cannot know it")
+    # a refusal may restate a fact that is true (the grounding check below catches an invented number)
+    if case.refuse and not _refuses(reply.text):
+        reasons.append("did not say it does not have the data")
     for key in case.mentions:
         if not _states_fact(reply.text, sheet, key):
             reasons.append(f"does not state {key}")
@@ -317,6 +318,8 @@ def run(
     *,
     only: set[str] | None = None,
     pace_s: float = 0.0,
+    retries: int = 1,
+    retry_wait_s: float = 12.0,
     sleep: Callable[[float], None] = time.sleep,
     on_result: Callable[[Result], None] | None = None,
 ) -> EvalReport:
@@ -333,6 +336,12 @@ def run(
             res = Result(case, "skip", [f"the session has no {', '.join(missing)}"])
         else:
             reply = session.ask(case.question, force_model=case.model_only)
+            tries = 0
+            # an overloaded or resting service says nothing about the model: wait and ask again
+            while reply.source == "degraded" and tries < retries:
+                tries += 1
+                sleep(retry_wait_s)
+                reply = session.ask(case.question, force_model=case.model_only)
             status, reasons = judge(case, reply, sheet)
             res = Result(case, status, reasons, reply, reply.raw or reply.text, reply.latency_ms)
             if case.model_only or reply.source in ("model", "cache"):
