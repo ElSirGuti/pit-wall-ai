@@ -190,17 +190,25 @@ class GeminiProvider:
         raise LLMError(f"the model API answered {s}: {msg}")
 
     def _model_missing_message(self, api_message: str) -> str:
+        """The API said 404 for generateContent. Always include what the API itself said, and tell apart
+        "this name is not in the key's list" from "it is listed but generation answers 404"."""
         try:
             names = self.accepted_models()
         except LLMError as exc:  # the listing failed too: say so, do not hide the first problem
             return (
-                f"model {self.cfg.model!r} was not found ({api_message}); the list of models "
+                f"model {self.cfg.model!r} answered 404 ({api_message}); the list of models "
                 f"available to this key could not be read either: {exc}"
             )
         shown = ", ".join(names[:20]) + (" ..." if len(names) > 20 else "")
+        if self.cfg.model in names:
+            return (
+                f"model {self.cfg.model!r} is in this key's list but generateContent answered 404: "
+                f"{api_message}. It may be retired or not available for text generation. "
+                f"Try another with llm.model (or --model): {shown}"
+            )
         return (
-            f"model {self.cfg.model!r} was not found. Models this key can use: {shown or '(none)'}. "
-            "Set llm.model in config/local.yaml to one of them."
+            f"model {self.cfg.model!r} was not found ({api_message}). Models this key can use: "
+            f"{shown or '(none)'}. Set llm.model in config/local.yaml to one of them."
         )
 
     # -- generation ---------------------------------------------------------------------------------

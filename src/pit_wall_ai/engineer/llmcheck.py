@@ -24,6 +24,7 @@ def run_llm_check(
     *,
     calls: int = 3,
     allow_cloud: bool = False,
+    model: str | None = None,
     out: Callable[[str], None] = print,
     transport: HttpTransport | None = None,
     api_key: str | None = None,
@@ -39,6 +40,8 @@ def run_llm_check(
         return 0
     if allow_cloud:
         cfg = cfg.model_copy(update={"allow_cloud": True})
+    if model:  # a one-off try without editing the YAML
+        cfg = cfg.model_copy(update={"model": model})
     try:
         provider = GeminiProvider(cfg, transport=transport, api_key=api_key, clock=clock)
     except LLMUnavailable as exc:

@@ -267,7 +267,7 @@ def test_a_missing_model_whose_listing_also_fails_says_both_things():
     )
     with pytest.raises(LLMUnavailable) as e:
         p.generate(REQ)
-    assert "'gone-model' was not found" in str(e.value) and "could not be read" in str(e.value)
+    assert "'gone-model' answered 404" in str(e.value) and "could not be read" in str(e.value)
 
 
 # -- through the client: limiter and degradation --------------------------------------------------------------
@@ -377,3 +377,48 @@ def test_llm_check_cli_runs_offline_with_the_default_config(capsys):
 
     assert main(["llm-check"]) == 0
     assert "nothing to check" in capsys.readouterr().out
+
+
+def test_a_listed_model_that_answers_404_shows_the_api_message_and_says_it_is_listed():
+    # the real case seen on 2026-10-14: the name is in the key's list but generateContent says 404
+    p, _ = provider(
+        resp(404, {"error": {"message": "models/test-model is not found for API version v1beta"}}),
+        resp(
+            200,
+            {
+                "models": [
+                    {
+                        "name": "models/test-model",
+                        "supportedGenerationMethods": ["generateContent"],
+                    },
+                    {"name": "models/other-one", "supportedGenerationMethods": ["generateContent"]},
+                ]
+            },
+        ),
+        model="test-model",
+    )
+    with pytest.raises(LLMUnavailable) as e:
+        p.generate(REQ)
+    msg = str(e.value)
+    assert "is in this key's list but generateContent answered 404" in msg
+    assert "is not found for API version v1beta" in msg  # what the API itself said
+    assert "other-one" in msg and "--model" in msg
+
+
+def test_llm_check_can_try_another_model_for_one_run():
+    page = {
+        "models": [{"name": "models/other-one", "supportedGenerationMethods": ["generateContent"]}]
+    }
+    lines: list[str] = []
+    t = FakeTransport(resp(200, page), resp(200, ok_body("ok")))
+    code = run_llm_check(
+        cfg(model="test-model"),
+        calls=1,
+        model="other-one",
+        out=lines.append,
+        transport=t,
+        api_key=KEY,
+    )
+    assert code == 0
+    assert "model from the configuration: other-one" in "\n".join(lines)
+    assert t.calls[1]["url"].endswith("/models/other-one:generateContent")
