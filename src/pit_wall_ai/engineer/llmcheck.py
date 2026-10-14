@@ -25,6 +25,7 @@ def run_llm_check(
     calls: int = 3,
     allow_cloud: bool = False,
     model: str | None = None,
+    thinking_budget: int | None = None,
     out: Callable[[str], None] = print,
     transport: HttpTransport | None = None,
     api_key: str | None = None,
@@ -42,6 +43,8 @@ def run_llm_check(
         cfg = cfg.model_copy(update={"allow_cloud": True})
     if model:  # a one-off try without editing the YAML
         cfg = cfg.model_copy(update={"model": model})
+    if thinking_budget is not None:
+        cfg = cfg.model_copy(update={"thinking_budget": thinking_budget})
     try:
         provider = GeminiProvider(cfg, transport=transport, api_key=api_key, clock=clock)
     except LLMUnavailable as exc:
@@ -49,6 +52,10 @@ def run_llm_check(
         return 2
 
     out(f"model from the configuration: {cfg.model}")
+    if cfg.thinking_budget is not None:
+        out(f"thinking budget: {cfg.thinking_budget} tokens")
+    if cfg.fallback_models:
+        out("fallback models: " + ", ".join(cfg.fallback_models))
     out(f"endpoint: {cfg.base_url}")
     out(f"what is sent: the one-line prompt {PING_USER!r}. No telemetry, no personal data.")
 
@@ -78,6 +85,7 @@ def run_llm_check(
     # the configured output budget, not a tiny one: thinking tokens count in it (16 gave MAX_TOKENS)
     request = LLMRequest(system=PING_SYSTEM, user=PING_USER)
     tokens = 0
+    answered_by: set[str] = set()
     for i in range(1, calls + 1):
         t0 = clock()
         try:
@@ -98,6 +106,7 @@ def run_llm_check(
         dt = resp.latency_s or (clock() - t0)
         latencies.append(dt)
         used = (resp.usage or {}).get("total", 0)
+        answered_by.add(resp.model)
         tokens += used
         usage = resp.usage or {}
         extra = f", thinking {usage['thoughts']}" if usage.get("thoughts") else ""
@@ -115,6 +124,8 @@ def run_llm_check(
             f"latency: median {statistics.median(latencies) * 1000:.0f} ms, "
             f"max {max(latencies) * 1000:.0f} ms (the chat target is under 3 s)"
         )
+    if answered_by:
+        out("answered by: " + ", ".join(sorted(answered_by)))
     if tokens:
         out(f"tokens used by the test: {tokens}")
     out(

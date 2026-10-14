@@ -584,5 +584,33 @@ def test_all_models_overloaded_raises_the_last_transient_error():
 
 
 def test_the_default_model_is_one_that_answered_on_the_real_service():
-    assert LLMConfig().model == "gemini-3.1-flash-lite"  # gemini-2.5-flash is retired for new users
-    assert LLMConfig().fallback_models == [] and LLMConfig().thinking_budget is None
+    # gemini-2.5-flash is retired for new users; the alias answered 5/5 in 0.6-0.7 s on 2026-10-14
+    assert LLMConfig().model == "gemini-flash-lite-latest"
+    assert LLMConfig().fallback_models == ["gemini-3.5-flash"]
+    assert LLMConfig().thinking_budget is None
+
+
+def test_llm_check_reports_the_model_that_really_answered_and_the_thinking_budget():
+    page = {
+        "models": [{"name": "models/an-alias", "supportedGenerationMethods": ["generateContent"]}]
+    }
+    body = ok_body("ok")
+    body["modelVersion"] = "concrete-model-7"
+    body["usageMetadata"]["thoughtsTokenCount"] = 30
+    lines: list[str] = []
+    t = FakeTransport(resp(200, page), resp(200, body))
+    code = run_llm_check(
+        cfg(model="an-alias"),
+        calls=2,
+        thinking_budget=0,
+        out=lines.append,
+        transport=t,
+        api_key=KEY,
+    )
+    text = "\n".join(lines)
+    assert code == 0
+    assert "answered by: concrete-model-7" in text and "thinking 30" in text
+    assert "thinking budget: 0 tokens" in text
+    assert json.loads(t.calls[1]["body"])["generationConfig"]["thinkingConfig"] == {
+        "thinkingBudget": 0
+    }

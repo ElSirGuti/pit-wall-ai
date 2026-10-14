@@ -68,3 +68,23 @@ locally, caches, and has fallback models.
 * The default model is now `gemini-3.1-flash-lite`, the only one that answered in this run. It is a default
   that **worked once**, not a recommendation: `llm-check --model <name>` compares others, and the aliases
   `gemini-flash-latest` / `gemini-flash-lite-latest` in the list would avoid the next retirement (untested).
+
+## Third real run (2026-10-14, same PC, a few minutes later)
+
+| Model | Calls | Result | Latency |
+|---|---|---|---|
+| `gemini-3.1-flash-lite` (pinned) | 10 | 8 ok, **1 x 503, 1 x read timeout (8 s)** | median 2359 ms, max 3640 ms; 3 of the 8 over 3 s |
+| `gemini-flash-lite-latest` (alias) | 5 | 5 ok | 609-687 ms, median 657 ms |
+| `gemini-3.5-flash` | 5 | 5 ok; **110-147 thinking tokens for a one-word answer** | 1406-1734 ms, median 1484 ms |
+
+Reading, with the caution that these are 5 to 10 calls each in a few minutes:
+
+* The pinned lite model was the least reliable of the three at that moment; the alias was the fastest and
+  the steadiest. Nothing here says why (the alias may resolve to another model, or load may simply differ):
+  `llm-check` now prints the concrete model that answered (`answered by:`).
+* A thinking model spends more tokens thinking than answering. For short radio-style answers the thinking
+  budget should be limited (`llm.thinking_budget`, field name still to verify) and the output budget sized
+  for it.
+* The default is now the alias with `gemini-3.5-flash` as the reserve. This is a choice from a very small
+  sample, not a proven ranking; a longer run at a different hour is needed (`llm-check --calls 20`).
+* No 429 appeared in 20 calls: the per-minute limit was not reached by these runs, so it is still unknown.

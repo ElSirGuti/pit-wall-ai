@@ -99,6 +99,11 @@ def _parser() -> argparse.ArgumentParser:
     chk.add_argument("--calls", type=int, default=3, help="how many test calls (default 3)")
     chk.add_argument("--model", help="try this model instead of llm.model, for this run only")
     chk.add_argument(
+        "--thinking-budget",
+        type=int,
+        help="thinking tokens to allow for this run (0 = none where the model allows it)",
+    )
+    chk.add_argument(
         "--allow-cloud",
         action="store_true",
         help="allow the cloud call for this run only (the YAML flag stays as it is)",
@@ -439,7 +444,13 @@ def _print_lap_comparison(g, names, result, cfg) -> None:
 def _cmd_llm_check(cfg: AppConfig, a: argparse.Namespace) -> int:
     from .engineer.llmcheck import run_llm_check
 
-    return run_llm_check(cfg.llm, calls=max(1, a.calls), allow_cloud=a.allow_cloud, model=a.model)
+    return run_llm_check(
+        cfg.llm,
+        calls=max(1, a.calls),
+        allow_cloud=a.allow_cloud,
+        model=a.model,
+        thinking_budget=a.thinking_budget,
+    )
 
 
 def _cmd_corners(cfg: AppConfig, a: argparse.Namespace) -> int:
