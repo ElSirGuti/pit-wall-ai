@@ -31,6 +31,7 @@ class Intent(StrEnum):
     LAPS = "laps"
     SESSION = "session"
     UNKNOWN_DATA = "unknown_data"
+    NOT_YET = "not_yet"  # setup and race strategy: planned for phase 8
 
 
 # keyword tables: every entry is a normalised phrase searched as whole words
@@ -154,6 +155,23 @@ _IDENTITY = (
     "que es",
     "cual",
 )
+_KEYS[Intent.NOT_YET] = (
+    "setup",
+    "reglaje",
+    "reglajes",
+    "configuracion del coche",
+    "estrategia",
+    "cuando debo parar",
+    "cuando parar",
+    "cuando paro",
+    "plan de carrera",
+    "strategy",
+    "when should i pit",
+    "when to pit",
+    "pit strategy",
+    "tyre strategy",
+    "estrategia de neumaticos",
+)
 _ORDER = (
     Intent.CORNER,
     Intent.LAST_ALERT,
@@ -164,6 +182,7 @@ _ORDER = (
     Intent.BRAKES,
     Intent.LAPS,
     Intent.SESSION,
+    Intent.NOT_YET,
     Intent.UNKNOWN_DATA,
 )
 
@@ -199,6 +218,9 @@ def route(question: str, track: TrackInfo | None = None) -> Routed | None:
     # data the context can never hold wins only when nothing answerable was asked
     if Intent.UNKNOWN_DATA in found and len(found) > 1:
         found.remove(Intent.UNKNOWN_DATA)
+    # setup / strategy is a question on its own: a clear "not yet" instead of a half answer
+    if Intent.NOT_YET in found:
+        return Routed((Intent.NOT_YET,), corners)
     # a corner or an alert explanation is a question on its own
     for solo in (Intent.CORNER, Intent.LAST_ALERT):
         if solo in found:
@@ -467,10 +489,10 @@ def _loss(sheet, lang, track, routed, th):
     if w is None:
         d, s = th
         text = (
-            f"En la vuelta {lap}, frente a tu mejor vuelta ({ref}), ninguna curva combina una diferencia de "
+            f"En la vuelta {lap}, frente a la vuelta {ref} (tu mejor), ninguna curva combina una diferencia de "
             f"frenada de al menos {_num(d, 0, lang)} m con una pérdida de al menos {_num(s, 1, lang)} s."
             if lang == "es"
-            else f"On lap {lap}, against your best lap ({ref}), no corner combines a braking-point difference of "
+            else f"On lap {lap}, against lap {ref} (your best), no corner combines a braking-point difference of "
             f"at least {_num(d, 0, lang)} m with a loss of at least {_num(s, 1, lang)} s."
         )
         return text, keys
@@ -555,6 +577,18 @@ def _last_alert(sheet, lang, track, routed, th):
     return f"{when}the alert was “{text}”, from the {rule} rule.{said}", keys
 
 
+def _not_yet(sheet, lang, track, routed, th):
+    if lang == "es":
+        return (
+            "Los consejos de reglaje y la estrategia de carrera todavía no están disponibles: "
+            "llegan en la fase 8. Ahora puedo hablarte de lo que mide el coche en esta sesión."
+        ), []
+    return (
+        "Setup advice and race strategy are not available yet: they come in phase 8. "
+        "For now I can talk about what the car measures in this session."
+    ), []
+
+
 def _unknown(sheet, lang, track, routed, th):
     if lang == "es":
         return (
@@ -578,4 +612,5 @@ _BUILDERS = {
     Intent.CORNER: _corner,
     Intent.LAST_ALERT: _last_alert,
     Intent.UNKNOWN_DATA: _unknown,
+    Intent.NOT_YET: _not_yet,
 }

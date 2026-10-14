@@ -199,3 +199,16 @@ def test_local_answers_on_a_real_recording_pass_their_own_grounding(q):
     s = ChatSession(AppConfig(), rt.inputs, None)
     text = s.ask(q).text
     assert G.check(text, build_facts(inp), q).ok, text
+
+
+def test_chat_reads_piped_questions_as_utf8_even_when_the_console_is_not(monkeypatch, capsys):
+    import io as _io
+
+    raw = "¿cuál fue mi última vuelta?\nsalir\n".encode()
+    stream = _io.TextIOWrapper(
+        _io.BytesIO(raw), encoding="cp1252"
+    )  # what a Windows pipe used to be read as
+    monkeypatch.setattr("sys.stdin", stream)
+    rc = main(["chat", "--file", str(FIXTURE)])
+    out = capsys.readouterr().out
+    assert rc == 0 and "Última vuelta" in out and "[local" in out

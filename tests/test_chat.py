@@ -523,3 +523,51 @@ def test_sanitize_drops_only_the_offending_sentences():
     assert G.sanitize(reply, rep) == "El delantero derecho está a 98 °C."
     only_bad = "El delantero izquierdo está a 98 °C."
     assert "No puedo confirmar" in G.sanitize(only_bad, G.check(only_bad, s))
+
+
+def test_the_nothing_reaches_the_thresholds_answer_passes_its_own_grounding_check():
+    inp = synthetic_inputs()
+    inp.laps = [
+        lap(1, {500: 400, 1500: 1400, 2400: 2300}, ms=84_889),
+        lap(2, {500: 400, 1500: 1400, 2400: 2300}, ms=84_950),
+    ]
+    inp.best = inp.laps[0]
+    sheet = build_facts(inp)
+    r = L.route("¿dónde pierdo tiempo?", inp.track)
+    a = L.answer(r, sheet, lang="es", track=inp.track, thresholds=(10.0, 0.1))
+    rep = G.check(a.text, sheet, "¿dónde pierdo tiempo?")
+    assert "frente a la vuelta 1 (tu mejor)" in a.text and "10 m" in a.text and "0,1 s" in a.text
+    assert rep.ok, rep.violations
+    assert sheet.value("analysis.thresholds.min_distance_m") == 10.0
+
+
+def test_the_threshold_answer_in_english_passes_too():
+    inp = synthetic_inputs()
+    inp.laps = [
+        lap(1, {500: 400, 1500: 1400, 2400: 2300}, ms=84_889),
+        lap(2, {500: 400, 1500: 1400, 2400: 2300}, ms=84_950),
+    ]
+    inp.best = inp.laps[0]
+    sheet = build_facts(inp)
+    r = L.route("where am I losing time", inp.track)
+    a = L.answer(r, sheet, lang="en", track=inp.track, thresholds=(10.0, 0.1))
+    assert G.check(a.text, sheet, "where am I losing time").ok, a.text
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "¿qué setup me recomiendas?",
+        "¿cuándo debo parar a boxes?",
+        "dame una estrategia de carrera",
+        "what setup do you recommend",
+        "when should I pit",
+    ],
+)
+def test_setup_and_strategy_questions_get_a_clear_not_yet_without_the_model(question):
+    r = L.route(question)
+    assert r is not None and r.intents == (L.Intent.NOT_YET,)
+    sheet = FactSheet()
+    es = L.answer(r, sheet, lang="es").text
+    assert "todavía no están disponibles" in es and "fase 8" in es
+    assert "not available yet" in L.answer(r, sheet, lang="en").text

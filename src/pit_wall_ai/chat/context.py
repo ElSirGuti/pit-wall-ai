@@ -294,10 +294,14 @@ def _add_analysis(inp: ChatInputs, sheet: FactSheet) -> None:
         comps = B.compare_lap(geometry, lap, ref, b)
         if not comps:
             continue
+        for n in (lap.number, ref.number):
+            sheet.alias(Subject("lap", str(n)), f"vuelta {n}", f"lap {n}")
         sheet.add(Fact("analysis.lap", lap.number, subject=Subject("lap", str(lap.number))))
         sheet.add(
             Fact("analysis.reference_lap", ref.number, subject=Subject("lap", str(ref.number)))
         )
+        sheet.add(Fact("analysis.thresholds.min_distance_m", b.min_distance_m, "m"))
+        sheet.add(Fact("analysis.thresholds.min_time_s", b.min_time_s, "s"))
         for c in geometry.apexes:
             nm = info.names.get(c.number)
             sheet.alias(Subject("corner", str(c.number)), *corner_aliases(c.number, nm))

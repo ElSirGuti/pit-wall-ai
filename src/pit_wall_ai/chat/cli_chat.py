@@ -73,6 +73,9 @@ def cmd_ask(cfg: AppConfig, a: argparse.Namespace) -> int:
 def cmd_chat(cfg: AppConfig, a: argparse.Namespace, *, stdin=None) -> int:
     runtime, session, poller = _build(cfg, a)
     stdin = stdin or sys.stdin
+    if not stdin.isatty() and hasattr(stdin, "reconfigure"):
+        # piped text is UTF-8 in practice; the console code page would turn every accent into noise
+        stdin.reconfigure(encoding="utf-8", errors="replace")
     print(BANNER[cfg.engineer.language])
     if session.client is None:
         print(f"[cloud model off: {session.unavailable_reason}]")
