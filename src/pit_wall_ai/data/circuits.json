@@ -362,47 +362,46 @@
      "apex_fraction": 0.197
     },
     {
-     "order": 4,
      "name": "Curva Grande 2",
      "apex_fraction": 0.23
     },
     {
-     "order": 5,
+     "order": 4,
      "name": "Variante della Roggia 1",
      "apex_fraction": 0.371
     },
     {
-     "order": 6,
+     "order": 5,
      "name": "Variante della Roggia 2",
      "apex_fraction": 0.379
     },
     {
-     "order": 7,
+     "order": 6,
      "name": "Lesmo 1",
      "apex_fraction": 0.441
     },
     {
-     "order": 8,
+     "order": 7,
      "name": "Lesmo 2",
      "apex_fraction": 0.497
     },
     {
-     "order": 9,
+     "order": 8,
      "name": "Variante Ascari 1",
      "apex_fraction": 0.683
     },
     {
-     "order": 10,
+     "order": 9,
      "name": "Variante Ascari 2",
      "apex_fraction": 0.702
     },
     {
-     "order": 11,
+     "order": 10,
      "name": "Variante Ascari 3",
      "apex_fraction": 0.716
     },
     {
-     "order": 12,
+     "order": 11,
      "name": "Parabolica",
      "apex_fraction": 0.9
     }
@@ -426,7 +425,58 @@
      "to_fraction": 0.9
     }
    ],
-   "map_note": "Names from two maps given by the author on 2026-10-15 (racingcircuits.info and a Wikimedia schematic): Prima Variante = Variante del Rettifilo, Curva Biassono = Curva Grande, Seconda Variante = Variante della Roggia, 1a and 2a Curva di Lesmo, Curva del Serraglio (the back straight), Variante Ascari, Rettifilo Centrale (the straight from Ascari to the Parabolica), Curva Parabolica, Rettifilo Tribune (the pit straight). Numbering not applied yet: the maps have no numbers (see PENDIENTES)."
+   "map_note": "Numbering of the Wikimedia map Monza_track_map (11 turns, F1 style), given by the author 2026-10-15: 1-2 Variante del Rettifilo (Prima Variante); 3 Curva Grande (Curva Biassono; two apexes on the line); 4-5 Variante della Roggia (Seconda Variante); 6-7 Curve di Lesmo; 8-10 Variante Ascari; 11 Curva Parabolica. The Curva del Serraglio (the back straight) has no number. Other maps (8 turns) group the chicanes.",
+   "official_numbers": [
+    {
+     "number": 1,
+     "apex_fraction": 0.161
+    },
+    {
+     "number": 2,
+     "apex_fraction": 0.168
+    },
+    {
+     "number": 3,
+     "apex_fraction": 0.197
+    },
+    {
+     "number": 3,
+     "apex_fraction": 0.23
+    },
+    {
+     "number": 4,
+     "apex_fraction": 0.371
+    },
+    {
+     "number": 5,
+     "apex_fraction": 0.379
+    },
+    {
+     "number": 6,
+     "apex_fraction": 0.441
+    },
+    {
+     "number": 7,
+     "apex_fraction": 0.497
+    },
+    {
+     "number": 8,
+     "apex_fraction": 0.683
+    },
+    {
+     "number": 9,
+     "apex_fraction": 0.702
+    },
+    {
+     "number": 10,
+     "apex_fraction": 0.716
+    },
+    {
+     "number": 11,
+     "apex_fraction": 0.9
+    }
+   ],
+   "numbering_verified": true
   },
   {
    "id": "red_bull_ring",

@@ -445,20 +445,19 @@ def test_numbering_verified_flag_comes_from_the_table():
 
 def test_monza_and_mugello_tables_cover_their_corners_in_order():
     monza = circuit_names.circuit_for("monza")["corners"]
-    assert [c["order"] for c in monza] == list(range(1, 13))
-    assert (
-        monza[0]["name"].startswith("Variante del Rettifilo") and monza[-1]["name"] == "Parabolica"
-    )
+    # the F1-style map: 11 turns; the Curva Grande is one turn with two apexes on the line
+    assert [c.get("order") for c in monza] == [1, 2, 3, None, 4, 5, 6, 7, 8, 9, 10, 11]
+    assert monza[0]["name"].startswith("Variante del Rettifilo") and monza[-1]["name"] == "Parabolica"
     mugello = circuit_names.circuit_for("mugello")["corners"]
     assert [c["order"] for c in mugello] == list(range(1, 16))
     assert [c["name"] for c in mugello][-1] == "Bucine"
     for table in (monza, mugello):
         fr = [c["apex_fraction"] for c in table]
-        assert fr == sorted(fr) and fr[0] > 0 and fr[-1] < 1
-    # nothing is "verified" until the author checks the numbering against the real circuit
-    assert (
-        circuit_names.table_names("monza") is None and circuit_names.table_names("mugello") is None
-    )
+        assert fr == sorted(fr) and 0 < fr[0] and fr[-1] < 1
+    # Monza was verified with the author's map; Mugello has not been
+    assert circuit_names.numbering_verified("monza") and not circuit_names.numbering_verified("mugello")
+    assert circuit_names.table_names("monza")[11] == "Parabolica"
+    assert circuit_names.table_names("mugello") is None
 
 
 def test_named_straights_are_found_by_position_and_by_question():
