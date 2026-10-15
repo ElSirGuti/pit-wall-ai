@@ -171,52 +171,87 @@
     {
      "order": 1,
      "name": "La Source",
-     "apex_fraction": 0.056
-    },
-    {
-     "order": 2,
-     "name": "Eau Rouge / Raidillon",
-     "apex_fraction": 0.165
+     "apex_fraction": 0.055
     },
     {
      "order": 3,
-     "name": "Les Combes",
-     "apex_fraction": 0.353
+     "name": "Eau Rouge",
+     "apex_fraction": 0.151
     },
     {
      "order": 4,
-     "name": "Malmedy",
-     "apex_fraction": 0.378
-    },
-    {
-     "order": 5,
-     "name": "Rivage",
-     "apex_fraction": 0.443
-    },
-    {
-     "order": 6,
-     "name": "Pouhon",
-     "apex_fraction": 0.557
+     "name": "Raidillon",
+     "apex_fraction": 0.164
     },
     {
      "order": 7,
-     "name": "Fagnes",
-     "apex_fraction": 0.652
+     "name": "Les Combes 1",
+     "apex_fraction": 0.348
     },
     {
      "order": 8,
-     "name": "Stavelot",
-     "apex_fraction": 0.707
+     "name": "Les Combes 2",
+     "apex_fraction": 0.358
     },
     {
      "order": 9,
-     "name": "Blanchimont",
-     "apex_fraction": 0.906
+     "name": "Malmedy",
+     "apex_fraction": 0.376
     },
     {
      "order": 10,
-     "name": "Bus Stop",
-     "apex_fraction": 0.968
+     "name": "Bruxelles",
+     "apex_fraction": 0.439
+    },
+    {
+     "order": 11,
+     "name": "Speaker's Corner",
+     "apex_fraction": 0.469
+    },
+    {
+     "order": 12,
+     "name": "Pouhon / Double Gauche",
+     "apex_fraction": 0.554
+    },
+    {
+     "order": 13,
+     "name": "Les Fagnes 1",
+     "apex_fraction": 0.648
+    },
+    {
+     "order": 14,
+     "name": "Les Fagnes 2",
+     "apex_fraction": 0.663
+    },
+    {
+     "order": 15,
+     "name": "Campus",
+     "apex_fraction": 0.709
+    },
+    {
+     "order": 16,
+     "name": "Stavelot",
+     "apex_fraction": 0.748
+    },
+    {
+     "order": 17,
+     "name": "Courbe Paul Frère",
+     "apex_fraction": 0.796
+    },
+    {
+     "order": 18,
+     "name": "Blanchimont",
+     "apex_fraction": 0.884
+    },
+    {
+     "order": 19,
+     "name": "Bus Stop 1",
+     "apex_fraction": 0.966
+    },
+    {
+     "order": 20,
+     "name": "Bus Stop 2",
+     "apex_fraction": 0.973
     }
    ],
    "straights": [
@@ -225,7 +260,83 @@
      "from_fraction": 0.186,
      "to_fraction": 0.348
     }
-   ]
+   ],
+   "official_numbers": [
+    {
+     "number": 1,
+     "apex_fraction": 0.055
+    },
+    {
+     "number": 3,
+     "apex_fraction": 0.151
+    },
+    {
+     "number": 4,
+     "apex_fraction": 0.164
+    },
+    {
+     "number": 5,
+     "apex_fraction": 0.186
+    },
+    {
+     "number": 7,
+     "apex_fraction": 0.348
+    },
+    {
+     "number": 8,
+     "apex_fraction": 0.358
+    },
+    {
+     "number": 9,
+     "apex_fraction": 0.376
+    },
+    {
+     "number": 10,
+     "apex_fraction": 0.439
+    },
+    {
+     "number": 11,
+     "apex_fraction": 0.469
+    },
+    {
+     "number": 12,
+     "apex_fraction": 0.554
+    },
+    {
+     "number": 13,
+     "apex_fraction": 0.648
+    },
+    {
+     "number": 14,
+     "apex_fraction": 0.663
+    },
+    {
+     "number": 15,
+     "apex_fraction": 0.709
+    },
+    {
+     "number": 16,
+     "apex_fraction": 0.748
+    },
+    {
+     "number": 17,
+     "apex_fraction": 0.796
+    },
+    {
+     "number": 18,
+     "apex_fraction": 0.884
+    },
+    {
+     "number": 19,
+     "apex_fraction": 0.966
+    },
+    {
+     "number": 20,
+     "apex_fraction": 0.973
+    }
+   ],
+   "numbering_verified": false,
+   "map_note": "20 numbered turns on the map (Wikimedia Spa-Francorchamps of Belgium) against 18 apexes on the line: 2 (exit of La Source) and 6 (the Kemmel kink at the start of the straight) have no apex. Names in lap order from the racingcircuits.info map: La Source, Eau Rouge, Raidillon, Kemmel, Les Combes, Malmedy, Bruxelles, Speaker's Corner, Double Gauche (Pouhon), Les Fagnes, Campus, Stavelot, Courbe Paul Frere (the long right from Stavelot to Blanchimont), Blanchimont, Chicane. Proposed 2026-10-15, awaiting confirmation."
   },
   {
    "id": "monza",

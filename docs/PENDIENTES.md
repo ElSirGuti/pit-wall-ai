@@ -94,6 +94,15 @@ Variante Alta 14, 15; Rivazza 1 = 17 y Rivazza 2 = 18. Las 15 apuestas de la lí
 Imola está marcado como **numeración verificada**: el ingeniero dice "curva 14" con el número de tu mapa.
 Siguiente circuito cuando quieras (Monza con tu mapa de 8 curvas, y el Serraglio como la 6).
 
+## 5i. Spa-Francorchamps (propuesta, a la espera de tu confirmación)
+
+20 números en tu mapa frente a 18 ápices en la línea: el 2 (salida de La Source) y el 6 (la curva
+"Kemmel" al principio de la recta) son planos y no tienen ápice. En orden: 1 La Source; 3 Eau Rouge; 4
+Raidillon; 5 (cima); 6 Kemmel; 7-8 Les Combes; 9 Malmedy; 10 Bruxelles; 11 Speaker's Corner; 12 Pouhon /
+Double Gauche; 13-14 Les Fagnes; 15 Campus; 16 Stavelot; 17 Courbe Paul Frère (la larga a derechas de
+Stavelot a Blanchimont); 18 Blanchimont; 19-20 Chicane (Bus Stop). Aplicada en la tabla pero **sin marcar
+como verificada**: el chat ya entiende "curva 17", el ingeniero no dirá números hasta que confirmes.
+
 ## 5e. Verificar la numeración de los circuitos (nuevo, con tu idea)
 
 1. `pit-wall circuit-maps` dibuja la línea de carrera de cada circuito de la tabla con sus ápices numerados,

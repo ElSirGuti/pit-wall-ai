@@ -266,8 +266,9 @@ def test_names_are_attached_only_where_the_table_has_a_corner_inside():
     assert names == {
         1: "La Source",
         2: "Eau Rouge / Raidillon",
-        3: "Les Combes",
-    }  # Malmedy is 0.03 away
+        3: "Les Combes 1 / Les Combes 2",  # two table corners on the same apex are joined
+        4: "Stavelot",
+    }  # Malmedy (0.376) is 0.028 from the apex: not attached
     assert circuit_names.circuit_for("fn_imola")["id"] == "imola"
     assert circuit_names.circuit_for("some_mod_track") is None
     g.track = "zandvoort"
@@ -366,7 +367,7 @@ def test_a_complex_is_numbered_per_apex_and_each_apex_can_take_its_own_name():
     assert [c.direction for c in g.apexes] == ["right", "left", "right"]
     assert (g.apexes[0].start_m, g.apexes[0].end_m) == (2354.0, 2500.0)
     assert [c.number for c in g.corners] == [1, 2]  # the grouped view is unchanged
-    assert corner_names(g) == {1: "Les Combes", 2: "Malmedy", 3: "Rivage"}
+    assert corner_names(g) == {1: "Les Combes 1 / Les Combes 2", 2: "Malmedy", 3: "Bruxelles"}
 
 
 @pytest.mark.real_data
