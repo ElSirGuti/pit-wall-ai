@@ -21,6 +21,10 @@ _HEARD: dict[str, str] = {
     "psy": "psi",
     "pisi": "psi",
     "pi esi": "psi",
+    "sai": "psi",
+    "psai": "psi",
+    "psay": "psi",
+    "pe sai": "psi",
 }
 
 

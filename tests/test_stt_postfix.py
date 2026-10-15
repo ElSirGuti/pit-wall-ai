@@ -8,3 +8,7 @@ def test_known_mishearings_are_replaced_and_the_rest_is_untouched():
     assert fix("dime la P S I del delantero") == "dime la psi del delantero"
     assert fix("espesor pesimista") == "espesor pesimista"  # inside other words: nothing
     assert fix("¿Cuánta gasolina me queda?") == "¿Cuánta gasolina me queda?"
+
+
+def test_sai_is_heard_for_psi():
+    assert fix("cuántos sai tengo en el delantero") == "cuántos psi tengo en el delantero"
