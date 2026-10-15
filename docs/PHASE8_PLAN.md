@@ -210,6 +210,13 @@ same order of the four wheels. **Limits to keep in mind:** four points only (a c
 probability of 1 in 24), one car, one circuit, and it validates the distribution between wheels, not corner by
 corner. A second independent stint (`sesion4`) is the next check before the corner advice is voiced.
 
+**Second stint (2026-10-15, `sesion4`, the game's autopilot, 9 laps, app 83/87/69/74 -> 71/78/53/60):** index
+per wheel against the measured drop: correlation 0.99 and the same order of the four wheels, with a
+different driver (the autopilot). Two sessions now agree at wheel level. The corner rankings differ between
+the human and the autopilot (front: 6, 2, 1 for the author; 1, 2, 8, 3 for the autopilot), as they should:
+they describe the driving, not the circuit. Still not verified: the split by corner itself (the app gives
+no per-corner wear); the wheel-level agreement is the evidence that the index is a sound proxy.
+
 ### 3.3 The learning loop: a ledger of suggestions and what happened
 
 The language model does not learn between sessions (its weights never change). What improves is a **local

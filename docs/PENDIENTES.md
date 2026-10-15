@@ -136,10 +136,11 @@ pista con coche de desgaste real, banderas, daños y penalizaciones. Lo de arrib
 
 * hecho: el indicador por rueda coincide con el desgaste que marca la app de neumáticos del juego (sesion3,
   Cobra 427 SC en Magione): `pit-wall tyre-corners sesion3.pwrec.gz --reference 83,88,70,75`;
-* tuyo: terminar `sesion4` (piloto automático + 6 a 8 vueltas tuyas variando), capturar la app de
-  porcentajes al principio (83/87/69/74 %, vuelta 15) y al final con el contador "Laps", y pasarme los
-  números; con eso hay un segundo punto independiente;
-* mío después: habilitar que el ingeniero diga el consejo por curva solo si ambas sesiones lo validan.
+* hecho: `sesion3` (tú) y `sesion4` (piloto automático) validan el indicador por rueda (correlación 1,00 y
+  0,99, mismo orden);
+* tuyo, sin prisa: una tanda manual variando (6 a 8 vueltas) con captura de la app al principio y al final;
+* mío: que el ingeniero conteste "¿en qué curvas gasto más los neumáticos?" con el indicador, dicho como
+  estimación (pendiente de tu visto bueno al texto).
 
 ## Varias claves de API (reserva)
 
