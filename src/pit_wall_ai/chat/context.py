@@ -240,7 +240,9 @@ def build_facts(inp: ChatInputs) -> FactSheet:
                 add(Fact(f"tyres.{w}.core_c", _r(snap.tyre_core_temp[i], 0), "C", sub))
             if snap.tyre_pressure[i] > 0:
                 add(Fact(f"tyres.{w}.pressure_psi", _r(snap.tyre_pressure[i], 1), "psi", sub))
-            if inp.cfg.engineer.wear_channel and snap.tyre_wear[i] > 0:
+            if (inp.cfg.engineer.wear_channel or snap.wear_source == "csp") and snap.tyre_wear[
+                i
+            ] > 0:
                 add(Fact(f"tyres.{w}.wear_pct", _r(snap.tyre_wear[i], 1), "%", sub))
         _add_axles(sheet, snap)
         any_alive = False

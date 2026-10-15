@@ -31,12 +31,21 @@ class ReplayConfig(_Model):
     session: SessionName = "practice"
 
 
+class CspBridgeConfig(_Model):
+    """Real tyre wear from the CSP Lua app in ``tools/csp_bridge`` (the classic shared memory keeps it at 100 %)."""
+
+    enabled: bool = True  # listens on 127.0.0.1 only; harmless when the app is not installed
+    port: int = Field(28271, ge=1024, le=65535)
+    max_age_s: float = Field(3.0, gt=0)  # older than this = the app is not sending
+
+
 class TelemetryConfig(_Model):
     source: Literal["ac", "replay"] = "ac"
     hz: float = Field(60.0, gt=0, le=240)
     buffer_seconds: float = Field(30.0, gt=0, le=3600)
     retry_s: float = Field(1.0, gt=0)
     replay: ReplayConfig = ReplayConfig()
+    csp_bridge: CspBridgeConfig = CspBridgeConfig()
 
 
 class LoggingConfig(_Model):

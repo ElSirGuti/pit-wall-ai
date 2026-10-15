@@ -124,6 +124,9 @@ class Snapshot:
     flags: int = 0
     ideal_line_on: bool = False
     mandatory_pit_done: bool = False
+    wear_source: str = (
+        ""  # "" = the shared memory; "csp" = the real wear sent by the CSP Lua bridge
+    )
 
     @property
     def status_name(self) -> str:

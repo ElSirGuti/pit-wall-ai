@@ -47,7 +47,14 @@ def build_source(cfg: AppConfig) -> TelemetrySource:
             loop=t.replay.loop,
             session=_SESSIONS[t.replay.session],
         )
-    return ACSharedMemorySource()
+    source = ACSharedMemorySource()
+    if t.csp_bridge.enabled:
+        from .telemetry.csp_bridge import BridgedSource, BridgeReceiver
+
+        return BridgedSource(
+            source, BridgeReceiver(t.csp_bridge.port, max_age_s=t.csp_bridge.max_age_s)
+        )
+    return source
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -186,6 +193,16 @@ def _parser() -> argparse.ArgumentParser:
     it = sub.add_parser("input-test", help="print every press and release, to check a device")
     it.add_argument("--config", help="YAML config")
     it.add_argument("--seconds", type=float, default=30.0, help="how long to listen (30)")
+
+    bi = sub.add_parser(
+        "bridge-install", help="copy the CSP Lua bridge app into the game's apps/lua"
+    )
+    bi.add_argument("--config", help="YAML config")
+    bi.add_argument("--ac-dir", action="append", help="the assettocorsa folder (repeatable)")
+
+    bt = sub.add_parser("bridge-test", help="listen for the CSP Lua bridge and print what it sends")
+    bt.add_argument("--config", help="YAML config")
+    bt.add_argument("--seconds", type=float, default=30.0, help="how long to listen (30)")
 
     tr = sub.add_parser(
         "trim", help="cut a window of a recording into a small .pwrec.gz at a lower rate"
@@ -673,6 +690,18 @@ def _cmd_input_test(cfg: AppConfig, a: argparse.Namespace) -> int:
     return cmd_input_test(cfg, a)
 
 
+def _cmd_bridge_install(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .telemetry.cli_bridge import cmd_bridge_install
+
+    return cmd_bridge_install(cfg, a)
+
+
+def _cmd_bridge_test(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .telemetry.cli_bridge import cmd_bridge_test
+
+    return cmd_bridge_test(cfg, a)
+
+
 def _cmd_trim(cfg: AppConfig, a: argparse.Namespace) -> int:
     import os
 
@@ -808,6 +837,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             "tyre-corners": _cmd_tyre_corners,
             "bindings": _cmd_bindings,
             "input-test": _cmd_input_test,
+            "bridge-install": _cmd_bridge_install,
+            "bridge-test": _cmd_bridge_test,
             "chat": _cmd_chat,
         }[args.cmd]
         return handler(cfg, args)

@@ -120,6 +120,16 @@ nombre) y **Silverstone** con tus mapas: GP con 18 curvas (Maggotts 10-11, Becke
 Vale 16-17, Club 18; dos curvas ligeras sin número), International (8) y National (7). Pendiente: confirmar en
 el juego que en el National el 3 y el 4 son la misma horquilla, y el mapa de los inversos de cada circuito.
 
+## 5l. Puente CSP: el desgaste real (2026-10-15, hay que probarlo en el juego)
+
+La memoria compartida clásica de AC se queda en 100 % de desgaste con CSP; las apps (CMRT) lo leen por la API
+Lua. `tools/csp_bridge/` es una app Lua mínima que envía el desgaste real (y banderas, penalización, daño y
+lluvia) a `127.0.0.1:28271`; `pit-wall` la recibe y la mezcla en la telemetría (`telemetry.csp_bridge`).
+Ya está copiada en `...ssettocorsapps\lua\pitwall_bridge`. Falta: 1) en el juego, abrir la barra de apps
+y activar **Pit Wall Bridge** una vez; 2) con una práctica abierta, `pit-wall bridge-test` debe mostrar los
+cuatro porcentajes (los de tu app CMRT); 3) con `pit-wall voice`, "¿cómo están los neumáticos?" ya dirá el
+desgaste real. Si algo no llega, dime el mensaje del juego (log de CSP) o la salida de `bridge-test`.
+
 ## 5e. Verificar la numeración de los circuitos (nuevo, con tu idea)
 
 1. `pit-wall circuit-maps` dibuja la línea de carrera de cada circuito de la tabla con sus ápices numerados,
