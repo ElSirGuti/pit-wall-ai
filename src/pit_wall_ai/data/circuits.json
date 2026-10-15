@@ -180,8 +180,13 @@
     },
     {
      "order": 4,
-     "name": "Raidillon",
+     "name": "Raidillon 1",
      "apex_fraction": 0.164
+    },
+    {
+     "order": 5,
+     "name": "Raidillon 2",
+     "apex_fraction": 0.186
     },
     {
      "order": 7,
@@ -210,7 +215,7 @@
     },
     {
      "order": 12,
-     "name": "Pouhon / Double Gauche",
+     "name": "Pouhon",
      "apex_fraction": 0.554
     },
     {
@@ -225,21 +230,15 @@
     },
     {
      "order": 15,
-     "name": "Campus",
+     "name": "Stavelot",
      "apex_fraction": 0.709
     },
     {
-     "order": 16,
-     "name": "Stavelot",
-     "apex_fraction": 0.748
-    },
-    {
-     "order": 17,
      "name": "Courbe Paul Frère",
      "apex_fraction": 0.796
     },
     {
-     "order": 18,
+     "order": 17,
      "name": "Blanchimont",
      "apex_fraction": 0.884
     },
@@ -320,10 +319,6 @@
     },
     {
      "number": 17,
-     "apex_fraction": 0.796
-    },
-    {
-     "number": 18,
      "apex_fraction": 0.884
     },
     {
@@ -335,8 +330,8 @@
      "apex_fraction": 0.973
     }
    ],
-   "numbering_verified": false,
-   "map_note": "20 numbered turns on the map (Wikimedia Spa-Francorchamps of Belgium) against 18 apexes on the line: 2 (exit of La Source) and 6 (the Kemmel kink at the start of the straight) have no apex. Names in lap order from the racingcircuits.info map: La Source, Eau Rouge, Raidillon, Kemmel, Les Combes, Malmedy, Bruxelles, Speaker's Corner, Double Gauche (Pouhon), Les Fagnes, Campus, Stavelot, Courbe Paul Frere (the long right from Stavelot to Blanchimont), Blanchimont, Chicane. Proposed 2026-10-15, awaiting confirmation."
+   "numbering_verified": true,
+   "map_note": "Numbering of the map Spa-Francorchamps of Belgium (Wikimedia), given by the author 2026-10-15: 1 La Source; 2 no name; 3 Eau Rouge; 4-5 Raidillon; 6 no name; Kemmel Straight; 7-9 Les Combes (9 is Malmedy on other maps); 10 Bruxelles; 11 Speaker's Corner; 12 Pouhon; 13-14 Les Fagnes (also drawn as Campus); 15 Stavelot; 16 no name; Courbe Paul Frere (the long right from Stavelot to Blanchimont, no number of its own); 17 Blanchimont; 18 no name; 19-20 Bus Stop. 2, 6 and 18 are flat kinks with no apex on the line; the long right at 0.796 (Courbe Paul Frere) is a named apex without a map number."
   },
   {
    "id": "monza",

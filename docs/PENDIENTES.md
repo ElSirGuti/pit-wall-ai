@@ -94,14 +94,14 @@ Variante Alta 14, 15; Rivazza 1 = 17 y Rivazza 2 = 18. Las 15 apuestas de la lí
 Imola está marcado como **numeración verificada**: el ingeniero dice "curva 14" con el número de tu mapa.
 Siguiente circuito cuando quieras (Monza con tu mapa de 8 curvas, y el Serraglio como la 6).
 
-## 5i. Spa-Francorchamps (propuesta, a la espera de tu confirmación)
+## 5i. Spa-Francorchamps verificado (2026-10-15)
 
-20 números en tu mapa frente a 18 ápices en la línea: el 2 (salida de La Source) y el 6 (la curva
-"Kemmel" al principio de la recta) son planos y no tienen ápice. En orden: 1 La Source; 3 Eau Rouge; 4
-Raidillon; 5 (cima); 6 Kemmel; 7-8 Les Combes; 9 Malmedy; 10 Bruxelles; 11 Speaker's Corner; 12 Pouhon /
-Double Gauche; 13-14 Les Fagnes; 15 Campus; 16 Stavelot; 17 Courbe Paul Frère (la larga a derechas de
-Stavelot a Blanchimont); 18 Blanchimont; 19-20 Chicane (Bus Stop). Aplicada en la tabla pero **sin marcar
-como verificada**: el chat ya entiende "curva 17", el ingeniero no dirá números hasta que confirmes.
+Con tu lista sobre el SVG: 1 La Source; 2 sin nombre; 3 Eau Rouge; 4-5 Raidillon; 6 sin nombre; Kemmel
+Straight; 7-8 Les Combes y 9 Malmedy (en algunos mapas la 9 es de Les Combes); 10 Bruxelles; 11 Speaker's
+Corner; 12 Pouhon; 13-14 Les Fagnes (también dibujadas como Campus); 15 Stavelot; 16 sin nombre; Courbe Paul
+Frère (la curva larga a derechas, sin número propio); 17 Blanchimont; 18 sin nombre; 19-20 Bus Stop. La
+línea tiene 18 ápices: 2, 6 y 18 no tienen ápice (son planas) y la Courbe Paul Frère es un ápice con
+nombre y sin número. Marcado como **numeración verificada**.
 
 ## 5e. Verificar la numeración de los circuitos (nuevo, con tu idea)
 

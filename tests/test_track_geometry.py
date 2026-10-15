@@ -265,10 +265,9 @@ def test_names_are_attached_only_where_the_table_has_a_corner_inside():
     names = circuit_names.corner_names(g)
     assert names == {
         1: "La Source",
-        2: "Eau Rouge / Raidillon",
-        3: "Les Combes 1 / Les Combes 2",  # two table corners on the same apex are joined
-        4: "Stavelot",
-    }  # Malmedy (0.376) is 0.028 from the apex: not attached
+        2: "Eau Rouge / Raidillon 1",  # two table corners on the same apex are joined
+        3: "Les Combes 1 / Les Combes 2",
+    }  # Malmedy (0.376) is 0.028 from the apex: not attached; 0.748 has no name on the map
     assert circuit_names.circuit_for("fn_imola")["id"] == "imola"
     assert circuit_names.circuit_for("some_mod_track") is None
     g.track = "zandvoort"
@@ -438,7 +437,9 @@ def test_corner_text_on_a_synthetic_track(stadium_line):
 
 def test_numbering_verified_flag_comes_from_the_table():
     assert circuit_names.numbering_verified("magione") is True
-    assert circuit_names.numbering_verified("spa") is False
+    assert circuit_names.numbering_verified("imola") is True  # the author's map, 2026-10-15
+    assert circuit_names.numbering_verified("spa") is True
+    assert circuit_names.numbering_verified("silverstone") is False
     assert circuit_names.numbering_verified("some_mod_track") is False
 
 
