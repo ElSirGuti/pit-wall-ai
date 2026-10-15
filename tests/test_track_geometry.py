@@ -607,11 +607,13 @@ def test_a_map_numbering_is_kept_apart_from_the_apex_numbering():
     ]
     g = SimpleNamespace(apexes=apexes, track="imola")
     m = circuit_names.official_map(g, "imola")
-    # the author's map: Tamburello 2-4, Villeneuve 5-6, Tosa 7, Variante Alta 14-15; Piratella not confirmed
-    assert m == {1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7, 8: 14, 9: 15}
+    # the author's map: Tamburello 2-4, Villeneuve 5-6, Tosa 7, Piratella 9, Variante Alta 14-15
+    assert m == {1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7, 7: 9, 8: 14, 9: 15}
     circuit_names.attach_official(g, "imola")
-    assert circuit_names.official_of(g, 8) == 14 and circuit_names.official_of(g, 7) is None
-    assert circuit_names.apex_of(g, 14) == 8 and circuit_names.apex_of(g, 8) is None
+    assert circuit_names.official_of(g, 8) == 14 and circuit_names.official_of(g, 7) == 9
+    assert (
+        circuit_names.apex_of(g, 14) == 8 and circuit_names.apex_of(g, 8) is None
+    )  # 8 is a kink with no apex
     # a circuit without a map list keeps the apex numbers
     h = SimpleNamespace(apexes=apexes, track="zandvoort")
     circuit_names.attach_official(h, "zandvoort")
@@ -646,3 +648,17 @@ def test_the_chat_speaks_the_map_numbers_and_understands_them():
     text = describe_corner(g, 8, "es", names)
     assert text.startswith("Variante Alta 1, que es la curva 14")
     assert "curva 8" not in text
+
+
+def test_imola_is_verified_with_the_numbers_of_the_authors_map():
+    assert circuit_names.numbering_verified("imola")
+    names = circuit_names.table_names("imola")
+    assert (
+        names[2].startswith("Variante Tamburello")
+        and names[7] == "Tosa"
+        and names[9] == "Piratella"
+    )
+    assert names[17] == "Rivazza 1" and names[18] == "Rivazza 2"
+    assert (
+        1 not in names and 8 not in names and 10 not in names and 19 not in names
+    )  # no names there

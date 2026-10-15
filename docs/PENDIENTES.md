@@ -85,14 +85,14 @@ Con el desgaste real ya medido (ver "Ya cerrado"), de aquella lista quedan:
   proyecto actualizado en los tres README. Léelos tú: una revisión de un hablante nativo (o tuya) antes de
   usarlos en una candidatura es lo que da la última pulida. Si quieres más documentos en alemán, dime cuáles.
 
-## 5h. Imola, con tu mapa (2026-10-15)
+## 5h. Imola verificado (2026-10-15)
 
-Ya hay **numeración del mapa** separada de la de la línea (`official_numbers` en `circuits.json`): el
-ingeniero dice "curva 14" y entiende "curva 14" aunque para la línea sea el ápice 11. Para Imola, con
-lo que me diste: 1 sin nombre; Tamburello 2, 3, 4; Villeneuve 5, 6; Tosa 7; Variante Alta 14, 15; la Variante
-Bassa (19) no se considera. **Faltan por confirmar** (en el mapa Wikimedia Imola_2009, por cercanía de
-las etiquetas): Piratella entre 8, 9 y 10; Acque Minerali (probablemente 11, 12, 13, tres ápices en la línea);
-Rivazza con tres números (16, 17, 18) frente a dos ápices de la línea. Dime cuáles son y los añado.
+Con tu mapa (Wikimedia Imola_2009): 18 curvas en el layout de coche; la Variante Bassa (19) es de moto y no
+se usa. 1 sin nombre; Tamburello 2, 3, 4; Villeneuve 5, 6; Tosa 7; Piratella 9; Acque Minerali 11, 12, 13;
+Variante Alta 14, 15; Rivazza 1 = 17 y Rivazza 2 = 18. Las 15 apuestas de la línea quedan con su número
+(el 16 es la curva suave a derechas antes de Rivazza); 1, 8 y 10 son curvas planas sin ápice en la línea.
+Imola está marcado como **numeración verificada**: el ingeniero dice "curva 14" con el número de tu mapa.
+Siguiente circuito cuando quieras (Monza con tu mapa de 8 curvas, y el Serraglio como la 6).
 
 ## 5e. Verificar la numeración de los circuitos (nuevo, con tu idea)
 

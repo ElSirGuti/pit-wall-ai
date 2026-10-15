@@ -18,72 +18,72 @@
    "confidence": "high",
    "corners": [
     {
-     "order": 1,
+     "order": 2,
      "name": "Variante Tamburello 1",
      "apex_fraction": 0.143
     },
     {
-     "order": 2,
+     "order": 3,
      "name": "Variante Tamburello 2",
      "apex_fraction": 0.156
     },
     {
-     "order": 3,
+     "order": 4,
      "name": "Variante Tamburello 3",
      "apex_fraction": 0.179
     },
     {
-     "order": 4,
+     "order": 5,
      "name": "Variante Villeneuve 1",
      "apex_fraction": 0.271
     },
     {
-     "order": 5,
+     "order": 6,
      "name": "Variante Villeneuve 2",
      "apex_fraction": 0.288
     },
     {
-     "order": 6,
+     "order": 7,
      "name": "Tosa",
      "apex_fraction": 0.349
     },
     {
-     "order": 7,
+     "order": 9,
      "name": "Piratella",
      "apex_fraction": 0.481
     },
     {
-     "order": 8,
+     "order": 11,
      "name": "Acque Minerali 1",
      "apex_fraction": 0.561
     },
     {
-     "order": 9,
+     "order": 12,
      "name": "Acque Minerali 2",
      "apex_fraction": 0.58
     },
     {
-     "order": 10,
+     "order": 13,
      "name": "Acque Minerali 3",
      "apex_fraction": 0.597
     },
     {
-     "order": 11,
+     "order": 14,
      "name": "Variante Alta 1",
      "apex_fraction": 0.682
     },
     {
-     "order": 12,
+     "order": 15,
      "name": "Variante Alta 2",
      "apex_fraction": 0.691
     },
     {
-     "order": 14,
+     "order": 17,
      "name": "Rivazza 1",
      "apex_fraction": 0.843
     },
     {
-     "order": 15,
+     "order": 18,
      "name": "Rivazza 2",
      "apex_fraction": 0.869
     }
@@ -114,15 +114,44 @@
      "apex_fraction": 0.349
     },
     {
+     "number": 9,
+     "apex_fraction": 0.481
+    },
+    {
+     "number": 11,
+     "apex_fraction": 0.561
+    },
+    {
+     "number": 12,
+     "apex_fraction": 0.58
+    },
+    {
+     "number": 13,
+     "apex_fraction": 0.597
+    },
+    {
      "number": 14,
      "apex_fraction": 0.682
     },
     {
      "number": 15,
      "apex_fraction": 0.691
+    },
+    {
+     "number": 16,
+     "apex_fraction": 0.809
+    },
+    {
+     "number": 17,
+     "apex_fraction": 0.843
+    },
+    {
+     "number": 18,
+     "apex_fraction": 0.869
     }
    ],
-   "map_note": "18 numbered turns on the car layout (Variante Bassa, 19, is the motorcycle chicane and is not drawn); 1 has no name; Tamburello is 2-4, Villeneuve 5-6, Variante Alta 14-15 (the author, 2026-10-15)"
+   "map_note": "Numbering of the map Imola_2009 (Wikimedia), confirmed by the author 2026-10-15: 18 turns on the car layout (Variante Bassa, 19, is the motorcycle chicane and is not used); 1 without a name; Tamburello 2-4; Villeneuve 5-6; Tosa 7; Piratella 9; Acque Minerali 11-13; Variante Alta 14-15; Rivazza 1 = 17, Rivazza 2 = 18. 1, 8 and 10 are flat kinks with no apex on the game's line; 16 is the gentle right before Rivazza (the only apex between Variante Alta and Rivazza).",
+   "numbering_verified": true
   },
   {
    "id": "spa_francorchamps",
