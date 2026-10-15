@@ -27,16 +27,7 @@ def _tracks_of(circuit: dict, libs: list[Path]) -> list[str]:
     return found
 
 
-def _is_reverse(layout: str) -> bool:
-    """AC layouts name the reverse direction in several ways: "reverse_x", "x_reverse", "r_x", "layout_r_gp"."""
-    low = layout.lower()
-    return (
-        "reverse" in low
-        or low.endswith("_rev")
-        or low.startswith("r_")
-        or "_r_" in low
-        or low.endswith("_r")
-    )
+_is_reverse = CN.is_reverse_layout
 
 
 def _best_line(circuit: dict, tracks: list[str], libs: list[Path]):

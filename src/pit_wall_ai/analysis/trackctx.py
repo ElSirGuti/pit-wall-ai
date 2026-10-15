@@ -58,7 +58,9 @@ class TrackAnalysis:
         info = TrackInfo(st.track, res.layout, res)
         if res.ok:
             info.names = corner_names(res.geometry, st.track)
-            info.verified = st.track in self.cfg.verified_numbering or numbering_verified(st.track)
+            info.verified = st.track in self.cfg.verified_numbering or numbering_verified(
+                st.track, res.layout, res.geometry.length_m
+            )
             log.info(
                 "braking analysis ready",
                 extra={
@@ -69,7 +71,9 @@ class TrackAnalysis:
                 },
             )
         else:
-            info.names = table_names(st.track) or {}  # the corners can still be named
+            info.names = (
+                table_names(st.track, st.track_configuration, st.track_length_m or None) or {}
+            )  # the corners can still be named
             info.verified = bool(info.names)
             log.warning(
                 "braking analysis off for this track",

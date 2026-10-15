@@ -24,20 +24,22 @@ def _table() -> list[dict]:
     return json.loads(text)["circuits"]
 
 
-def numbering_verified(track: str) -> bool:
+def numbering_verified(track: str, layout: str = "", length_m: float | None = None) -> bool:
     """The author checked this circuit's corner numbering against the real circuit (flag in the table)."""
-    c = circuit_for(track)
+    c = circuit_for_layout(track, layout, length_m)
     return bool(c and c.get("numbering_verified"))
 
 
-def table_names(track: str) -> dict[int, str] | None:
+def table_names(
+    track: str, layout: str = "", length_m: float | None = None
+) -> dict[int, str] | None:
     """{number: name} straight from the table, only for a circuit whose numbering was verified.
 
     It lets the chat answer "which corner is the Prima Esse?" on a machine without the game installed
     (no racing line). For an unverified circuit the table order is not known to be the circuit's numbering,
     so nothing is returned.
     """
-    c = circuit_for(track)
+    c = circuit_for_layout(track, layout, length_m)
     if not c or not c.get("numbering_verified"):
         return None
     out = {int(e["order"]): str(e["name"]) for e in c.get("corners", []) if "order" in e}
@@ -55,6 +57,97 @@ def circuit_for(track: str) -> dict | None:
         if t in {_norm(c["id"]), *(_norm(a) for a in c.get("aliases", []))}:
             return c
     return None
+
+
+LAYOUT_LENGTH_TOLERANCE = 0.08  # a layout this far from the table's length is another layout
+
+
+def is_reverse_layout(layout: str) -> bool:
+    """AC layouts name the reverse direction in several ways: "reverse_x", "x_reverse", "r_x", "layout_r_gp"."""
+    low = (layout or "").lower()
+    return (
+        "reverse" in low
+        or low.endswith("_rev")
+        or low.startswith("r_")
+        or "_r_" in low
+        or low.endswith("_r")
+    )
+
+
+def _mirror(c: dict) -> dict:
+    """The same circuit driven the other way: same names, the lap fractions mirrored, the order reversed.
+
+    Derived, never verified: the author confirms a reverse layout against its own map before it is trusted.
+    """
+    orders = [int(e["order"]) for e in c.get("corners", []) if e.get("order") is not None]
+    top = max(orders) if orders else 0
+    corners = []
+    for e in reversed(c.get("corners", [])):
+        m = dict(e)
+        m["apex_fraction"] = round((1.0 - float(e["apex_fraction"])) % 1.0, 4)
+        if e.get("order") is not None and top:
+            m["order"] = top + 1 - int(e["order"])
+        corners.append(m)
+    nums = c.get("official_numbers") or []
+    ntop = max((int(e["number"]) for e in nums), default=0)
+    official = [
+        {
+            "number": ntop + 1 - int(e["number"]),
+            "apex_fraction": round((1.0 - float(e["apex_fraction"])) % 1.0, 4),
+        }
+        for e in reversed(nums)
+    ]
+    straights = [
+        {
+            **s,
+            "from_fraction": round((1.0 - float(s["to_fraction"])) % 1.0, 4),
+            "to_fraction": round((1.0 - float(s["from_fraction"])) % 1.0, 4),
+        }
+        for s in c.get("straights", [])
+    ]
+    out = {k: v for k, v in c.items() if k not in ("layouts", "numbering_verified", "map_note")}
+    out.update(
+        corners=corners, official_numbers=official, straights=straights, numbering_verified=False
+    )
+    out["map_note"] = (
+        "derived: the base layout driven the other way (names kept, order reversed); not verified"
+    )
+    return out
+
+
+def circuit_for_layout(track: str, layout: str = "", length_m: float | None = None) -> dict | None:
+    """The table entry that describes the layout actually driven, or ``None`` if it does not describe it.
+
+    * an entry in the circuit's ``layouts`` ({"<layout folder>": {...own corners/official_numbers/...}})
+      overrides the base table for that layout;
+    * a reverse layout of the base one reuses its names with the order reversed (derived, unverified);
+    * a layout whose length is far from the table's (Red Bull Ring *national* vs the GP table) gets nothing:
+      the base corners' fractions do not apply to it, and a wrong name is worse than none.
+    """
+    c = circuit_for(track)
+    if c is None:
+        return None
+    key = _norm(layout or "")
+    for name, entry in (c.get("layouts") or {}).items():
+        if key and _norm(name) == key:
+            return {**{k: v for k, v in c.items() if k != "layouts"}, **entry}
+    base_len = float(c.get("length_m") or 0.0)
+    near = (
+        not length_m
+        or not base_len
+        or abs(length_m - base_len) / base_len <= LAYOUT_LENGTH_TOLERANCE
+    )
+    if key and is_reverse_layout(layout):
+        return _mirror(c) if near else None
+    return c if near else None
+
+
+def _of_geometry(track: str | None, geometry) -> dict | None:
+    return circuit_for_layout(
+        track or getattr(geometry, "track", ""),
+        getattr(geometry, "layout", "") or "",
+        getattr(geometry, "length_m", None),
+    )
 
 
 @dataclass(frozen=True)
@@ -82,8 +175,8 @@ class Straight:
 _GENERIC = {"straight", "recta", "gerade", "rectilineo", "the", "la", "el", "die", "der"}
 
 
-def straights_for(track: str) -> list[Straight]:
-    c = circuit_for(track)
+def straights_for(track: str, geometry=None) -> list[Straight]:
+    c = _of_geometry(track, geometry) if geometry is not None else circuit_for(track)
     if not c:
         return []
     return [
@@ -97,9 +190,9 @@ def straights_for(track: str) -> list[Straight]:
     ]
 
 
-def straight_at(track: str, fraction: float) -> Straight | None:
+def straight_at(track: str, fraction: float, geometry=None) -> Straight | None:
     """The named straight a position of the lap is on, if any."""
-    return next((s for s in straights_for(track) if s.contains(fraction)), None)
+    return next((s for s in straights_for(track, geometry) if s.contains(fraction)), None)
 
 
 # generic straights: any circuit has a main straight and most have a back straight, named or not
@@ -174,7 +267,7 @@ def generic_straights(geometry) -> list[Straight]:
 
 def all_straights(track: str, geometry=None) -> list[Straight]:
     """The table's named straights first, then the generic main/back ones that do not overlap a named one."""
-    named = straights_for(track)
+    named = straights_for(track, geometry)
     out = list(named)
     if geometry is not None:
         roles = {s.role for s in named}
@@ -191,7 +284,7 @@ def find_straight(track: str, query: str, geometry=None) -> Straight | None:
     """A straight in free text: "la recta Rahal", "Rahal Straight", "la recta principal", "back straight"."""
     q = _norm_words(query)
     padded = f" {q} "
-    for s in straights_for(track):
+    for s in straights_for(track, geometry):
         words = [w for w in _norm_words(s.name).split() if w not in _GENERIC]
         if words and all(w in q.split() for w in words):
             return s
@@ -230,7 +323,7 @@ def official_map(geometry, track: str | None = None) -> dict[int, int] | None:
     (it groups or skips some). The table lists the map's numbers with the lap fraction of each, and every one
     is given to the nearest apex within ``TOLERANCE``. An apex with no map number simply has none.
     """
-    circuit = circuit_for(track or getattr(geometry, "track", ""))
+    circuit = _of_geometry(track, geometry)
     entries = circuit.get("official_numbers") if circuit else None
     if not entries:
         return None
@@ -274,7 +367,7 @@ def corner_names(geometry: TrackGeometry, track: str | None = None) -> dict[int,
     Two table corners that fall on the same apex are joined ("Les Combes / Malmedy"); an apex that no
     table corner is near keeps its number alone.
     """
-    circuit = circuit_for(track or geometry.track)
+    circuit = _of_geometry(track, geometry)
     if circuit is None:
         return {}
     names: dict[int, list[str]] = {}

@@ -587,7 +587,11 @@ class BrakingHintRule(Rule):
             name = self._names.get(corner.number)
             verified = (
                 ctx.snap.static.track in self.analysis.verified_numbering
-                or numbering_verified(ctx.snap.static.track)
+                or numbering_verified(
+                    ctx.snap.static.track,
+                    geometry.layout,
+                    geometry.length_m,
+                )
             )
             where = M.where_phrase(
                 ctx.lang,

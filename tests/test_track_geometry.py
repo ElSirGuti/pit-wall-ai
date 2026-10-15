@@ -663,3 +663,26 @@ def test_imola_is_verified_with_the_numbers_of_the_authors_map():
     assert (
         1 not in names and 8 not in names and 10 not in names and 19 not in names
     )  # no names there
+
+
+def test_layout_aware_table():
+    from pit_wall_ai.analysis import circuit_names as CN
+
+    gp = CN.circuit_for_layout("ks_red_bull_ring", "layout_gp", 4318)
+    assert gp and gp["corners"]
+    # the national layout is 2.3 km: the GP fractions do not apply, so no names rather than wrong ones
+    assert CN.circuit_for_layout("ks_red_bull_ring", "layout_national", 2336) is None
+    assert CN.numbering_verified("ks_red_bull_ring", "layout_national", 2336) is False
+    assert CN.numbering_verified("ks_red_bull_ring", "layout_gp", 4318) is True
+
+
+def test_reverse_layout_reuses_names_in_reverse_order():
+    from pit_wall_ai.analysis import circuit_names as CN
+
+    base = CN.circuit_for("monza")
+    rev = CN.circuit_for_layout("monza", "monza_reverse", base["length_m"])
+    assert rev and not rev["numbering_verified"]
+    assert [e["name"] for e in rev["corners"]] == [e["name"] for e in reversed(base["corners"])]
+    f0 = base["corners"][0]["apex_fraction"]
+    assert abs(rev["corners"][-1]["apex_fraction"] - (1 - f0)) < 1e-3
+    assert CN.table_names("monza", "monza_reverse", base["length_m"]) is None
