@@ -75,8 +75,9 @@ def cmd_circuit_maps(cfg: AppConfig, a: argparse.Namespace, *, out=print) -> int
         )
         (dest / f"{circuit['id']}.svg").write_text(svg, encoding="utf-8")
         made += 1
+        off = getattr(g, "official", None)
         rows = "".join(
-            f"<tr><td>{c.number}</td><td>{'left' if c.direction == 'left' else 'right'}</td>"
+            f"<tr><td>{c.number}</td><td>{'' if off is None else off.get(c.number, '·')}</td><td>{'left' if c.direction == 'left' else 'right'}</td>"
             f"<td>{c.min_radius_m:.0f} m</td><td>{c.apex_m / g.length_m:.3f}</td>"
             f"<td>{html.escape(names.get(c.number, ''))}</td></tr>"
             for c in g.apexes
@@ -91,7 +92,7 @@ def cmd_circuit_maps(cfg: AppConfig, a: argparse.Namespace, *, out=print) -> int
             f"numbering verified: <b>{ok}</b></p>"
             f"<img src='{circuit['id']}.svg' width='560'>"
             f"<table border='1' cellpadding='4' style='border-collapse:collapse'>"
-            f"<tr><th>#</th><th>dir</th><th>Rmin</th><th>lap</th><th>name</th></tr>{rows}</table>"
+            f"<tr><th>apex</th><th>map</th><th>dir</th><th>Rmin</th><th>lap</th><th>name</th></tr>{rows}</table>"
             f"<ul>{sts}</ul>"
             f"<p>Checklist: [ ] the number of corners matches the map &nbsp; [ ] the order matches "
             f"&nbsp; [ ] left/right match &nbsp; [ ] the names are in the right place</p></section>"

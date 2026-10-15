@@ -164,7 +164,11 @@ def clock(seconds: float) -> str:
 
 def corner_ref(sheet, number: int, names: dict[int, str]) -> str:
     name = names.get(number)
-    base = f"Kurve {number}"
+    official = getattr(sheet, "official", None)
+    shown = number if official is None else official.get(number)
+    if shown is None:
+        return name or "eine Kurve ohne Nummer"
+    base = f"Kurve {shown}"
     return f"{name} ({base})" if name and not re.fullmatch(r"(?i)curva\s+\d+", name) else base
 
 

@@ -85,6 +85,15 @@ Con el desgaste real ya medido (ver "Ya cerrado"), de aquella lista quedan:
   proyecto actualizado en los tres README. Léelos tú: una revisión de un hablante nativo (o tuya) antes de
   usarlos en una candidatura es lo que da la última pulida. Si quieres más documentos en alemán, dime cuáles.
 
+## 5h. Imola, con tu mapa (2026-10-15)
+
+Ya hay **numeración del mapa** separada de la de la línea (`official_numbers` en `circuits.json`): el
+ingeniero dice "curva 14" y entiende "curva 14" aunque para la línea sea el ápice 11. Para Imola, con
+lo que me diste: 1 sin nombre; Tamburello 2, 3, 4; Villeneuve 5, 6; Tosa 7; Variante Alta 14, 15; la Variante
+Bassa (19) no se considera. **Faltan por confirmar** (en el mapa Wikimedia Imola_2009, por cercanía de
+las etiquetas): Piratella entre 8, 9 y 10; Acque Minerali (probablemente 11, 12, 13, tres ápices en la línea);
+Rivazza con tres números (16, 17, 18) frente a dos ápices de la línea. Dime cuáles son y los añado.
+
 ## 5e. Verificar la numeración de los circuitos (nuevo, con tu idea)
 
 1. `pit-wall circuit-maps` dibuja la línea de carrera de cada circuito de la tabla con sus ápices numerados,

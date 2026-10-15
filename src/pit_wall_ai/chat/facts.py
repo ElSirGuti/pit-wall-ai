@@ -52,6 +52,8 @@ class FactSheet:
     # aliases of every subject as they may appear in a sentence ("delantero izquierdo", "curvone", "vuelta 5")
     aliases: dict[Subject, tuple[str, ...]] = field(default_factory=dict)
     lang: str = "es"
+    # {apex number: the number of the circuit's own map} when the table has one (None = the apex numbers)
+    official: dict[int, int] | None = None
     extra_numbers: list[float] = field(
         default_factory=list
     )  # numbers of the question, alert texts...

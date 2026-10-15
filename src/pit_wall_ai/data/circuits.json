@@ -19,51 +19,110 @@
    "corners": [
     {
      "order": 1,
-     "name": "Tamburello",
-     "apex_fraction": 0.148
+     "name": "Variante Tamburello 1",
+     "apex_fraction": 0.143
     },
     {
      "order": 2,
-     "name": "Villeneuve",
-     "apex_fraction": 0.294
+     "name": "Variante Tamburello 2",
+     "apex_fraction": 0.156
     },
     {
      "order": 3,
-     "name": "Tosa",
-     "apex_fraction": 0.352
+     "name": "Variante Tamburello 3",
+     "apex_fraction": 0.179
     },
     {
      "order": 4,
-     "name": "Piratella",
-     "apex_fraction": 0.483
+     "name": "Variante Villeneuve 1",
+     "apex_fraction": 0.271
     },
     {
      "order": 5,
-     "name": "Acque Minerali",
-     "apex_fraction": 0.582
+     "name": "Variante Villeneuve 2",
+     "apex_fraction": 0.288
     },
     {
      "order": 6,
-     "name": "Variante Alta",
-     "apex_fraction": 0.692
+     "name": "Tosa",
+     "apex_fraction": 0.349
     },
     {
      "order": 7,
-     "name": "Rivazza 1",
-     "apex_fraction": 0.846
+     "name": "Piratella",
+     "apex_fraction": 0.481
     },
     {
      "order": 8,
-     "name": "Rivazza 2",
-     "apex_fraction": 0.872
+     "name": "Acque Minerali 1",
+     "apex_fraction": 0.561
     },
     {
      "order": 9,
-     "name": "Variante Bassa",
-     "apex_fraction": 0.94,
-     "kind": "flat_out"
+     "name": "Acque Minerali 2",
+     "apex_fraction": 0.58
+    },
+    {
+     "order": 10,
+     "name": "Acque Minerali 3",
+     "apex_fraction": 0.597
+    },
+    {
+     "order": 11,
+     "name": "Variante Alta 1",
+     "apex_fraction": 0.682
+    },
+    {
+     "order": 12,
+     "name": "Variante Alta 2",
+     "apex_fraction": 0.691
+    },
+    {
+     "order": 14,
+     "name": "Rivazza 1",
+     "apex_fraction": 0.843
+    },
+    {
+     "order": 15,
+     "name": "Rivazza 2",
+     "apex_fraction": 0.869
     }
-   ]
+   ],
+   "official_numbers": [
+    {
+     "number": 2,
+     "apex_fraction": 0.143
+    },
+    {
+     "number": 3,
+     "apex_fraction": 0.156
+    },
+    {
+     "number": 4,
+     "apex_fraction": 0.179
+    },
+    {
+     "number": 5,
+     "apex_fraction": 0.271
+    },
+    {
+     "number": 6,
+     "apex_fraction": 0.288
+    },
+    {
+     "number": 7,
+     "apex_fraction": 0.349
+    },
+    {
+     "number": 14,
+     "apex_fraction": 0.682
+    },
+    {
+     "number": 15,
+     "apex_fraction": 0.691
+    }
+   ],
+   "map_note": "18 numbered turns on the car layout (Variante Bassa, 19, is the motorcycle chicane and is not drawn); 1 has no name; Tamburello is 2-4, Villeneuve 5-6, Variante Alta 14-15 (the author, 2026-10-15)"
   },
   {
    "id": "spa_francorchamps",

@@ -73,16 +73,25 @@ def describe_corner(
     geometry: TrackGeometry, number: int, lang: str = "es", names: dict[int, str] | None = None
 ) -> str:
     """ "la curva 11, la última, a izquierdas" / "the corner 6, the first after the long straight, right-hand"."""
+    from .circuit_names import official_of
+
     c = geometry.apexes[number - 1]
     n = len(geometry.apexes)
+    shown = official_of(
+        geometry, c.number
+    )  # the number of the circuit's map; None = this apex has none
     after = _gap_before(geometry, c) >= LONG_STRAIGHT_M
     before = _gap_after(geometry, c) >= LONG_STRAIGHT_M
     es = lang == "es"
     parts: list[str] = []
     if es:
-        head = f"la curva {c.number}"
+        head = f"la curva {shown}" if shown is not None else "esta curva"
         if _named(names, c.number):
-            head = f"{names[c.number]}, que es la curva {c.number}"
+            head = (
+                f"{names[c.number]}, que es la curva {shown}"
+                if shown is not None
+                else f"{names[c.number]}"
+            )
         if c.number == n:
             parts.append("la última")
         elif c.number == 1:
@@ -93,9 +102,13 @@ def describe_corner(
             parts.append("la última antes de la recta larga")
         parts.append("a derechas" if c.direction == "right" else "a izquierdas")
         return ", ".join([head, *parts])
-    head = f"corner {c.number}"
+    head = f"corner {shown}" if shown is not None else "this corner"
     if _named(names, c.number):
-        head = f"{names[c.number]}, which is corner {c.number}"
+        head = (
+            f"{names[c.number]}, which is corner {shown}"
+            if shown is not None
+            else f"{names[c.number]}"
+        )
     if c.number == n:
         parts.append("the last one")
     elif c.number == 1:
@@ -116,6 +129,14 @@ def find_corner(
     Several numbers come back when the text is ambiguous ("esse" matches three corners); the caller asks
     which one. Accents and case are ignored.
     """
+    from .circuit_names import apex_of
+
+    official = getattr(geometry, "official", None)
+    if official:  # the driver says the numbers of the circuit's map: translate them to apexes
+        count = max(official.values())
+        return find_in_names(
+            query, names or {}, count, number_to_apex=lambda k: apex_of(geometry, k)
+        )
     return find_in_names(query, names or {}, len(geometry.apexes))
 
 
@@ -138,7 +159,9 @@ def _digits(q: str) -> str:
     )
 
 
-def find_in_names(query: str, names: dict[int, str], count: int | None = None) -> list[int]:
+def find_in_names(
+    query: str, names: dict[int, str], count: int | None = None, number_to_apex=None
+) -> list[int]:
     """The same lookup from the names alone (a circuit table), without a racing line."""
     n_corners = count if count is not None else (max(names) if names else 0)
     q = " ".join(w for w in _digits(_norm(query)).split() if w not in _ARTICLES)
@@ -147,7 +170,11 @@ def find_in_names(query: str, names: dict[int, str], count: int | None = None) -
     out: list[int] = []
     m = re.search(r"\b(?:curva|corner|turn|t)?\s*(\d{1,2})\b", q)
     if m and 1 <= int(m.group(1)) <= n_corners:
-        out.append(int(m.group(1)))
+        target = int(m.group(1))
+        if number_to_apex is not None:
+            target = number_to_apex(target)
+        if target is not None:
+            out.append(target)
     for num, name in names.items():
         nm = _norm(name)
         generic = _norm(re.sub(r"^curva\s+", "", name))

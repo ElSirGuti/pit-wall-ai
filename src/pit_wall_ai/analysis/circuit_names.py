@@ -223,6 +223,51 @@ def _norm_words(s: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", t).strip()
 
 
+def official_map(geometry, track: str | None = None) -> dict[int, int] | None:
+    """{apex number: the number of the circuit's own map}, or ``None`` when the table has no such list.
+
+    The apexes of the game's line are numbered by the line; a published map numbers the turns its own way
+    (it groups or skips some). The table lists the map's numbers with the lap fraction of each, and every one
+    is given to the nearest apex within ``TOLERANCE``. An apex with no map number simply has none.
+    """
+    circuit = circuit_for(track or getattr(geometry, "track", ""))
+    entries = circuit.get("official_numbers") if circuit else None
+    if not entries:
+        return None
+    out: dict[int, int] = {}
+    for e in entries:
+        f = float(e["apex_fraction"])
+        best, best_d = None, TOLERANCE
+        for c in geometry.apexes:
+            d = abs(((f - c.apex_fraction) + 0.5) % 1.0 - 0.5)
+            if d <= best_d:
+                best, best_d = c, d
+        if best is not None:
+            out[best.number] = int(e["number"])
+    return out
+
+
+def attach_official(geometry, track: str | None = None) -> None:
+    """Store the map numbering on the geometry (``geometry.official``) for everything that speaks numbers."""
+    geometry.official = official_map(geometry, track)  # type: ignore[attr-defined]
+
+
+def official_of(geometry, apex_number: int) -> int | None:
+    """The number to say for an apex: the map's, or the apex's own when the circuit has no map list."""
+    m = getattr(geometry, "official", None)
+    if m is None:
+        return apex_number
+    return m.get(apex_number)
+
+
+def apex_of(geometry, number: int) -> int | None:
+    """The apex a number typed or said by the driver refers to (the map's numbering when there is one)."""
+    m = getattr(geometry, "official", None)
+    if m is None:
+        return number
+    return next((a for a, o in m.items() if o == number), None)
+
+
 def corner_names(geometry: TrackGeometry, track: str | None = None) -> dict[int, str]:
     """{apex number: name}: each table corner is given to the nearest apex within ``TOLERANCE`` of the lap.
 

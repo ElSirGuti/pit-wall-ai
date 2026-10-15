@@ -392,7 +392,10 @@ NO_DATA = {
 
 def _corner_ref(sheet: FactSheet, number: int, names: dict[int, str], lang: str) -> str:
     name = names.get(number)
-    base = f"la curva {number}" if lang == "es" else f"corner {number}"
+    shown = number if sheet.official is None else sheet.official.get(number)
+    if shown is None:  # this apex has no number on the circuit's map: only its name, if it has one
+        return name or ("una curva sin número" if lang == "es" else "a corner without a number")
+    base = f"la curva {shown}" if lang == "es" else f"corner {shown}"
     return f"{name} ({base})" if name and not re.fullmatch(r"(?i)curva\s+\d+", name) else base
 
 

@@ -136,11 +136,16 @@ def is_recall(question: str) -> bool:
     return "was hast du mir" in q and any(w in q for w in ("gesagt", "geraten", "gemeldet"))
 
 
-def _mentions(text: str, number: int, names: dict[int, str]) -> bool:
+def _mentions(
+    text: str, number: int | None, names: dict[int, str], apex: int | None = None
+) -> bool:
+    """``number`` is what was said (the map's number); ``apex`` keys the names (the line's number)."""
     t = _norm(text)
-    if re.search(rf"\b(?:curva|corner|turn|kurve)\s+{number}\b", t):
+    if number is not None and re.search(
+        r"\b(?:curva|corner|turn|kurve)\s+" + str(number) + r"\b", t
+    ):
         return True
-    name = names.get(number)
+    name = names.get(apex if apex is not None else number)
     if name:
         nm = _norm(re.sub(r"^curva\s+", "", name, flags=re.IGNORECASE))
         return len(nm) >= 4 and nm in t
@@ -156,7 +161,7 @@ def _ago(seconds: float, lang: str) -> str:
 
 
 def _recall_topic_or_session(
-    topic, earlier, *, alerts, previous, now, lang, corner=None, names=None
+    topic, earlier, *, alerts, previous, now, lang, corner=None, corner_spoken=None, names=None
 ) -> Recall:
     """Quotes by topic from this session, or from the earlier ones when the driver asked about them."""
     import time as _time
@@ -172,7 +177,7 @@ def _recall_topic_or_session(
 
     def wanted(a) -> bool:
         if corner is not None:
-            return _mentions(a.text, corner, names or {})
+            return _mentions(a.text, corner_spoken, names or {}, corner)
         return rules is None or a.rule in rules
 
     quotes: list[tuple[str, str]] = []  # (when, text)
@@ -249,6 +254,12 @@ def recall(
     quotes: list[tuple[float | None, str]] = []
     if corners:
         n = corners[0]
+        if track is not None and getattr(track, "geometry", None) is not None:
+            from ..analysis.circuit_names import official_of
+
+            spoken = official_of(track.geometry, n)  # what was said then: the map's number
+        else:
+            spoken = n
         if earlier:
             return _recall_topic_or_session(
                 None,
@@ -261,11 +272,11 @@ def recall(
                 names=names,
             )
         for a in alerts:
-            if _mentions(a.text, n, names):
+            if _mentions(a.text, spoken, names, n):
                 ago = (now - a.t) if now is not None else None
                 quotes.append((ago, a.text))
         for _q, ans in history:
-            if _mentions(ans, n, names):
+            if _mentions(ans, spoken, names, n):
                 quotes.append((None, ans))
         label = (
             names.get(n) or {"es": f"la curva {n}", "en": f"corner {n}", "de": f"Kurve {n}"}[lang]

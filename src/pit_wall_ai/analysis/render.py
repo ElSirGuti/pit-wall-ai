@@ -90,14 +90,17 @@ def render_svg(
         f'<rect x="-3" y="-17" width="6" height="34" fill="#000"/>'
         f'<path d="M 12,0 L 0,-9 L 0,9 Z" fill="#c62828"/></g>'
     )
+    official = getattr(geometry, "official", None)
     for c in geometry.apexes:
         x, y = at(c.apex_fraction)
         name = names.get(c.number, "")
+        # with a map numbering the circle shows the map's number ("·" when this apex has none)
+        shown = c.number if official is None else official.get(c.number, "·")
         out.append(
             f'<circle cx="{x:.1f}" cy="{y:.1f}" r="15" fill="#fff" stroke="#c62828" stroke-width="3"/>'
         )
         out.append(
-            f'<text x="{x:.1f}" y="{y + 6:.1f}" font-size="17" text-anchor="middle" font-weight="700">{c.number}</text>'
+            f'<text x="{x:.1f}" y="{y + 6:.1f}" font-size="17" text-anchor="middle" font-weight="700">{shown}</text>'
         )
         if name:
             out.append(

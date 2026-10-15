@@ -19,7 +19,7 @@ from collections import deque
 from dataclasses import dataclass
 
 from ..analysis import braking as B
-from ..analysis.circuit_names import numbering_verified
+from ..analysis.circuit_names import numbering_verified, official_of
 from ..analysis.laps import LapTracker
 from ..analysis.trackctx import TrackAnalysis
 from ..config import AnalysisConfig, EngineerConfig
@@ -592,7 +592,7 @@ class BrakingHintRule(Rule):
             where = M.where_phrase(
                 ctx.lang,
                 name=name,
-                number=corner.number if verified else None,
+                number=official_of(geometry, corner.number) if verified else None,
                 direction=corner.direction,
                 at_m=corner.apex_m,
             )

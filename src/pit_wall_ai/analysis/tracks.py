@@ -197,4 +197,7 @@ def resolve(
     res.candidate = cand
     res.layout = cand.layout
     res.geometry = analyze_line(line, track=track, layout=cand.layout)
+    from .circuit_names import attach_official
+
+    attach_official(res.geometry, track)
     return res

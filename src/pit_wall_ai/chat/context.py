@@ -16,6 +16,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 from ..analysis import braking as B
+from ..analysis.circuit_names import official_of
 from ..analysis.laps import CurrentLap, LapRecord
 from ..analysis.trackctx import TrackInfo
 from ..config import AppConfig
@@ -96,8 +97,12 @@ def _time_numbers(ms: float) -> tuple[float, ...]:
     return (round(ms / 1000.0, 3), float(ms))
 
 
-def corner_aliases(number: int, name: str | None) -> list[str]:
-    out = [f"curva {number}", f"corner {number}", f"turn {number}", f"kurve {number}"]
+def corner_aliases(number: int | None, name: str | None) -> list[str]:
+    out = (
+        [f"curva {number}", f"corner {number}", f"turn {number}", f"kurve {number}"]
+        if number is not None
+        else []
+    )
     if name:
         out.append(name)
         out.append(re.sub(r"^curva\s+", "", name, flags=re.IGNORECASE))
@@ -359,9 +364,11 @@ def _add_analysis(inp: ChatInputs, sheet: FactSheet) -> None:
         return
     geometry, b = info.geometry, inp.cfg.analysis.braking
     # the corners are referred to by number and name whether or not there is a lap to compare yet
+    sheet.official = getattr(geometry, "official", None)
     for c in geometry.apexes:
         sheet.alias(
-            Subject("corner", str(c.number)), *corner_aliases(c.number, info.names.get(c.number))
+            Subject("corner", str(c.number)),
+            *corner_aliases(official_of(geometry, c.number), info.names.get(c.number)),
         )
     candidates = [lap for lap in inp.laps if B.comparable(lap) and lap.time_ms > 0]
     for lap in reversed(candidates):
@@ -381,7 +388,10 @@ def _add_analysis(inp: ChatInputs, sheet: FactSheet) -> None:
         sheet.add(Fact("analysis.thresholds.min_time_s", b.min_time_s, "s"))
         for c in geometry.apexes:
             nm = info.names.get(c.number)
-            sheet.alias(Subject("corner", str(c.number)), *corner_aliases(c.number, nm))
+            sheet.alias(
+                Subject("corner", str(c.number)),
+                *corner_aliases(official_of(geometry, c.number), nm),
+            )
         found = B.worst_issue(comps, b)
         if found is not None:
             kind, w = found

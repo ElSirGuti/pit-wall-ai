@@ -596,3 +596,53 @@ def test_the_map_svg_has_the_line_the_numbers_and_the_names(tmp_path):
     assert ">1<" in svg and ">2<" in svg and "Alpha" in svg
     assert "Beta &lt;&amp;&gt;" in svg and "Test &amp; circuit" in svg  # escaped
     assert write_svg(tmp_path / "a" / "m.svg", g, {}, ()).is_file()
+
+
+def test_a_map_numbering_is_kept_apart_from_the_apex_numbering():
+    from types import SimpleNamespace
+
+    apexes = [
+        SimpleNamespace(number=i + 1, apex_fraction=f)
+        for i, f in enumerate((0.143, 0.156, 0.179, 0.271, 0.288, 0.349, 0.481, 0.682, 0.691))
+    ]
+    g = SimpleNamespace(apexes=apexes, track="imola")
+    m = circuit_names.official_map(g, "imola")
+    # the author's map: Tamburello 2-4, Villeneuve 5-6, Tosa 7, Variante Alta 14-15; Piratella not confirmed
+    assert m == {1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7, 8: 14, 9: 15}
+    circuit_names.attach_official(g, "imola")
+    assert circuit_names.official_of(g, 8) == 14 and circuit_names.official_of(g, 7) is None
+    assert circuit_names.apex_of(g, 14) == 8 and circuit_names.apex_of(g, 8) is None
+    # a circuit without a map list keeps the apex numbers
+    h = SimpleNamespace(apexes=apexes, track="zandvoort")
+    circuit_names.attach_official(h, "zandvoort")
+    assert circuit_names.official_of(h, 7) == 7 and circuit_names.apex_of(h, 7) == 7
+
+
+def test_the_chat_speaks_the_map_numbers_and_understands_them():
+    from types import SimpleNamespace
+
+    from pit_wall_ai.analysis.corner_text import describe_corner, find_corner
+
+    class G(SimpleNamespace):
+        pass
+
+    apexes = [
+        SimpleNamespace(
+            number=i + 1,
+            apex_fraction=f,
+            direction="left",
+            apex_m=f * 4800,
+            start_m=f * 4800 - 20,
+            end_m=f * 4800 + 20,
+            kind="single",
+        )
+        for i, f in enumerate((0.143, 0.156, 0.179, 0.271, 0.288, 0.349, 0.481, 0.682, 0.691))
+    ]
+    g = G(apexes=apexes, track="imola", length_m=4800.0)
+    circuit_names.attach_official(g, "imola")
+    names = {8: "Variante Alta 1"}
+    assert find_corner(g, "curva 14", names) == [8]  # the driver says the map's number
+    assert find_corner(g, "curva 8", names) == []  # a number the map has no apex for
+    text = describe_corner(g, 8, "es", names)
+    assert text.startswith("Variante Alta 1, que es la curva 14")
+    assert "curva 8" not in text
