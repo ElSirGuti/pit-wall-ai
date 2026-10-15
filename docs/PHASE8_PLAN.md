@@ -310,6 +310,35 @@ parts that need other cars, after 8b (rivals).
   racing, AC without a league plugin) and where there is a yellow or a full-course yellow its behaviour
   depends on the server. Strategy messages never assume one; a yellow-flag rule may add a note where the
   flag is verified.
+### 4b.1 Rain near the end: is it worth stopping? (added 2026-10-15, from the author)
+
+Rain that starts with few laps or little time left must not trigger the textbook "box for wets". The
+simulation (and the plain rules before it exists) has to weigh **what the stop costs against what the new
+tyres give back over what is left**, and only override that when staying out becomes unsafe.
+
+* **The comparison.** Stay out: the time lost per lap on slicks in the wet (growing if the rain grows).
+  Stop: the pit-lane loss (measured from the author's own stops, per circuit) plus the laps still to be driven
+  at the lower speed until the tyres are up to temperature, then the gain per lap on the right tyre for the
+  laps that remain. It pays only if `laps_left x gain_per_lap > pit_loss + margin`, and the margin carries the
+  uncertainty, so with 2 or 3 laps to go the answer is almost always "stay out", said with the numbers
+  ("quedan 2 vueltas: parar nos cuesta unos 22 s y recuperaríamos unos 3 s: nos quedamos").
+* **Scenarios, not a point guess.** The Monte Carlo run draws the rain over the remaining laps (it stays, it
+  grows, it stops), the lap-time loss on slicks, the gain on wets and the traffic on rejoining, and reports
+  the **chance that stopping beats staying** and the places at stake. The engineer says the recommendation and
+  how sure it is; below a stated confidence it says "es una moneda al aire" and leaves it to the driver.
+* **The override: a downpour.** If the conditions make slicks unsafe, the stop is urgent whatever the
+  arithmetic says. "Unsafe" is **measured, not declared**: the lap-time loss against the dry reference beyond
+  a limit, a rising count of slides and off-track events (the incident detection already exists), a falling
+  grip estimate, and the sim's own rain or wetness field where one exists. All thresholds are settings.
+* **Say what is not known.** The gain per lap on wets is unknown until the car has run them: a prior with a
+  wide spread (from the crossover model) is used and labelled as an estimate; once the driver has done laps on
+  both tyres the measured difference replaces it.
+* **The driver decides.** The message is advice with its reason; "sigo en pista" is respected and not repeated
+  every lap, and the quiet mode applies (an urgent downpour warning is the exception, like a critical alert).
+* **What it needs before it can be built**: a recording of a race or practice with a rain start and a stop
+  (to check the measured signals and the lap-time loss), the author's pit-lane loss at a few circuits, and
+  which fields each simulator gives for rain and track wetness (`docs/MULTI_SIM_PLAN.md`, the `probe`).
+
 * **Rules that stay**: numbers from code, the model only phrases, "no tengo ese dato" when the input is
   missing (no rivals, no wetness field), and every estimate labelled as such.
 * **Open**: which sims expose the wetness field and the cars' gaps (the 9 and 10 phases of

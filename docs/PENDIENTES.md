@@ -96,6 +96,15 @@ Con el desgaste real ya medido (ver "Ya cerrado"), de aquella lista quedan:
    curva (Monza en tu mapa: 8; la línea da 12) decidimos si añadimos una tabla ápice a número del mapa.
 4. Los que no se dibujan (Oran Park, Lime Rock) no tienen línea en tu instalación.
 
+## 5f. Lluvia al final de la carrera (planificación)
+
+Añadido a `docs/PHASE8_PLAN.md` (4b.1): con pocas vueltas por delante la parada solo compensa si
+`vueltas que quedan x ganancia por vuelta > pérdida en boxes + margen`; la simulación de Monte Carlo da la
+probabilidad de que parar sea mejor que quedarse, y solo una **situación peligrosa medida** (pérdida de
+tiempo, deslizamientos y salidas de pista, agarre estimado, campo de lluvia del juego) la vuelve urgente.
+Para construirla necesito: una grabación con una carrera o práctica en que empiece a llover y pares, tu
+pérdida en pit lane en algún circuito, y revisar qué campos de lluvia da cada simulador.
+
 ## 5d. Nombres de curvas (nuevo)
 
 Añadidos el 2026-10-15 a `data/circuits.json`, con la posición medida en la línea de tu instalación:
