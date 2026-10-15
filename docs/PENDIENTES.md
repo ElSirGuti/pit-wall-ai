@@ -71,8 +71,10 @@ Con el desgaste real ya medido (ver "Ya cerrado"), de aquella lista quedan:
 
 ## Ya cerrado
 
-* ~~Segunda sesión grabada y evaluación del chat~~ (2026-10-15): `sesion2`, `sesion3` y `sesion4` con el Shelby
-  Cobra 427 SC en Magione; el chat se evalúa también sobre la sesión 2 (`eval_report_sesion2.md`).
+* ~~Segunda sesión grabada y evaluación del chat~~ (2026-10-15): sesiones con el Shelby Cobra 427 SC en
+  Magione; el chat evaluado sobre `sesion3` (13 vueltas, otro coche y otro compuesto): **29 de 30** casos, 17
+  respuestas del modelo sin afirmaciones eliminadas, mediana 2,2 s (p95 4,1 s); el único fallo era un caso mal
+  planteado (exigía una cifra concreta del último aviso) y ya está corregido.
 * ~~Desgaste de neumáticos por curva~~ (2026-10-15): el canal de la memoria compartida no se mueve en esta
   configuración, pero con la app de neumáticos del juego como referencia el indicador por rueda coincide con
   el desgaste real en dos sesiones (correlación 1,00 con tu conducción y 0,99 con el piloto automático, mismo
