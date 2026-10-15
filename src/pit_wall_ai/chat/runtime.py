@@ -18,6 +18,7 @@ from ..analysis.trackctx import TrackAnalysis
 from ..analysis.tyre_corners import TyreLoadWatch
 from ..config import AppConfig
 from ..engineer.engine import Engineer
+from ..engineer.milestones import attach as attach_milestones
 from ..engineer.rules import build_rules
 from ..session.engine import SessionEngine
 from .context import BrakeWatch, ChatInputs
@@ -57,6 +58,14 @@ class ChatRuntime:
             )
         )
         self.engine.add_sample_hook(lambda snap, state, tracker, events: self.brakes.update(snap))
+        # pole / grid / result messages; the client is set by whoever builds the chat (it may be absent)
+        self.milestones = attach_milestones(
+            self.engine,
+            speaker or _SilentSpeaker(),
+            cfg,
+            quiet=lambda: self.engineer.quiet,
+            threaded=live,
+        )
         self.engine.add_sample_hook(lambda snap, state, tracker, events: self._tyre_load(snap))
 
     def _tyre_load(self, snap) -> None:

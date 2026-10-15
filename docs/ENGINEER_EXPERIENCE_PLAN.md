@@ -152,6 +152,27 @@ than one simulator exists, the structure is there and the only profile is AC.
 
 ---
 
+## Milestones: pole, grid and result (2026-10-15)
+
+`engineer/milestones.py`. Said once, by the engineer, and never the same sentence twice in a row:
+
+| When | Detected from | Example |
+|---|---|---|
+| after a best lap that leaves the car first in qualifying | `position` (the live classification by best time) + the lap event | "Tenemos la pole provisional" |
+| the qualifying session ends | the session changes (race or menu); the last position is the grid | "Aseguramos la pole, saldremos desde el primer puesto" / "Saldremos últimos, no pasa nada, intentaremos remontar" |
+| the race ends | `completed_laps >= number_of_laps`; start position = the last position seen standing on the grid | "Felicidades por esa remontada, salimos últimos y llegamos en el puesto 9" / "Eso es un podio" / "Ganamos saliendo desde la última posición..." |
+
+The facts (position, start position, places gained or lost, cars in the field) are computed in code. The
+wording is asked from the model, with a different tone each time and the recent sentences to avoid, and it is
+used only if **every number in it is one of the facts**; otherwise (no key, offline, a refused sentence) a pool
+of fixed variants in the three languages is used. It respects the "do not bother me" mode. Settings:
+`engineer.milestones.enabled` and `.use_model`.
+
+Verified on the real qualifying + race recording of the repository (18 cars): *grid last* and *race finished,
+started 18th and ended 9th, nine places gained*. **Not yet verified on real data**: the provisional pole (it
+needs a qualifying where the author is first), a race win, and a timed race with no lap count (the end of
+those is not detected yet: only races by laps).
+
 ## Languages (2026-10-14): es, en, de
 
 `engineer.language: es | en | de` selects the text AND the voice language. German covers: the spoken alerts

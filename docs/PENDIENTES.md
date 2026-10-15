@@ -58,7 +58,14 @@ Con el desgaste real ya medido (ver "Ya cerrado"), de aquella lista quedan:
   (`docs/PROVIDERS_PLAN.md`). Con 2 o más claves, `pit-wall llm-check` debe listarlas como aceptadas.
 * **Aprobar el plan de carrera (fase 8a)** y el resto de la fase 8 antes de empezar: `docs/PHASE8_PLAN.md`.
 
-## 5. Opcional, sin prisa
+## 5. Mensajes de pole y de resultado (nuevo)
+
+* una **qualy en la que salgas primero** y una **carrera por vueltas** que termines (idealmente subiendo
+  puestos): grábalas con `pit-wall record` y anota qué dijo el ingeniero; así se comprueban la pole
+  provisional, la victoria y el final de carrera;
+* una **carrera por tiempo** (sin número de vueltas): hoy el final no se detecta; con una grabación se añade.
+
+## 6. Opcional, sin prisa
 
 * **Una tanda manual variando** (6 a 8 vueltas, bloqueando, con mucho volante y con gas brusco) con captura de
   la app de neumáticos al principio y al final: da un tercer punto de validación del desgaste por curva, con

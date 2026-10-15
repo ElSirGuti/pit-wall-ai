@@ -372,6 +372,11 @@ def _start_engineer(
     engine.add_sample_hook(
         lambda snap, state, tracker, events: eng.on_sample(snap, state, tracker, events)
     )
+    from .chat.session import make_client
+    from .engineer.milestones import attach as attach_milestones
+
+    client, _why = make_client(cfg)
+    attach_milestones(engine, speech, cfg, client=client, quiet=lambda: eng.quiet)
     return speech
 
 

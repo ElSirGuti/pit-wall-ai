@@ -277,11 +277,21 @@ class PersonaConfig(_Model):
     custom: str | None = Field(None, max_length=400)  # the driver's own style notes
 
 
+class MilestonesConfig(_Model):
+    """Pole, grid and result messages: "tenemos pole provisional", "felicidades por esa remontada"."""
+
+    enabled: bool = True
+    use_model: bool = (
+        True  # wording written by the model (new every time); False = the fixed variants only
+    )
+
+
 class EngineerConfig(_Model):
     enabled: bool = False  # opt in: `pit-wall run --voice` or enabled: true
     language: Literal["es", "en", "de"] = "es"
     voice: VoiceConfig = VoiceConfig()
     persona: PersonaConfig = PersonaConfig()
+    milestones: MilestonesConfig = MilestonesConfig()
     calm: CalmConfig = CalmConfig()
     policies: PoliciesConfig = PoliciesConfig()
     rules: RulesConfig = RulesConfig()
