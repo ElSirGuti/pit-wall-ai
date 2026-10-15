@@ -187,11 +187,13 @@ Captura usada: Assetto Corsa 1.16.4, memoria compartida 1.7, servidor de prácti
 | 6 | Voz: push-to-talk en cualquier botón de cualquier dispositivo, elección de micrófono y de voz, reconocimiento local (CPU o GPU), respuestas habladas, reglas de radio semidúplex, "no molestes" ([guía](docs/VOICE.md), [plan](docs/PHASE6_PLAN.md)) | hecha y probada de punta a punta en simulación; falta la prueba en vivo con el volante |
 | 6c | El ingeniero como servidor MCP, para quien no tiene clave de API ([propuesta](docs/MCP_PLAN.md)) | propuesta, aplazada |
 | 6b | El ingeniero como personaje: persona y nombres, memoria de la conversación por curva, idiomas es / en / de | en parte hecha ([docs](docs/ENGINEER_EXPERIENCE_PLAN.md)): persona, memoria, idiomas, modo silencio; faltan perfiles por simulador y ahorro de combustible por curva |
-| 7 | Debrief post-sesión con Gemini | prevista |
+| 6d | Voces neuronales locales (Piper y servidores zero-shot con audio de referencia del propio usuario), perfiles de voz, efecto de radio ([plan](docs/VOICES_PLAN.md)) | propuesta |
+| 7 | Debrief post-sesión: informe escrito y un resumen hablado corto, con la comparación con la última vez ([plan](docs/PHASE7_PLAN.md)) | propuesta, a la espera de aprobación |
 | 8 | Preparación de carrera: plan de estrategia con checklist de práctica editable, resumen de rivales, sugerencias de reglaje y de estilo de conducción, **desgaste de neumáticos por curva** | el desgaste por curva está hecho (estimación validada por rueda contra la app de neumáticos del juego: `pit-wall tyre-corners`, y el chat lo contesta); el resto está previsto, ver [docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md) |
 | 9 | Más simuladores (ACC, iRacing, rFactor 2 / Le Mans Ultimate, Automobilista 2, RaceRoom, AC Evo) con detección automática | prevista, ver [docs/MULTI_SIM_PLAN.md](docs/MULTI_SIM_PLAN.md); hoy solo se soporta el Assetto Corsa original |
 | 10 | Eventos de carrera: banderas, daños, safety car, adelantamientos y huecos | prevista (necesita capturas reales y los datos de rivales), mismo plan |
 | 11 | Interfaz de ajustes (página web local) y perfiles por simulador | prevista, mismo plan |
+| 12 | Visor remoto de "muro abierto" de solo lectura sobre la red privada del propio usuario ([notas](docs/MULTI_SIM_PLAN.md)) | idea |
 
 ## Pendientes del autor
 

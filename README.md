@@ -186,11 +186,13 @@ Capture used: Assetto Corsa 1.16.4, shared-memory 1.7, LFM practice server, Toyo
 | 6 | Voice: push-to-talk on any button of any device, microphone and voice selection, local speech recognition (CPU or GPU), spoken answers, half-duplex radio rules, "do not bother me" ([guide](docs/VOICE.md), [plan](docs/PHASE6_PLAN.md)) | done and simulated end to end; the live test with the wheel is pending |
 | 6c | The engineer as an MCP server, for people without an API key ([proposal](docs/MCP_PLAN.md)) | proposal, deferred |
 | 6b | The engineer as a character: persona and names, conversation memory by corner, languages es / en / de | partly done ([docs](docs/ENGINEER_EXPERIENCE_PLAN.md)): persona, memory, languages, quiet mode; profiles per simulator and fuel saving per corner pending |
-| 7 | Post-session debrief with Gemini | planned |
+| 6d | Neural local voices (Piper and zero-shot servers with the user's own reference audio), voice profiles, radio effect ([plan](docs/VOICES_PLAN.md)) | proposal |
+| 7 | Post-session debrief: written report and a short spoken summary, with the comparison to last time ([plan](docs/PHASE7_PLAN.md)) | proposal, waiting for approval |
 | 8 | Race preparation: strategy plan with an editable practice checklist, rivals brief, setup and driving-style suggestions, **tyre wear by corner** | tyre wear by corner is done (an estimate, validated per wheel against the game's own tyre app: `pit-wall tyre-corners`, and the chat answers it); the rest is planned, see [docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md) |
 | 9 | More simulators (ACC, iRacing, rFactor 2 / Le Mans Ultimate, Automobilista 2, RaceRoom, AC Evo) with automatic detection | planned, see [docs/MULTI_SIM_PLAN.md](docs/MULTI_SIM_PLAN.md); only the original AC is supported today |
 | 10 | Race events: flags, damage, safety car, overtakes and gaps | planned (needs real captures and the rivals feed), same plan |
 | 11 | Settings interface (local web page) and profiles per simulator | planned, same plan |
+| 12 | Remote read-only "open pit wall" viewer over the user's own private network ([notes](docs/MULTI_SIM_PLAN.md)) | idea |
 
 ## Open items for the author
 

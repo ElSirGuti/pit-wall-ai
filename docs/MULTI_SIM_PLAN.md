@@ -160,6 +160,34 @@ Not planned:
   engineer is low and its interface is untested. Revisit only if asked.
 * **Automobilista 1**: superseded by AMS2 for the author.
 
+## 9. Notes from the author's conversation of 2026-10-15
+
+**The order the author stated** (AC first, then ACC, iRacing and RaceRoom, rFactor 2 / LMU / AC Evo last)
+differs from the order proposed in section 5, which was driven by what could be tested first (AMS2 and ACC
+before iRacing because iRacing needs an active subscription to test). Both are valid: the integration order
+follows what the author can run on a given day, and **the adapter interface does not depend on it**. The
+author's list adds Assetto Corsa Competizione, AC Evo, RaceRoom, iRacing, rFactor 2, Automobilista 2 and Le
+Mans Ultimate as the sims the tool should serve; AC Rally and AMS1 stay out.
+
+**A common telemetry type.** Every adapter fills the same `Snapshot`; the engine, the rules, the chat and the
+voice read only that. A new simulator is a new adapter plus its `detect()`; nothing in the rules changes. This
+is what section 3 of this plan already describes, and it is kept as the guard against sim-specific code
+leaking into the analysis (the corner geometry of phase 4 is the known exception: it needs a per-sim source).
+
+**A remote "open pit wall" viewer (idea).** A local web page, served by the program, with the lap times, the
+delta, the fuel and the tyres, so a friend or a coach can watch from another device while the driver races.
+
+* Hosting stays on the driver's PC: no server of the project, no cost, no accounts.
+* Another device reaches it through the user's own private network (Tailscale or ZeroTier, which are free
+  and open alternatives to Hamachi) or the same LAN; a direct peer-to-peer link (WebRTC) is possible but a
+  second project in itself.
+* It reuses the settings page of phase 11 (a local web server already planned) and the read-only parts of the
+  fact sheet; it exposes **no controls** and binds to the local network only, with a token.
+* Risks: exposing telemetry to a network (token, local-only default, no port forwarding advice), and the CPU
+  cost of a web server next to the game (measure it like the speech recogniser).
+
+Proposed as phase 12; nothing is built.
+
 ---
 
 ## Resumen en español

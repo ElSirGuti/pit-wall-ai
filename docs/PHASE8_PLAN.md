@@ -291,6 +291,30 @@ suggestion = { id, created, car, track, layout, conditions {air, road, compound,
 7. What is the simplest feedback capture that the driver will actually use mid-session? Decided: voice after the
    stint **and** buttons bindable to any input device (see [INPUT_BINDINGS.md](INPUT_BINDINGS.md)).
 
+## 4b. Phase 8d: the strategy engine (added 2026-10-15, from the author's notes)
+
+Three small engines whose inputs exist in every simulator the project targets, so they stay sim-agnostic
+(they read the common snapshot, never a game's own fields). They come **after** 8a (own data) and, for the
+parts that need other cars, after 8b (rivals).
+
+| Engine | Question | Inputs | Needs rivals | Output (always from numbers) |
+|---|---|---|---|---|
+| **Fuel** | can I finish, and how much must I save per lap? | fuel, laps or time left, the weighted consumption of the last laps (more weight on the recent ones) | no | "ahorra 0,15 L por vuelta para llegar" / "margen para apretar"; per-corner lift-and-coast only when the corner data supports it |
+| **Pit window and traffic** | if I stop now, where do I come out? | pit-lane loss per circuit (**measured from the author's own stops** and kept; a setting until then), gaps ahead and behind | yes (8b) | "si paramos ahora salimos P6 detrás del Porsche; dos vueltas más y salimos limpios" |
+| **Track and weather** | when do wets beat slicks? | wetness / grip signals (**which fields exist per sim is unverified**: `surface_grip`, rain intensity), lap times on each tyre | no, but needs a sim with dynamic weather | "con la pista a 40 % de humedad los mojados son 2 s más rápidos: box" |
+
+* **Simulation**: a Monte Carlo run of the rest of the race (pit lap, tyre degradation from the measured
+  trend, traffic from the gaps) only after the three engines above are verified on recorded data; it is a
+  decision aid and says its spread, not a single promise.
+* **Safety car is deliberately not a dependency.** It is not native in several of the sims (iRacing road
+  racing, AC without a league plugin) and where there is a yellow or a full-course yellow its behaviour
+  depends on the server. Strategy messages never assume one; a yellow-flag rule may add a note where the
+  flag is verified.
+* **Rules that stay**: numbers from code, the model only phrases, "no tengo ese dato" when the input is
+  missing (no rivals, no wetness field), and every estimate labelled as such.
+* **Open**: which sims expose the wetness field and the cars' gaps (the 9 and 10 phases of
+  `docs/MULTI_SIM_PLAN.md` answer it); the pit-lane loss needs the author's own pit stops to be measured.
+
 ## 5. Decisions taken (2026-10-13)
 
 * Main install is `D:` (has CSP). Races: private leagues on other servers and LFM, so no server plugin.

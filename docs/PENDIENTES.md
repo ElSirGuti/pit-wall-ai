@@ -71,6 +71,19 @@ Con el desgaste real ya medido (ver "Ya cerrado"), de aquella lista quedan:
   gasolina?" y dime si la respuesta tiene sentido; el archivo es `.pit-wall-ai/memory.jsonl` en tu carpeta de
   usuario (borrarlo olvida todo; `engineer.memory.enabled: false` lo apaga).
 
+## 5c. Planes nuevos que esperan tu respuesta (2026-10-15)
+
+* **Debrief post-sesión** (`docs/PHASE7_PLAN.md`): aprobar el plan y contestar sus 4 preguntas (sección 7).
+* **Voces neuronales, perfiles y efecto de radio** (`docs/VOICES_PLAN.md`): aprobar el plan, y decidir si
+  Piper en CPU por defecto te sirve y si quieres el efecto de radio con intensidad ajustable. Recuerda la
+  línea del plan: el proyecto no incluye ni nombra voces de personas reales; los perfiles zero-shot usan un
+  clip que tú aportas y tienes derecho a usar.
+* **Motor de estrategia** (`docs/PHASE8_PLAN.md`, sección 4b): combustible, ventana de parada con tráfico y
+  clima; sin dependencia del safety car. Pide que midamos la pérdida en pit lane con tus paradas reales.
+* **Visor remoto de muro abierto** (`docs/MULTI_SIM_PLAN.md`, sección 9): idea; decide si merece una fase.
+* **README en alemán** (`README.de.md`) para el portafolio: puedo traducir el README y los documentos clave;
+  dime si lo quieres y con qué alcance (solo README o también `docs/VOICE.md`).
+
 ## 6. Opcional, sin prisa
 
 * **Una tanda manual variando** (6 a 8 vueltas, bloqueando, con mucho volante y con gas brusco) con captura de
