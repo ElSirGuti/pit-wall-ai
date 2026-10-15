@@ -16,6 +16,7 @@ from __future__ import annotations
 import gc
 import logging
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -33,6 +34,15 @@ _PURGE_BEFORE_SPEAK = 2
 _RUNNING_SPEAKING = 2
 # primary language ids (the low 10 bits of the LCID that SAPI reports as a hex string)
 _PRIMARY_LANG = {"es": 0x0A, "en": 0x09, "de": 0x07}
+
+
+_PRONOUNCE = {"es": "pe ese i", "en": "P S I", "de": "pe es i"}
+
+
+def pronounce(text: str, language: str | None) -> str:
+    """What the synthesiser should read: SAPI voices say "psi" as a word ("sai"), so spell it out."""
+    spelled = _PRONOUNCE.get((language or "es")[:2].lower(), "P S I")
+    return re.sub(r"(?<![A-Za-z])psi(?![A-Za-z])", spelled, text, flags=re.IGNORECASE)
 
 
 class TtsBackend(Protocol):
@@ -312,7 +322,7 @@ class SapiTts:
         if self._voice is None:
             raise TtsUnavailable("voice not open")
         flags = _ASYNC | (_PURGE_BEFORE_SPEAK if interrupt else 0)
-        self._voice.Speak(text, flags)
+        self._voice.Speak(pronounce(text, self.language), flags)
 
     def is_speaking(self) -> bool:
         if self._voice is None:

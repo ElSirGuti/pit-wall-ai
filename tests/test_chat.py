@@ -298,7 +298,8 @@ def test_fuel_without_consumption_data_says_so():
 def test_tyre_answer_lists_each_wheel_with_its_own_numbers():
     _, a, _ = ask("¿cómo están los neumáticos?")
     t = a.text
-    assert "delantero izquierdo: 82 °C, 27,1 psi, desgaste 97,0 %" in t
+    # the game's wear channel is not stated unless engineer.wear_channel is on (it does not move in this setup)
+    assert "delantero izquierdo: 82 °C, 27,1 psi" in t and "desgaste" not in t
     assert "delantero derecho: 98 °C, 27,4 psi" in t
     assert "(soft)" in t
 
@@ -764,3 +765,11 @@ def test_a_question_about_one_corner_is_answered_about_that_corner_not_the_worst
 def test_corner_numbers_spoken_as_words_are_understood():
     _, a, _ = ask("¿cuánto perdí en la curva dos?")
     assert "Curvone (la curva 2)" in a.text and "pierdes" in a.text
+
+
+def test_psi_is_spelled_for_the_synthesiser():
+    from pit_wall_ai.voice.tts import pronounce
+
+    assert pronounce("27,1 psi en el trasero", "es") == "27,1 pe ese i en el trasero"
+    assert pronounce("psi", "en") == "P S I"
+    assert pronounce("psicología", "es") == "psicología"

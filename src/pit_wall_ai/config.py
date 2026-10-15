@@ -305,6 +305,9 @@ class EngineerConfig(_Model):
     policies: PoliciesConfig = PoliciesConfig()
     rules: RulesConfig = RulesConfig()
     startup_quiet_s: float = Field(5.0, ge=0)  # silence right after a session starts
+    # the game's shared-memory tyre wear does not move in this setup (the tyre app shows 18 % where it says 100 %):
+    # off, the engineer does not state a wear it cannot know; on, it reads that channel
+    wear_channel: bool = False
 
 
 class BrakingConfig(_Model):
