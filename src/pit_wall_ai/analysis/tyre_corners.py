@@ -93,6 +93,51 @@ def phase_of(brake: float, gas: float, steer: float) -> str | None:
     return None
 
 
+MIN_LAP_SAMPLES = 600  # about 30 s at 20 Hz: anything shorter is a fragment
+
+
+def _one_lap(
+    lap: int, ss: list[Snapshot], corners: list[Corner], length_m: float
+) -> LapLoad | None:
+    """The index of one lap's samples, or ``None`` when it is not a whole lap."""
+    if len(ss) < MIN_LAP_SAMPLES or lap == 0:  # an out lap or a fragment
+        return None
+    pos = np.array([s.normalized_pos for s in ss])
+    if pos.min() > 0.1 or pos.max() < 0.9:
+        return None
+    loads: dict[int, CornerLoad] = {}
+    tf = tr = 0.0
+    wheels = [0.0, 0.0, 0.0, 0.0]
+    prev_t = ss[0].t
+    n = 0
+    for s in ss:
+        dt = min(max(s.t - prev_t, 0.0), MAX_DT_S)
+        prev_t = s.t
+        if s.speed_kmh < MIN_SPEED_KMH:
+            continue
+        ph = phase_of(s.brake, s.gas, s.steer_angle)
+        if ph is None:
+            continue
+        slip = [abs(x) for x in s.wheel_slip]
+        load = s.wheel_load
+        f = dt * sum(slip[i] * load[i] for i in FRONT) / 1e3
+        r = dt * sum(slip[i] * load[i] for i in REAR) / 1e3
+        tf += f
+        tr += r
+        for i in range(4):
+            wheels[i] += dt * slip[i] * load[i] / 1e3
+        n += 1
+        cn = corner_of(s.normalized_pos * length_m, corners)
+        if cn is None:
+            continue
+        cl = loads.setdefault(cn, CornerLoad(cn))
+        cl.front[ph] += f
+        cl.rear[ph] += r
+    a, b = ss[0].tyre_wear, ss[-1].tyre_wear
+    drop = tuple(float(a[i] - b[i]) for i in range(4))
+    return LapLoad(lap, loads, tf, tr, drop, n, tuple(wheels))  # type: ignore[arg-type]
+
+
 def lap_loads(snaps: Iterable[Snapshot], corners: list[Corner], length_m: float) -> list[LapLoad]:
     """One :class:`LapLoad` per complete lap in the stream (pit laps and partial laps are left out)."""
     by_lap: dict[int, list[Snapshot]] = defaultdict(list)
@@ -101,43 +146,47 @@ def lap_loads(snaps: Iterable[Snapshot], corners: list[Corner], length_m: float)
             by_lap[s.completed_laps].append(s)
     out: list[LapLoad] = []
     for lap, ss in sorted(by_lap.items()):
-        if len(ss) < 600 or lap == 0:  # an out lap or a fragment
-            continue
-        pos = np.array([s.normalized_pos for s in ss])
-        if pos.min() > 0.1 or pos.max() < 0.9:
-            continue
-        loads: dict[int, CornerLoad] = {}
-        tf = tr = 0.0
-        wheels = [0.0, 0.0, 0.0, 0.0]
-        prev_t = ss[0].t
-        n = 0
-        for s in ss:
-            dt = min(max(s.t - prev_t, 0.0), MAX_DT_S)
-            prev_t = s.t
-            if s.speed_kmh < MIN_SPEED_KMH:
-                continue
-            ph = phase_of(s.brake, s.gas, s.steer_angle)
-            if ph is None:
-                continue
-            slip = [abs(x) for x in s.wheel_slip]
-            load = s.wheel_load
-            f = dt * sum(slip[i] * load[i] for i in FRONT) / 1e3
-            r = dt * sum(slip[i] * load[i] for i in REAR) / 1e3
-            tf += f
-            tr += r
-            for i in range(4):
-                wheels[i] += dt * slip[i] * load[i] / 1e3
-            n += 1
-            cn = corner_of(s.normalized_pos * length_m, corners)
-            if cn is None:
-                continue
-            cl = loads.setdefault(cn, CornerLoad(cn))
-            cl.front[ph] += f
-            cl.rear[ph] += r
-        a, b = ss[0].tyre_wear, ss[-1].tyre_wear
-        drop = tuple(float(a[i] - b[i]) for i in range(4))
-        out.append(LapLoad(lap, loads, tf, tr, drop, n, tuple(wheels)))  # type: ignore[arg-type]
+        done = _one_lap(lap, ss, corners, length_m)
+        if done is not None:
+            out.append(done)
     return out
+
+
+class TyreLoadWatch:
+    """The same index, gathered while driving: one lap is held until the lap counter changes.
+
+    New tyres (a different compound) start the count again, and incident laps are left out when the answer is
+    built (:func:`drop_incident_laps`). ``laps`` is what the chat reads.
+    """
+
+    def __init__(self, max_laps: int = 40) -> None:
+        self.laps: list[LapLoad] = []
+        self.max_laps = max_laps
+        self.compound = ""
+        self._lap: int | None = None
+        self._buf: list[Snapshot] = []
+
+    def reset(self) -> None:
+        self.laps.clear()
+        self._buf = []
+        self._lap = None
+
+    def update(self, s: Snapshot, corners: list[Corner], length_m: float) -> None:
+        if s.tyre_compound and self.compound and s.tyre_compound != self.compound:
+            self.reset()
+        if s.tyre_compound:
+            self.compound = s.tyre_compound
+        if self._lap is not None and s.completed_laps != self._lap:
+            done = _one_lap(self._lap, self._buf, corners, length_m)
+            if done is not None:
+                self.laps.append(done)
+                del self.laps[: -self.max_laps]
+            self._buf = []
+        self._lap = s.completed_laps
+        if not s.is_in_pit:
+            self._buf.append(s)
+            if len(self._buf) > 20000:  # a lap that never ends: do not grow without bound
+                self._buf = []
 
 
 def drop_incident_laps(laps: list[LapLoad], factor: float = 2.0) -> tuple[list[LapLoad], list[int]]:
@@ -259,6 +308,39 @@ def validate_reference(laps: list[LapLoad], drops: tuple[float, float, float, fl
     )
 
 
+ADVICE_EN = {
+    (
+        "front",
+        "brake",
+    ): "you lock or punish the fronts under braking: brake straighter and release before turning in",
+    ("front", "turn"): "too much steering in the turn: enter a little slower",
+    (
+        "front",
+        "throttle",
+    ): "the fronts slide on the throttle: open the steering before you add power",
+    ("rear", "brake"): "the rears unload under braking: check the brake balance",
+    ("rear", "turn"): "the rears slide in the turn: less throttle mid-corner",
+    ("rear", "throttle"): "the rears spin on the throttle: be progressive on the exit",
+}
+ADVICE_DE = {
+    (
+        "front",
+        "brake",
+    ): "du blockierst oder belastest die Vorderreifen beim Bremsen: gerader bremsen und vor dem Einlenken lösen",
+    ("front", "turn"): "zu viel Lenkeinschlag in der Kurve: etwas langsamer einfahren",
+    (
+        "front",
+        "throttle",
+    ): "die Vorderreifen rutschen beim Gasgeben: erst aufdrehen, dann Gas geben",
+    ("rear", "brake"): "die Hinterreifen werden beim Bremsen entlastet: Bremsbalance prüfen",
+    ("rear", "turn"): "die Hinterreifen rutschen in der Kurve: weniger Gas in der Kurvenmitte",
+    ("rear", "throttle"): "die Hinterreifen drehen beim Gasgeben durch: am Kurvenausgang dosieren",
+}
+PHASE_WORDS = {
+    "es": {"brake": "frenando", "turn": "girando", "throttle": "al acelerar"},
+    "en": {"brake": "braking", "turn": "turning", "throttle": "on the throttle"},
+    "de": {"brake": "beim Bremsen", "turn": "in der Kurve", "throttle": "beim Beschleunigen"},
+}
 ADVICE_ES = {
     (
         "front",

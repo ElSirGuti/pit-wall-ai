@@ -38,6 +38,7 @@ class Intent(StrEnum):
     UNKNOWN_DATA = "unknown_data"
     NOT_YET = "not_yet"  # setup and race strategy: planned for phase 8
     TIME_LEFT = "time_left"
+    TYRE_CORNERS = "tyre_corners"  # where the tyres are worked hardest (an estimate)
 
 
 # keyword tables: every entry is a normalised phrase searched as whole words
@@ -187,6 +188,25 @@ _KEYS[Intent.NOT_YET] = (
     "tyre strategy",
     "estrategia de neumaticos",
 )
+_KEYS[Intent.TYRE_CORNERS] = (
+    "en que curvas gasto",
+    "en que curvas estoy gastando",
+    "que curvas gasto",
+    "que curvas desgastan",
+    "que curvas gastan",
+    "donde gasto mas los neumaticos",
+    "donde gasto mas neumaticos",
+    "donde estoy gastando los neumaticos",
+    "donde desgasto",
+    "curvas que mas desgastan",
+    "gastando mas los neumaticos",
+    "which corners wear",
+    "where am i wearing",
+    "where do i wear",
+    "wearing the tyres most",
+    "wearing the tyres the most",
+    "which corners are wearing",
+)
 _KEYS[Intent.TIME_LEFT] = (
     "cuanto tiempo queda",
     "cuanto falta",
@@ -217,6 +237,7 @@ _HOTTEST = ("mas caliente", "mas calientes", "hottest")
 _COLDEST = ("mas fria", "mas frio", "coldest")
 _ORDER = (
     Intent.CORNER,
+    Intent.TYRE_CORNERS,
     Intent.LAST_ALERT,
     Intent.LOSS,
     Intent.PENALTY,
@@ -289,7 +310,7 @@ def route(question: str, track: TrackInfo | None = None, lang: str = "es") -> Ro
     if Intent.NOT_YET in found:
         return Routed((Intent.NOT_YET,), corners)
     # a corner or an alert explanation is a question on its own
-    for solo in (Intent.CORNER, Intent.LAST_ALERT):
+    for solo in (Intent.CORNER, Intent.TYRE_CORNERS, Intent.LAST_ALERT):
         if solo in found:
             return Routed((solo,), corners)
     # a braking/losing question already covers "frenadas": do not also dump the brake temperatures
@@ -774,6 +795,79 @@ def _last_alert(sheet, lang, track, routed, th):
     return f"{when}the alert was “{text}”, from the {rule} rule.{said}", keys
 
 
+def tyre_corners_answer(sheet, lang, names, corner_ref):
+    """Shared by the three languages: ``corner_ref(number)`` writes the corner as that language says it."""
+    from ..analysis import tyre_corners as TC
+
+    n = sheet.value("tyre_corners.laps")
+    need = sheet.value("tyre_corners.laps_needed")
+    if n is None:
+        return NO_DATA[lang], []
+    if n < (need or 0):
+        text = {
+            "es": f"Todavía no tengo suficientes vueltas con estos neumáticos para decirlo: llevo {n} y necesito {need}.",
+            "en": f"I do not have enough laps on these tyres to say yet: I have {n} and need {need}.",
+            "de": f"Ich habe noch nicht genug Runden mit diesen Reifen: {n} vorhanden, {need} nötig.",
+        }[lang]
+        return text, ["tyre_corners.laps", "tyre_corners.laps_needed"]
+    keys = ["tyre_corners.laps"]
+    parts = []
+    first_advice = None
+    for axle in ("front", "rear"):
+        bits = []
+        for j in range(3):
+            k = f"tyre_corners.{axle}.R{j}"
+            c = sheet.value(f"{k}.corner")
+            if c is None:
+                break
+            share = sheet.value(f"{k}.share_pct")
+            phase = sheet.value(f"{k}.phase")
+            keys += [f"{k}.corner", f"{k}.share_pct"]
+            if j == 0:
+                piece = f"{corner_ref(int(c))} ({_num(share, 0, lang)} %, {TC.PHASE_WORDS[lang][phase]})"
+                if first_advice is None:
+                    first_advice = (axle, phase, int(c))
+            else:
+                piece = f"{corner_ref(int(c))} ({_num(share, 0, lang)} %)"
+            bits.append(piece)
+        if bits:
+            parts.append((axle, ", ".join(bits)))
+    if not parts:
+        return NO_DATA[lang], []
+    front = next((b for a, b in parts if a == "front"), "")
+    rear = next((b for a, b in parts if a == "rear"), "")
+    if lang == "es":
+        head = (
+            f"Es una estimación con el indicador de carga de las {_num(n, 0, lang)} vueltas de estos neumáticos, "
+            "no una medida directa. "
+        )
+        body = f"Delanteros: {front}. Traseros: {rear}."
+        advice = TC.ADVICE_ES.get(first_advice[:2]) if first_advice else None
+        tail = f" Para bajarlo en {corner_ref(first_advice[2])}: {advice}." if advice else ""
+    elif lang == "de":
+        head = (
+            f"Das ist eine Schätzung mit dem Belastungsindex der {_num(n, 0, lang)} Runden dieser Reifen, "
+            "keine direkte Messung. "
+        )
+        body = f"Vorne: {front}. Hinten: {rear}."
+        advice = TC.ADVICE_DE.get(first_advice[:2]) if first_advice else None
+        tail = f" Um es bei {corner_ref(first_advice[2])} zu senken: {advice}." if advice else ""
+    else:
+        head = (
+            f"This is an estimate from the load index of the {_num(n, 0, lang)} laps on these tyres, "
+            "not a direct measurement. "
+        )
+        body = f"Fronts: {front}. Rears: {rear}."
+        advice = TC.ADVICE_EN.get(first_advice[:2]) if first_advice else None
+        tail = f" To reduce it at {corner_ref(first_advice[2])}: {advice}." if advice else ""
+    return head + body + tail, keys
+
+
+def _tyre_corners(sheet, lang, track, routed, th):
+    names = track.names if track is not None else {}
+    return tyre_corners_answer(sheet, lang, names, lambda c: _corner_ref(sheet, c, names, lang))
+
+
 def _time_left(sheet, lang, track, routed, th):
     left = sheet.value("session.time_left_s")
     if left is not None and left > 0:
@@ -832,4 +926,5 @@ _BUILDERS = {
     Intent.UNKNOWN_DATA: _unknown,
     Intent.NOT_YET: _not_yet,
     Intent.TIME_LEFT: _time_left,
+    Intent.TYRE_CORNERS: _tyre_corners,
 }

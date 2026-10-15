@@ -321,6 +321,8 @@ class AnalysisConfig(_Model):
     # circuits whose corner NUMBERING the user has checked against the real track: only for those does
     # the voice say "corner N". Without a name or a verified number it describes the stretch.
     verified_numbering: list[str] = Field(default_factory=list)
+    # laps of the same set of tyres (incident laps left out) before the engineer says where they wear most
+    tyre_corners_min_laps: int = Field(6, ge=3, le=40)
 
 
 class ChatConfig(_Model):

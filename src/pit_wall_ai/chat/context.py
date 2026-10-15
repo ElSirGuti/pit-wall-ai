@@ -82,6 +82,7 @@ class ChatInputs:
     alerts: Sequence[AlertRecord] = ()
     track: TrackInfo | None = None
     brakes: BrakeWatch | None = None
+    tyre_watch: object | None = None  # TyreLoadWatch: the index of the laps of this set of tyres
     now: float | None = None  # same clock as ``snap.t``
 
 
@@ -251,6 +252,7 @@ def build_facts(inp: ChatInputs) -> FactSheet:
 
     # -- the last lap against the best, corner by corner ------------------------------------------------
     _add_analysis(inp, sheet)
+    _add_tyre_corners(inp, sheet)
 
     # -- what the engineer said recently ------------------------------------------------------------------
     for j, rec in enumerate(list(inp.alerts)[-RECENT_ALERTS:][::-1]):
@@ -318,6 +320,36 @@ def _fuel_per_lap(inp: ChatInputs) -> float | None:
     return FuelRule(inp.cfg.engineer.rules.fuel).per_lap(_T())  # type: ignore[arg-type]
 
 
+def _add_tyre_corners(inp: ChatInputs, sheet: FactSheet) -> None:
+    """Where the tyres are worked hardest (an estimate from the slip x load index; see tyre_corners.py)."""
+    from ..analysis import tyre_corners as TC
+
+    watch = inp.tyre_watch
+    if watch is None:
+        return
+    laps, _dropped = TC.drop_incident_laps(list(watch.laps))
+    need = inp.cfg.analysis.tyre_corners_min_laps
+    sheet.add(Fact("tyre_corners.laps", len(laps)))
+    sheet.add(Fact("tyre_corners.laps_needed", need))
+    if len(laps) < need:
+        return
+    for axle in ("front", "rear"):
+        for j, (corner, share, phase) in enumerate(TC.ranking(laps, axle)[:3]):
+            k = f"tyre_corners.{axle}.R{j}"
+            sub = Subject("corner", str(corner))
+            sheet.add(Fact(f"{k}.corner", corner, "", sub))
+            sheet.add(
+                Fact(
+                    f"{k}.share_pct",
+                    _r(share * 100, 0),
+                    "%",
+                    sub,
+                    (round(share * 100, 0), round(share * 100, 1)),
+                )
+            )
+            sheet.add(Fact(f"{k}.phase", phase))
+
+
 def _add_analysis(inp: ChatInputs, sheet: FactSheet) -> None:
     info = inp.track
     if info is None or info.geometry is None:
@@ -325,6 +357,11 @@ def _add_analysis(inp: ChatInputs, sheet: FactSheet) -> None:
             sheet.add(Fact("analysis.unavailable", info.reason))
         return
     geometry, b = info.geometry, inp.cfg.analysis.braking
+    # the corners are referred to by number and name whether or not there is a lap to compare yet
+    for c in geometry.apexes:
+        sheet.alias(
+            Subject("corner", str(c.number)), *corner_aliases(c.number, info.names.get(c.number))
+        )
     candidates = [lap for lap in inp.laps if B.comparable(lap) and lap.time_ms > 0]
     for lap in reversed(candidates):
         ref = B.reference_lap(list(inp.laps), lap)

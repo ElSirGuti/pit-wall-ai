@@ -152,6 +152,7 @@ analysis:               # phase 4: track geometry and braking analysis
   ac_dirs: []           # folders to search for the game's tracks: the game folder, a Steam library or its
                         # content/tracks. Empty = look in the usual Steam locations and in $AC_PATH.
                         # e.g. ["E:/SteamLibrary", "D:/SteamLibrary"]
+  tyre_corners_min_laps: 6 # laps on the same tyres before "where do I wear the tyres most" is answered
   verified_numbering: [] # track ids whose corner numbering you have checked against the real circuit;
                         # only for those (or corners with a known name) does the voice say the corner
   braking:              # braking per corner vs the best valid lap of the session (same compound)

@@ -149,7 +149,8 @@ CASES: tuple[Case, ...] = (
         "open-alert",
         "open",
         "explícame el último aviso que diste",
-        any_of=("alerts.A0.values.lap", "laps.best.time_s"),
+        # whatever the alert was (a lap summary or a braking hint) the answer must not invent: it is checked
+        # by the grounding like every other case; no specific number is demanded
         needs=("alerts.A0.text",),
     ),
     Case(

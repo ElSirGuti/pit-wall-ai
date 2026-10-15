@@ -83,6 +83,15 @@ KEYS: dict[str, tuple[str, ...]] = {
         "runden gefahren",
         "wie viele runden bin ich",
     ),
+    "tyre_corners": (
+        "in welchen kurven verschleisse",
+        "in welchen kurven verbrauche",
+        "welche kurven verschleissen",
+        "wo verschleisse ich",
+        "wo verbrauche ich die reifen",
+        "wo verbrauche ich am meisten reifen",
+        "in welchen kurven gehen die reifen",
+    ),
     "time_left": (
         "wie viel zeit",
         "wie lange noch",
@@ -449,7 +458,15 @@ def unknown(sheet, track, routed, th):
     ), []
 
 
+def tyre_corners(sheet, track, routed, th):
+    from . import local as L
+
+    names = track.names if track is not None else {}
+    return L.tyre_corners_answer(sheet, "de", names, lambda c: corner_ref(sheet, c, names))
+
+
 BUILDERS = {
+    "tyre_corners": tyre_corners,
     "fuel": fuel,
     "laps": laps,
     "tyres": tyres,

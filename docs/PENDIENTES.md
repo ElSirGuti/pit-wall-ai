@@ -3,181 +3,90 @@
 Lista viva de lo que **tiene que hacer una persona** (no el código). Se actualiza cuando algo se cierra.
 Última actualización: 2026-10-15.
 
-## Cuando vuelvas a casa (con el juego abierto)
+El orden es por lo que más desbloquea. Lo que ya está hecho está al final, en "Ya cerrado".
 
-### 1. Grabar una segunda sesión para la evaluación del chat  ·  ~20 min
+## 1. Una sentada de mediciones  ·  guion en `docs/SESION_MEDICION.md`
 
-La evaluación del chat (`pit-wall eval`) solo se ha probado con **una** ventana de carrera (Magione, MX-5, 6
-minutos). Para que el 34/34 signifique algo más hace falta otro coche u otra pista.
+Con el desgaste real ya medido (ver "Ya cerrado"), de aquella lista quedan:
 
-Qué grabar:
+* **FPS con el reconocedor de voz**: medir tres bloques de 3 vueltas, misma pista y coche, y anotar FPS medio y
+  mínimo en cada uno. Ya tienes un dato: 142 FPS de media con `record` y `run --voice` corriendo.
 
-* **Otro coche y/o otra pista**. Lo mejor: un coche donde la **temperatura de frenos sí se mueva** (los GT3/GT4
-  suelen tenerla; el Supra GT4 no) y una pista con nombres de curvas en la tabla (Spa, Imola, Mugello) o
-  Magione con otro coche.
-* **Práctica de 6 a 8 vueltas**; en una o dos, frena claramente antes o después en una curva (para que haya
-  avisos de frenada), y si quieres provoca un trompo o una salida de pista.
+  | Bloque | En paralelo | FPS medio | FPS mínimo |
+  |---|---|---|---|
+  | 1 | nada (juego solo) | ? | ? |
+  | 2 | `pit-wall stt-test --device cpu --repeat 30` | ? | ? |
+  | 3 | `pit-wall stt-test --device cuda --repeat 30` | ? | ? |
 
-Comandos (dos terminales, como la otra vez):
+  Con eso se fija `stt.device` para Assetto Corsa.
+* **Eventos del juego** (una grabación corta con `pit-wall record` alrededor de cada uno; apunta la hora):
+  bandera amarilla, azul, blanca, negra y las penalizaciones de AC nativo (límites de pista y salida en falso);
+  un contacto que cause daño; y safety car si algún modo lo ofrece. Si usas Real Penalty, el log de la sesión
+  (`...\assettocorsa\apps\python\RealPenalty\logs\session_<fecha>.log`). Con eso se activan las reglas con
+  datos reales (hoy están apagadas porque nunca se ha capturado un evento).
 
-```
-cd E:\Documents\pit-wall-ai
-.venv\Scripts\pit-wall record --out sesion2.pwrec.gz
-```
+## 2. Voz: probarla con tu equipo  ·  `docs/VOICE.md`
 
-y, si quieres oír los avisos mientras grabas, en la otra terminal:
+* En casa, con `pip install -e ".[voice,stt]"`: `pit-wall devices`, `pit-wall mic-test --device <nombre>` y
+  `pit-wall voices --test`; anotar el micrófono, la salida y la voz que prefieres y ponerlos en
+  `config/local.yaml`.
+* **El botón del volante**: con G HUB abierto, `pit-wall input-test --seconds 30` (pulsa botones y paletas del
+  G29, una tecla y un botón del ratón), y después `pit-wall bind push_to_talk` y `pit-wall bindings`. Es lo
+  único de la voz que no se ha podido probar sin ti.
+* **Frases habladas** (`docs/FRASES_VOZ.md`): las 40 en español, en silencio y con el coche sonando, con el
+  micrófono o con el móvil (en `frases/telefono/`). Con ellas se cierra el paso 5 de la voz y se decide si
+  `small` basta o conviene `medium`.
+* **Probar la conversación en vivo**: `pit-wall voice` (botón + micrófono) o al menos `pit-wall chat` con una
+  práctica abierta; sobre todo "¿dónde pierdo tiempo?", "¿en qué curvas gasto más los neumáticos?" y
+  "no molestes".
 
-```
-.venv\Scripts\pit-wall run --voice --plain --log-level INFO
-```
+## 3. Idiomas (alemán e inglés)
 
-Al terminar (`Ctrl+C`), recorta una ventana pequeña para el repositorio (menos de 1 MB):
+* Instalar una voz alemana de Windows (Configuración > Hora e idioma > Voz > Agregar voces > "Deutsch
+  (Deutschland)", trae Hedda y Katja) y elegirla con `pit-wall voices --test`.
+* Poner `engineer.language: de` (o `en`) en `config/local.yaml` y leer las frases de `docs/FRASES_VOZ.md`;
+  decirme si el reconocimiento en alemán es suficiente y qué preguntas no entiende el enrutado local.
 
-```
-.venv\Scripts\pit-wall trim --file sesion2.pwrec.gz --from 0 --to 420 --rate 10 --out tests\fixtures\live_<pista>_<coche>_window.pwrec.gz
-```
+## 4. Seguridad y decisiones
 
-(ajusta `--from`/`--to` en segundos para quedarte con las vueltas buenas; `--rate 10` basta).
+* **Rotar la clave de Gemini.** Las dos claves que has usado quedaron escritas en la conversación. Entra a
+  Google AI Studio > API keys, borra las usadas y crea una nueva solo para el proyecto; ponla en `.env` como
+  `GEMINI_API_KEY=...` (`.env` está ignorado por git).
+* **Claves de reserva**: decidir cuáles poner (`GEMINI_API_KEY_2`... o `GEMINI_API_KEY_LIST=a,b,c`). Revisa
+  los términos de Google antes de usar muchas cuentas gratuitas: las cuotas son por proyecto y los términos
+  pueden prohibir abrir cuentas para sortear los límites. Una alternativa es otro proveedor como reserva
+  (`docs/PROVIDERS_PLAN.md`). Con 2 o más claves, `pit-wall llm-check` debe listarlas como aceptadas.
+* **Aprobar el plan de carrera (fase 8a)** y el resto de la fase 8 antes de empezar: `docs/PHASE8_PLAN.md`.
 
-Luego, **con la clave nueva** en `.env` (ver el punto 2) y `config\local.yaml` con `provider: gemini` y
-`allow_cloud: true`:
+## 5. Opcional, sin prisa
 
-```
-.venv\Scripts\pit-wall eval --file tests\fixtures\live_<pista>_<coche>_window.pwrec.gz --session practice --out eval_report_2.md
-```
-
-Y me pasas el `.pwrec.gz` recortado y el resultado (o `eval_report_2.md`). Yo lo añado como fixture y amplío el
-conjunto. Los casos están escritos sobre **hechos de la sesión**, no sobre números fijos, así que valen para
-cualquier grabación.
-
-### 2. Rotar la clave de Gemini  ·  2 min
-
-La clave que me pasaste quedó escrita en la conversación. Aunque ya la quité del disco (`.env` está vacío):
-
-1. Entra a Google AI Studio → API keys y **borra** la que usé.
-2. Crea una nueva **solo** para el proyecto (proyecto de AI Studio aparte, sin facturación).
-3. Ponla en `E:\Documents\pit-wall-ai\.env` como `GEMINI_API_KEY=...` cuando vayas a repetir pruebas.
-
-### 3. Probar el botón de push-to-talk con tu volante  ·  5 min
-
-Es lo único del paso 1 de la Fase 6 que no he podido comprobar sin ti (necesita que pulses un botón). Con el
-G HUB abierto, como cuando juegas:
-
-```
-.venv\Scripts\pit-wall input-test --seconds 30
-```
-
-pulsa y suelta botones y paletas del G29, una tecla (por ejemplo F9) y un botón lateral del ratón. Debe salir
-una línea `press` y otra `release` por cada pulsación, con el nombre del dispositivo. Si algún botón del volante
-no sale, dímelo (puede ser el G HUB). Cuando salgan todos, asigna el tuyo:
-
-```
-.venv\Scripts\pit-wall bind push_to_talk
-.venv\Scripts\pit-wall bindings
-```
-
-### 4. Probar el chat con el juego en vivo (opcional, 10 min)
-
-```
-.venv\Scripts\pit-wall chat
-```
-
-con una práctica abierta, y preguntar tras una vuelta: `¿cuánta gasolina queda?`, `¿dónde pierdo tiempo?`,
-`¿cuál es la curvone?`, `¿qué fue eso?`. Interesa sobre todo `¿dónde pierdo tiempo?` en vivo (en las pruebas
-solo se ha probado sobre grabaciones).
-
-### 5. Capturas para los eventos (banderas, daños, safety car)  ·  cuando puedas
-
-Ninguna regla de banderas ni de daños está activada porque **nunca se ha capturado un evento real**. Para cada
-una, una grabación corta con `pit-wall record` (basta un minuto alrededor del evento):
-
-* **bandera amarilla** y **bandera azul** (contra coches de la IA: ponte detrás de uno lento o deja que te
-  doblen);
-* **bandera negra / penalización** si puedes provocarla;
-* **un contacto que cause daño** (choca contra un muro a poca velocidad);
-* **safety car o penalización con Real Penalty activado**, y de esa sesión el archivo de log más reciente de
-  `...\assettocorsa\apps\python\RealPenalty\logs\` (se llama `session_<fecha>.log`).
-
-Con eso se activan las reglas con datos reales, y se decide si el safety car se lee del log de Real Penalty o
-con una app puente. Detalle en `docs/ENGINEER_EXPERIENCE_PLAN.md`, secciones 3 y 8.
-
-## Para la Fase 6 (voz)
-
-Ver `docs/PHASE6_PLAN.md`, sección "Preguntas para el autor". Lo que necesitaré de ti:
-
-* ~~decidir qué botón será el push-to-talk y con qué micrófono hablas~~ (respondido: configurable; el botón lo asignas tú con `pit-wall bind`);
-* decidir cómo quieres que se comporte un aviso medio mientras te contesta el ingeniero (ver el ejemplo en el plan);
-* ~~cómo se comporta un aviso medio mientras contesta el ingeniero~~ (decidido: gana el que empieza primero; los críticos siempre salen);
-* en casa, con el paquete de voz instalado (`pip install -e ".[voice]"`): ejecutar `pit-wall devices`, `pit-wall mic-test --device seiren` (o el casco) y `pit-wall voices --test`, y anotar qué micrófono, qué salida y qué voz prefieres para ponerlos en `config/local.yaml`;
-* si quieres otra voz: bájala en Configuración de Windows > Hora e idioma > Voz > Agregar voces, y vuelve a ejecutar `pit-wall voices`;
-* medir el efecto de `stt.device: cuda` vs `cpu` en los fps del juego: `pit-wall stt-test --device both` con el juego abierto y comparar fps (instalar `pip install -e ".[stt,stt-cuda]"`);
-* grabar las **40 frases habladas** de `docs/FRASES_VOZ.md` (tanda en silencio y tanda con el coche sonando)
-  para medir el reconocimiento de voz con tu voz y tu micrófono;
-* "psi" mal reconocido: resuelto con una tabla de correcciones (`stt/postfix.py`); con tus frases reales se amplía o se prueba el modelo `medium`;
-* idea nueva (2026-10-14): **desgaste de neumáticos por curva** con consejo para reducirlo, ver
-  `docs/PHASE8_PLAN.md` 3.4; espera tu aprobación del plan y una grabación de al menos 8 vueltas.
-
-## Modelo en la nube (probado 2026-10-14)
-
-* con la clave nueva en `.env`: `llm-check` 3/3 (mediana 0,78 s, `gemini-3.5-flash-lite`) y `pit-wall eval`
-  **34/34**, 21 respuestas del modelo sin afirmaciones eliminadas, latencia mediana 0,94 s, p95 1,09 s;
-* los cinco estilos de `engineer.persona` se notan en la redacción y mantienen las cifras;
-* **la clave se pegó en el chat: rótala cuando termines las pruebas** (solo está en `.env`, ignorado por git).
-
-Corregido: los tiempos de vuelta del modelo se leen como minutos y segundos (1:24,913).
-
-## Sesión única de mediciones
-
-Todo lo que falta medir con tu PC está ordenado en **`docs/SESION_MEDICION.md`** para hacerlo en una sola
-sentada: micrófono y voces, frases (`docs/FRASES_VOZ.md`), fps con el reconocedor en CPU y GPU, y una sesión de
-pista con coche de desgaste real, banderas, daños y penalizaciones. Lo de arriba se resuelve con ese guion.
-
-## Desgaste de neumáticos por curva (en curso)
-
-* hecho: el indicador por rueda coincide con el desgaste que marca la app de neumáticos del juego (sesion3,
-  Cobra 427 SC en Magione): `pit-wall tyre-corners sesion3.pwrec.gz --reference 83,88,70,75`;
-* hecho: `sesion3` (tú) y `sesion4` (piloto automático) validan el indicador por rueda (correlación 1,00 y
-  0,99, mismo orden);
-* tuyo, sin prisa: una tanda manual variando (6 a 8 vueltas) con captura de la app al principio y al final;
-* mío: que el ingeniero conteste "¿en qué curvas gasto más los neumáticos?" con el indicador, dicho como
-  estimación (pendiente de tu visto bueno al texto).
-
-## Varias claves de API (reserva)
-
-* hecho: `GEMINI_API_KEY`, `GEMINI_API_KEY_2` ... o `GEMINI_API_KEY_LIST=a,b,c` en `.env`; pasa a la
-  siguiente cuando una agota su cuota (`docs/LLM.md`);
-* decidir **qué claves poner**: revisa los términos de Google antes de usar muchas cuentas gratuitas, porque
-  las cuotas son por proyecto y los términos pueden prohibir abrir cuentas para sortear los límites;
-  una alternativa que no depende de eso es otro proveedor como reserva (ver `docs/PROVIDERS_PLAN.md`);
-* probar con `pit-wall llm-check` cuando tengas 2 o más: debe listar cada clave como aceptada.
-
-## Idiomas (alemán e inglés)
-
-* instalar una voz alemana en Windows (Configuración > Hora e idioma > Voz > Agregar voces > "Deutsch
-  (Deutschland)", trae Hedda y Katja) y ejecutar `pit-wall voices --test` para elegirla;
-* poner `engineer.language: de` en `config/local.yaml` y leer las frases alemanas de `docs/FRASES_VOZ.md`
-  (con el móvil, en `frases/telefono/`) para medir el reconocimiento en alemán; lo mismo con `en`;
-* decirme si el reconocimiento en alemán con el modelo `small` es suficiente o conviene `medium`;
-* las respuestas locales en alemán ya existen (`chat/local_de.py`): comprobar con frases reales que el
-  enrutado entiende tu forma de preguntar y decirme las que no reconozca.
-
-## Modo MCP (para quien no tiene clave de API) — aplazado, sin prisa
-
-Propuesta en `docs/MCP_PLAN.md`, sin código; decidido el 2026-10-14 que puede esperar. Solo cubre la
-conversación (los avisos siguen siendo de la voz local). Cuando se retome, lo que necesito de ti:
-
-* la documentación de los MCP que has desarrollado (convenciones de nombres de herramientas, respuestas
-  cortas y largas, errores, consentimiento y registro), para que éste se parezca a los tuyos;
-* decir qué cliente usarías (Claude Desktop u otro) y si quieres que las alertas críticas sigan saliendo por
-  la voz local mientras conversas con el asistente;
-* decir si el valor por defecto de `mcp.local_voice` te parece bien: `critical` (la voz local solo dice los
-  críticos mientras hablas con el asistente); las otras opciones son `on`, `off` y `auto`;
-* decir qué avisos rutinarios quieres que la voz local siga diciendo en modo MCP además de los críticos
-  (`mcp.local_voice_always`; propuesta por defecto: solo `lap_summary`, el resumen de vuelta);
-* aprobar o corregir el plan (sección 4) antes del paso 1.
+* **Una tanda manual variando** (6 a 8 vueltas, bloqueando, con mucho volante y con gas brusco) con captura de
+  la app de neumáticos al principio y al final: da un tercer punto de validación del desgaste por curva, con
+  tu forma de conducir.
+* **Una grabación pequeña como fixture** de la sesión del Cobra, si quieres que entre al repositorio:
+  `pit-wall trim --file sesion3.pwrec.gz --from 0 --to 600 --rate 10 --out tests\fixtures\live_magione_cobra427_window.pwrec.gz`
+  (el nombre debe ser real, sin `<` ni `>`).
+* **Modo MCP** (aplazado, `docs/MCP_PLAN.md`): cuando se retome, necesito la documentación de tus MCP, el
+  cliente que usarías y el valor por defecto de `mcp.local_voice` y de `mcp.local_voice_always`.
 
 ## Ya cerrado
 
-* ~~Pregunta "¿cuánto tiempo queda?" en carrera sin límite~~ (2026-10-15): ahora dice que la sesión no tiene
-  límite de tiempo.
-* ~~Forma de recortar una grabación grande a un tamaño publicable~~ (2026-10-15): `pit-wall trim`.
+* ~~Segunda sesión grabada y evaluación del chat~~ (2026-10-15): `sesion2`, `sesion3` y `sesion4` con el Shelby
+  Cobra 427 SC en Magione; el chat se evalúa también sobre la sesión 2 (`eval_report_sesion2.md`).
+* ~~Desgaste de neumáticos por curva~~ (2026-10-15): el canal de la memoria compartida no se mueve en esta
+  configuración, pero con la app de neumáticos del juego como referencia el indicador por rueda coincide con
+  el desgaste real en dos sesiones (correlación 1,00 con tu conducción y 0,99 con el piloto automático, mismo
+  orden de las cuatro ruedas): `pit-wall tyre-corners sesion3.pwrec.gz --reference 83,88,70,75`. El
+  ingeniero ya contesta "¿en qué curvas gasto más los neumáticos?" como estimación, con la causa y el consejo.
+* ~~Modelo en la nube probado~~ (2026-10-14): `llm-check` 3/3 y `pit-wall eval` 34/34, estilos de la persona
+  verificados, tiempos de vuelta como minutos y segundos.
+* ~~Voz de punta a punta en simulación~~ (2026-10-14): micrófono, reconocimiento local (CPU 1,9 s y GPU 0,4 s
+  por pregunta), reglas de radio, modo "no molestes" y órdenes habladas.
+* ~~Idiomas~~ (2026-10-14): español, inglés y alemán en alertas, respuestas locales, modelo, órdenes,
+  memoria y reconocimiento.
+* ~~Varias claves de API~~ (2026-10-14): reserva en orden, con la comprobación de cada clave.
+* ~~Decisiones de la voz~~: gana el que empieza primero, los críticos siempre salen, solo se dicen los
+  eventos críticos e importantes, el botón se asigna con `pit-wall bind`.
+* ~~"psi" mal reconocido~~: tabla de correcciones en `stt/postfix.py`; se amplía con tus frases reales.
+* ~~"¿Cuánto tiempo queda?" en carrera sin límite~~: dice que la sesión no tiene límite de tiempo.
+* ~~Recortar una grabación a un tamaño publicable~~: `pit-wall trim`.

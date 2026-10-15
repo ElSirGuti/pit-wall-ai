@@ -15,6 +15,7 @@ from pathlib import Path
 
 from ..analysis.offline import iter_snapshots
 from ..analysis.trackctx import TrackAnalysis
+from ..analysis.tyre_corners import TyreLoadWatch
 from ..config import AppConfig
 from ..engineer.engine import Engineer
 from ..engineer.rules import build_rules
@@ -43,6 +44,7 @@ class ChatRuntime:
         self._clock = clock
         self.engine = SessionEngine()
         self.brakes = BrakeWatch()
+        self.tyre_watch = TyreLoadWatch()
         self.track = TrackAnalysis(cfg.analysis)
         self.engineer = Engineer(
             cfg.engineer,
@@ -55,6 +57,13 @@ class ChatRuntime:
             )
         )
         self.engine.add_sample_hook(lambda snap, state, tracker, events: self.brakes.update(snap))
+        self.engine.add_sample_hook(lambda snap, state, tracker, events: self._tyre_load(snap))
+
+    def _tyre_load(self, snap) -> None:
+        info = self.track.for_static(snap.static)
+        g = info.geometry if info is not None else None
+        if g is not None:
+            self.tyre_watch.update(snap, g.apexes, g.length_m)
 
     def feed_file(self, path: str | Path, *, session: str = "practice") -> int:
         """Run a whole recording through the engine; returns the number of samples."""
@@ -82,5 +91,6 @@ class ChatRuntime:
             alerts=list(self.engineer.recent),
             track=info,
             brakes=self.brakes,
+            tyre_watch=self.tyre_watch,
             now=now,
         )

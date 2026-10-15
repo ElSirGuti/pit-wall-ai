@@ -135,3 +135,74 @@ def test_reference_rejects_a_different_order_few_laps_and_a_tiny_total_drop():
     assert "in total" in TC.validate_reference(laps, (1.0, 0.0, 2.0, 1.0)).reason
     flat = [wheel_lap(i, (100, 100, 100, 100)) for i in range(8)]
     assert not TC.validate_reference(flat, (17.0, 12.0, 30.0, 25.0)).ok
+
+
+# -- gathered while driving, and the chat answer -------------------------------------------------------------
+def _lap_stream(lap, compound="V", n=1200, brake_zone=(60, 140)):
+    out = []
+    for i in range(n):
+        pos = i / n
+        m = pos * 1000
+        braking = brake_zone[0] <= m <= brake_zone[1]
+        out.append(
+            Snapshot(
+                t=lap * 100.0 + i * 0.05,
+                source="test",
+                packet_id=lap * 10000 + i,
+                completed_laps=lap,
+                normalized_pos=pos,
+                speed_kmh=100.0,
+                brake=0.8 if braking else 0.0,
+                wheel_slip=(0.5,) * 4 if braking else (0.0,) * 4,
+                wheel_load=(3000.0,) * 4,
+                tyre_wear=(99.0,) * 4,
+                tyre_compound=compound,
+            )
+        )
+    return out
+
+
+def test_the_watch_closes_a_lap_when_the_counter_changes_and_restarts_on_new_tyres():
+    w = TC.TyreLoadWatch()
+    for lap in (1, 2, 3):
+        for s in _lap_stream(lap):
+            w.update(s, CORNERS, 1000.0)
+    assert [lp.lap for lp in w.laps] == [1, 2]  # lap 3 is still open
+    for s in _lap_stream(4, compound="S"):  # a different set of tyres
+        w.update(s, CORNERS, 1000.0)
+    assert w.laps == [] and w.compound == "S"
+
+
+def test_the_chat_says_how_many_laps_are_missing_and_then_where_the_tyres_wear():
+    from pit_wall_ai.chat import local as L
+    from pit_wall_ai.chat.context import build_facts
+    from tests.test_chat import synthetic_inputs
+
+    inp = synthetic_inputs()
+    w = TC.TyreLoadWatch()
+    for lap in range(1, 4):
+        for s in _lap_stream(lap):
+            w.update(s, CORNERS, 1000.0)
+    inp.tyre_watch = w
+    r = L.route("¿En qué curvas estoy gastando más los neumáticos?", None, "es")
+    assert r is not None and r.intents[0].value == "tyre_corners"
+    a = L.answer(r, build_facts(inp), lang="es")
+    assert "Todavía no tengo suficientes vueltas" in a.text and "llevo 2" in a.text
+
+    for lap in range(4, 10):
+        for s in _lap_stream(lap):
+            w.update(s, CORNERS, 1000.0)
+    sheet = build_facts(inp)
+    a = L.answer(r, sheet, lang="es")
+    assert "estimación" in a.text and "curva 1" in a.text and "frenando" in a.text
+    from pit_wall_ai.chat import grounding as G
+
+    assert G.check(a.text, sheet, "").ok, a.text
+    assert "tyre_corners.front.R0.share_pct" in a.keys
+
+
+def test_the_german_router_knows_the_question():
+    from pit_wall_ai.chat import local as L
+
+    r = L.route("In welchen Kurven verschleiße ich die Reifen am meisten?", None, "de")
+    assert r is not None and r.intents[0].value == "tyre_corners"
