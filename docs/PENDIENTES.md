@@ -91,7 +91,14 @@ Añadidos el 2026-10-15 a `data/circuits.json`, con la posición medida en la l�
 **Monza** (12 curvas, de la Variante del Rettifilo a la Parabolica), **Mugello** (completo, 15) y **Laguna
 Seca** (Andretti Hairpin, Corkscrew 1 y 2, Rainey Curve). Ninguno está marcado como verificado: para que el
 ingeniero diga "curva N" con el número del circuito hace falta que compruebes la numeración contra el mapa
-real (`pit-wall corners --track monza --length 5793` y el plano de la pista). **Rectas con nombre** (idea tuya, 2026-10-15): `data/circuits.json` admite `straights` (de qué fracción
+real (`pit-wall corners --track monza --length 5793` y el plano de la pista). **Recta principal y recta trasera** (idea tuya, 2026-10-15): se calculan solas para cualquier circuito con
+línea de carrera (no hace falta tabla): la principal es el hueco entre curvas que contiene la línea de
+meta (mínimo 250 m) y la trasera es el hueco más largo de los demás (mínimo 400 m); una recta con nombre
+tiene prioridad. Medidas en tu instalación: Monza 1 192 m y 952 m, Imola 1 186 m y 462 m, Mugello 1 158 m,
+Laguna Seca 464 m (la trasera es la Rahal), Brands Hatch 300 m y 566 m. Revisa que coincidan con lo que tú
+llamas recta principal / trasera en tus circuitos.
+
+**Rectas con nombre** (idea tuya, 2026-10-15): `data/circuits.json` admite `straights` (de qué fracción
 de la vuelta a cuál); hay Rahal Straight (Laguna Seca), Kemmel Straight (Spa) y Hangar Straight
 (Silverstone), y el chat contesta "¿qué es la recta Rahal?" diciendo entre qué curvas va. Comprueba que
 la recta empieza y acaba donde tú la conoces; si me das las de otros circuitos las añado igual.

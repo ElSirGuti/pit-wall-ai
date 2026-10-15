@@ -490,3 +490,67 @@ def test_the_chat_says_between_which_corners_a_straight_runs():
     a = L.answer(r, FactSheet(lang="es"), lang="es", track=track)
     assert "Rahal Straight" in a.text and "curva 6" in a.text and "Corkscrew 1" in a.text
     assert L.route("¿cuánta gasolina queda?", track, "es").intents[0].value == "fuel"
+
+
+def _geom(length, corners):
+    from types import SimpleNamespace
+
+    return SimpleNamespace(
+        length_m=length,
+        corners=[SimpleNamespace(start_m=a, end_m=b) for a, b in corners],
+        apexes=[
+            SimpleNamespace(number=i + 1, apex_fraction=((a + b) / 2) / length)
+            for i, (a, b) in enumerate(corners)
+        ],
+    )
+
+
+def test_generic_main_and_back_straights_come_from_the_gaps_between_corners():
+    # a lap of 4000 m: corners at 500-600 (just after the line), 1500-1600, 2900-3000 and 3600-3700
+    g = _geom(4000.0, [(500, 600), (1500, 1600), (2900, 3000), (3600, 3700)])
+    got = {s.role: s for s in circuit_names.generic_straights(g)}
+    assert set(got) == {"main", "back"}
+    # main: from the end of the last corner (3700) over the line to the start of the first (500)
+    assert got["main"].contains(0.0) and abs(got["main"].fraction_of_lap * 4000 - 800) < 1
+    # back: the longest of the others, 1600 -> 2900 (1300 m)
+    assert abs(got["back"].fraction_of_lap * 4000 - 1300) < 1
+    assert circuit_names.straight_label(got["main"], "es") == "la recta principal"
+    assert circuit_names.straight_label(got["back"], "de") == "die Gegengerade"
+
+
+def test_a_short_gap_is_not_a_straight_and_a_named_one_hides_the_generic_one():
+    short = _geom(4000.0, [(100, 900), (1000, 2000), (2100, 3000), (3100, 3900)])
+    assert circuit_names.generic_straights(short) == []  # every gap is 100 to 200 m
+    g = _geom(
+        3559.0, [(100, 200), (450, 650), (1200, 1300), (1900, 2000), (2300, 2400), (3000, 3100)]
+    )
+    # laguna_seca has the Rahal Straight (0.542 -> 0.685 = 1929 m -> 2438 m): a generic back straight inside it is dropped
+    roles = [s.role for s in circuit_names.all_straights("laguna_seca", g)]
+    assert roles[0] == "named" and roles.count("back") <= 1
+
+
+def test_the_chat_finds_the_main_and_the_back_straight():
+    from types import SimpleNamespace
+
+    from pit_wall_ai.chat import local as L
+    from pit_wall_ai.chat.facts import FactSheet
+
+    g = _geom(4000.0, [(500, 600), (1500, 1600), (2900, 3000), (3600, 3700)])
+    track = SimpleNamespace(track="some_mod_track", names={}, geometry=g)
+    for q, role in (
+        ("¿cuál es la recta principal?", "main"),
+        ("¿dónde está la recta trasera?", "back"),
+        ("what is the back straight", "back"),
+        ("Was ist die Gegengerade?", "back"),
+    ):
+        lang = "de" if "Gegen" in q else ("en" if q.startswith("what") else "es")
+        r = L.route(q, track, lang)
+        assert r is not None and r.intents[0].value == "straight", q
+        assert f"straight:{role}:" in r.flags[0]
+    a = L.answer(
+        L.route("¿cuál es la recta principal?", track, "es"),
+        FactSheet(lang="es"),
+        lang="es",
+        track=track,
+    )
+    assert a.text.startswith("La recta principal es la recta que va de la curva 4 a la curva 1")

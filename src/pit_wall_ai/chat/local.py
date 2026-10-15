@@ -172,6 +172,23 @@ _IDENTITY = (
     "que es",
     "cual",
 )
+# a question that asks what a straight is or where it is (not "do I lose time on it")
+_STRAIGHT_Q = (
+    "que es",
+    "cual es",
+    "cual",
+    "donde esta",
+    "donde queda",
+    "donde",
+    "what is",
+    "what s",
+    "where is",
+    "which is",
+    "was ist",
+    "wo ist",
+    "wo liegt",
+    "welche",
+)
 _KEYS[Intent.NOT_YET] = (
     "setup",
     "reglaje",
@@ -287,9 +304,9 @@ def route(question: str, track: TrackInfo | None = None, lang: str = "es") -> Ro
     if track is not None:
         from ..analysis.circuit_names import find_straight
 
-        st = find_straight(track.track, question)
-        if st is not None and _has(q, DE.IDENTITY if de else _IDENTITY):
-            return Routed((Intent.STRAIGHT,), (), (f"straight:{st.name}",))
+        st = find_straight(track.track, question, track.geometry)
+        if st is not None and _has(q, _STRAIGHT_Q):
+            return Routed((Intent.STRAIGHT,), (), (f"straight:{st.role}:{st.name}",))
     if track is not None and track.geometry is not None:
         hits = find_corner(track.geometry, question, track.names)
         if hits and _has(q, identity):
@@ -872,18 +889,28 @@ def tyre_corners_answer(sheet, lang, names, corner_ref):
 
 def straight_answer(sheet, lang, track, routed, corner_ref):
     """ "The Rahal Straight goes from corner 6 to the entry of the Corkscrew 1": no number that is not a corner."""
-    from ..analysis.circuit_names import straights_for
+    from ..analysis.circuit_names import all_straights, straight_label
 
-    name = next((f.split(":", 1)[1] for f in routed.flags if f.startswith("straight:")), None)
-    st = next((s for s in straights_for(track.track) if s.name == name), None) if track else None
+    key = next((f.split(":", 1)[1] for f in routed.flags if f.startswith("straight:")), "")
+    role, _, name = key.partition(":")
     g = track.geometry if track is not None else None
+    st = (
+        next(
+            (s for s in all_straights(track.track, g) if s.role == role and s.name == name),
+            None,
+        )
+        if track
+        else None
+    )
     if st is None:
         return NO_DATA[lang], []
+    label = straight_label(st, lang)
+    label = label[0].upper() + label[1:]
     if g is None or not g.apexes:
         text = {
-            "es": f"{st.name} es una recta nombrada de este circuito, pero no tengo su línea para situarla.",
-            "en": f"{st.name} is a named straight of this circuit, but I have no racing line to place it.",
-            "de": f"{st.name} ist eine benannte Gerade dieser Strecke, aber ich habe keine Ideallinie, um sie einzuordnen.",
+            "es": f"{label} es una recta de este circuito, pero no tengo su línea para situarla.",
+            "en": f"{label} is a straight of this circuit, but I have no racing line to place it.",
+            "de": f"{label} ist eine Gerade dieser Strecke, aber ich habe keine Ideallinie, um sie einzuordnen.",
         }[lang]
         return text, []
 
@@ -892,9 +919,9 @@ def straight_answer(sheet, lang, track, routed, corner_ref):
 
     a, b = near(st.start), near(st.end)
     text = {
-        "es": f"{st.name} es la recta que va de {corner_ref(a)} a {corner_ref(b)}.",
-        "en": f"{st.name} is the straight that runs from {corner_ref(a)} to {corner_ref(b)}.",
-        "de": f"{st.name} ist die Gerade von {corner_ref(a)} bis {corner_ref(b)}.",
+        "es": f"{label} es la recta que va de {corner_ref(a)} a {corner_ref(b)}.",
+        "en": f"{label} is the straight that runs from {corner_ref(a)} to {corner_ref(b)}.",
+        "de": f"{label} ist die Gerade von {corner_ref(a)} bis {corner_ref(b)}.",
     }[lang]
     return text, []
 

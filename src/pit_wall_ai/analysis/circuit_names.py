@@ -66,6 +66,7 @@ class Straight:
     name: str
     start: float
     end: float
+    role: str = "named"  # named | main | back
 
     def contains(self, fraction: float) -> bool:
         f = fraction % 1.0
@@ -96,14 +97,112 @@ def straight_at(track: str, fraction: float) -> Straight | None:
     return next((s for s in straights_for(track) if s.contains(fraction)), None)
 
 
-def find_straight(track: str, query: str) -> Straight | None:
-    """A straight named in free text: "la recta Rahal", "Rahal Straight", "Kemmel"."""
+# generic straights: any circuit has a main straight and most have a back straight, named or not
+MIN_MAIN_STRAIGHT_M = 250.0
+MIN_BACK_STRAIGHT_M = 400.0
+GENERIC_NAMES = {
+    "main": {"es": "la recta principal", "en": "the main straight", "de": "die Start-Ziel-Gerade"},
+    "back": {"es": "la recta trasera", "en": "the back straight", "de": "die Gegengerade"},
+}
+_MAIN_WORDS = (
+    "recta principal",
+    "recta de meta",
+    "recta de boxes",
+    "recta de salida",
+    "main straight",
+    "front straight",
+    "pit straight",
+    "start finish straight",
+    "start ziel gerade",
+    "zielgerade",
+    "startgerade",
+    "boxengerade",
+)
+_BACK_WORDS = (
+    "recta trasera",
+    "contrarrecta",
+    "recta opuesta",
+    "back straight",
+    "backstraight",
+    "far straight",
+    "gegengerade",
+    "hintere gerade",
+)
+
+
+def generic_straights(geometry) -> list[Straight]:
+    """The main straight (the one that holds the start line) and the back straight (the longest of the others).
+
+    Straights are the stretches between the corners of the line; below ``MIN_MAIN_STRAIGHT_M`` there is
+    no main straight to speak of, and the back straight must be at least ``MIN_BACK_STRAIGHT_M`` long."""
+    corners = getattr(geometry, "corners", None)
+    length = float(getattr(geometry, "length_m", 0) or 0)
+    if not corners:
+        return []
+    cs = [c for c in corners if c.start_m <= c.end_m] or list(corners)
+    if length <= 0 or len(cs) < 2:
+        return []
+    cs = sorted(cs, key=lambda c: c.start_m)
+    gaps: list[
+        tuple[float, float]
+    ] = []  # (from_m, to_m) between the end of one corner and the start of the next
+    for i, c in enumerate(cs):
+        nxt = cs[(i + 1) % len(cs)]
+        a, b = c.end_m, nxt.start_m
+        size = (b - a) % length
+        if size > 1.0:
+            gaps.append((a, b))
+    out: list[Straight] = []
+    main = None
+    for a, b in gaps:
+        if (a > b) and (b - a) % length >= MIN_MAIN_STRAIGHT_M:
+            main = (a, b)
+    if main is not None:
+        out.append(Straight("main", main[0] / length, main[1] / length, "main"))
+    rest = [(a, b) for a, b in gaps if (a, b) != main]
+    if rest:
+        a, b = max(rest, key=lambda g: (g[1] - g[0]) % length)
+        if (b - a) % length >= MIN_BACK_STRAIGHT_M:
+            out.append(Straight("back", a / length, b / length, "back"))
+    return out
+
+
+def all_straights(track: str, geometry=None) -> list[Straight]:
+    """The table's named straights first, then the generic main/back ones that do not overlap a named one."""
+    named = straights_for(track)
+    out = list(named)
+    if geometry is not None:
+        for g in generic_straights(geometry):
+            mid = (g.start + g.fraction_of_lap / 2) % 1.0
+            if not any(n.contains(mid) for n in named):
+                out.append(g)
+    return out
+
+
+def find_straight(track: str, query: str, geometry=None) -> Straight | None:
+    """A straight in free text: "la recta Rahal", "Rahal Straight", "la recta principal", "back straight"."""
     q = _norm_words(query)
+    padded = f" {q} "
     for s in straights_for(track):
         words = [w for w in _norm_words(s.name).split() if w not in _GENERIC]
         if words and all(w in q.split() for w in words):
             return s
+    if geometry is not None:
+        wanted = None
+        if any(f" {w} " in padded for w in _MAIN_WORDS):
+            wanted = "main"
+        elif any(f" {w} " in padded for w in _BACK_WORDS):
+            wanted = "back"
+        if wanted:
+            return next((g for g in all_straights(track, geometry) if g.role == wanted), None)
     return None
+
+
+def straight_label(s: Straight, lang: str) -> str:
+    """The name a straight is spoken with: its own, or the generic one in the language."""
+    if s.role in GENERIC_NAMES:
+        return GENERIC_NAMES[s.role].get(lang, GENERIC_NAMES[s.role]["en"])
+    return s.name
 
 
 def _norm_words(s: str) -> str:
