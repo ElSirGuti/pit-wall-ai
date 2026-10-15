@@ -490,7 +490,79 @@
    ],
    "length_m": 4318,
    "confidence": "medium",
-   "corners": []
+   "corners": [
+    {
+     "order": 1,
+     "name": "Niki Lauda Kurve",
+     "apex_fraction": 0.071
+    },
+    {
+     "order": 3,
+     "name": "Remus",
+     "apex_fraction": 0.291
+    },
+    {
+     "order": 4,
+     "name": "Schlossgold",
+     "apex_fraction": 0.478
+    },
+    {
+     "order": 6,
+     "name": "Rauch",
+     "apex_fraction": 0.601
+    },
+    {
+     "order": 7,
+     "name": "Würth Kurve",
+     "apex_fraction": 0.671
+    },
+    {
+     "order": 9,
+     "name": "Rindt",
+     "apex_fraction": 0.847
+    },
+    {
+     "order": 10,
+     "name": "Red Bull Mobile",
+     "apex_fraction": 0.892
+    }
+   ],
+   "official_numbers": [
+    {
+     "number": 1,
+     "apex_fraction": 0.071
+    },
+    {
+     "number": 3,
+     "apex_fraction": 0.291
+    },
+    {
+     "number": 4,
+     "apex_fraction": 0.478
+    },
+    {
+     "number": 6,
+     "apex_fraction": 0.601
+    },
+    {
+     "number": 7,
+     "apex_fraction": 0.671
+    },
+    {
+     "number": 8,
+     "apex_fraction": 0.708
+    },
+    {
+     "number": 9,
+     "apex_fraction": 0.847
+    },
+    {
+     "number": 10,
+     "apex_fraction": 0.892
+    }
+   ],
+   "numbering_verified": true,
+   "map_note": "Map given by the author 2026-10-15 (10 turns, GP layout): 1 Niki Lauda Kurve; 2 no name; 3 Remus; 4 Schlossgold; 5 no name; 6 Rauch; 7 Wurth Kurve; 8 no name; 9 Rindt; 10 Red Bull Mobile. The line has 8 apexes: 2 (the kink on the climb) and 5 (the quick left after Schlossgold) are flat and have none. The directions of the 8 apexes (R R R L L R R R) match those of turns 1 3 4 6 7 8 9 10 on the map."
   },
   {
    "id": "silverstone",

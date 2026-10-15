@@ -27,6 +27,18 @@ def _tracks_of(circuit: dict, libs: list[Path]) -> list[str]:
     return found
 
 
+def _is_reverse(layout: str) -> bool:
+    """AC layouts name the reverse direction in several ways: "reverse_x", "x_reverse", "r_x", "layout_r_gp"."""
+    low = layout.lower()
+    return (
+        "reverse" in low
+        or low.endswith("_rev")
+        or low.startswith("r_")
+        or "_r_" in low
+        or low.endswith("_r")
+    )
+
+
 def _best_line(circuit: dict, tracks: list[str], libs: list[Path]):
     """The standard line of the circuit's folders: no reverse, the plain folder before a named layout, and
     the closest to the table's length (within 3 %) among those."""
@@ -43,7 +55,7 @@ def _best_line(circuit: dict, tracks: list[str], libs: list[Path]):
             err = abs(r.geometry.length_m - want) / want if want else 0.0
             if err > 0.03:
                 continue
-            reverse = "reverse" in r.layout.lower() or r.layout.lower().endswith("_rev")
+            reverse = _is_reverse(r.layout)
             cands.append(((reverse, bool(r.layout), err), r))
     return min(cands, key=lambda c: c[0])[1] if cands else None
 

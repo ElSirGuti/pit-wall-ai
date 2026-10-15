@@ -103,6 +103,14 @@ Frère (la curva larga a derechas, sin número propio); 17 Blanchimont; 18 sin n
 línea tiene 18 ápices: 2, 6 y 18 no tienen ápice (son planas) y la Courbe Paul Frère es un ápice con
 nombre y sin número. Marcado como **numeración verificada**.
 
+## 5j. Red Bull Ring verificado (2026-10-15)
+
+Con tu mapa de 10 curvas (layout GP): 1 Niki Lauda Kurve; 2 sin nombre; 3 Remus; 4 Schlossgold; 5 sin
+nombre; 6 Rauch; 7 Würth Kurve; 8 sin nombre; 9 Rindt; 10 Red Bull Mobile. La línea tiene 8 ápices: la 2 (la
+curva suave de la subida) y la 5 (la izquierda rápida tras Schlossgold) son planas y no tienen ápice. El
+sentido de los 8 ápices (D D D I I D D D) coincide con el de las curvas 1, 3, 4, 6, 7, 8, 9 y 10 del mapa.
+Marcado como **numeración verificada**. Si alguna asignación no te cuadra, dímelo.
+
 ## 5e. Verificar la numeración de los circuitos (nuevo, con tu idea)
 
 1. `pit-wall circuit-maps` dibuja la línea de carrera de cada circuito de la tabla con sus ápices numerados,
