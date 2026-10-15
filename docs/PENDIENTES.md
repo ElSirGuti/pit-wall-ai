@@ -85,6 +85,17 @@ Con el desgaste real ya medido (ver "Ya cerrado"), de aquella lista quedan:
   proyecto actualizado en los tres README. Léelos tú: una revisión de un hablante nativo (o tuya) antes de
   usarlos en una candidatura es lo que da la última pulida. Si quieres más documentos en alemán, dime cuáles.
 
+## 5e. Verificar la numeración de los circuitos (nuevo, con tu idea)
+
+1. `pit-wall circuit-maps` dibuja la línea de carrera de cada circuito de la tabla con sus ápices numerados,
+   las rectas coloreadas y los nombres, y crea `circuit_maps\index.html` (local, no se sube: está en
+   `.gitignore`). Orientación del juego, que puede estar girada respecto a un mapa publicado.
+2. Abre el índice y, circuito por circuito, compara con tu mapa: ¿mismo número de curvas?, ¿mismo orden?,
+   ¿izquierda y derecha coinciden?, ¿los nombres están donde deben?
+3. Dime cuáles quedan bien y los marco `numbering_verified`; para los que agrupan chicanes en una sola
+   curva (Monza en tu mapa: 8; la línea da 12) decidimos si añadimos una tabla ápice a número del mapa.
+4. Los que no se dibujan (Oran Park, Lime Rock) no tienen línea en tu instalación.
+
 ## 5d. Nombres de curvas (nuevo)
 
 Añadidos el 2026-10-15 a `data/circuits.json`, con la posición medida en la línea de tu instalación:

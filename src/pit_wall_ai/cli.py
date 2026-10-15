@@ -257,11 +257,23 @@ def _parser() -> argparse.ArgumentParser:
         "--laps", action="store_true", help="also compare every lap of --file against the best lap"
     )
     cor.add_argument(
+        "--map", help="also draw the racing line with its numbered corners to this .svg file"
+    )
+    cor.add_argument(
         "--session",
         choices=["practice", "qualify", "race", "hotlap"],
         default="practice",
         help="session kind for .ld/.csv logs, which do not say (default practice)",
     )
+
+    cm = sub.add_parser(
+        "circuit-maps",
+        help="draw the racing line of every circuit of the table with its numbered corners",
+    )
+    cm.add_argument("--config", help="YAML config")
+    cm.add_argument("--out", default="circuit_maps", help="folder for the SVG files and index.html")
+    cm.add_argument("--only", action="append", help="a circuit id of the table (repeatable)")
+    cm.add_argument("--ac-dir", action="append", default=[], help="extra AC folder to search")
 
     rec = sub.add_parser("record", help="record the live session to a .pwrec.gz file")
     common(rec)
@@ -387,6 +399,12 @@ def _start_engineer(
     client, _why = make_client(cfg)
     attach_milestones(engine, speech, cfg, client=client, quiet=lambda: eng.quiet)
     return speech
+
+
+def _cmd_circuit_maps(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .analysis.cli_maps import cmd_circuit_maps
+
+    return cmd_circuit_maps(cfg, a)
 
 
 def _cmd_say(cfg: AppConfig, a: argparse.Namespace) -> int:
@@ -734,6 +752,18 @@ def _cmd_corners(cfg: AppConfig, a: argparse.Namespace) -> int:
         )
     if not names:
         print("(no names for this circuit: numbered by the geometry only, numbering not verified)")
+    if getattr(a, "map", None):
+        from .analysis.circuit_names import all_straights
+        from .analysis.render import write_svg
+
+        out_path = write_svg(
+            a.map,
+            g,
+            names,
+            all_straights(track, g),
+            title=f"{track}{'/' + res.layout if res.layout else ''}",
+        )
+        print(f"map written to {out_path} (numbers = apexes of the game's line)")
     if a.what:
         from .analysis.corner_text import describe_corner, find_corner
 
@@ -764,6 +794,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "say": _cmd_say,
             "rules": _cmd_rules,
             "corners": _cmd_corners,
+            "circuit-maps": _cmd_circuit_maps,
             "llm-check": _cmd_llm_check,
             "ask": _cmd_ask,
             "eval": _cmd_eval,

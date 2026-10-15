@@ -574,3 +574,25 @@ def test_monzas_straights_are_named_and_answer_to_the_generic_words():
     roles = [s.role for s in circuit_names.all_straights("monza", g)]
     assert roles.count("main") == 1 and roles.count("back") == 1
     assert circuit_names.straight_label(st["back"], "es") == "Curva del Serraglio"
+
+
+def test_the_map_svg_has_the_line_the_numbers_and_the_names(tmp_path):
+    from types import SimpleNamespace
+
+    from pit_wall_ai.analysis.render import render_svg, write_svg
+
+    t = np.linspace(0, 2 * np.pi, 200, endpoint=False)
+    x, z = 300 * np.cos(t), 200 * np.sin(t)
+    s = np.concatenate([[0.0], np.cumsum(np.hypot(np.diff(x), np.diff(z)))])
+    line = SimpleNamespace(x=x, z=z, s=s, length_m=float(s[-1]))
+    apexes = [
+        SimpleNamespace(number=1, apex_fraction=0.25),
+        SimpleNamespace(number=2, apex_fraction=0.75),
+    ]
+    g = SimpleNamespace(line=line, apexes=apexes)
+    st = circuit_names.Straight("main", 0.9, 0.1, "main")
+    svg = render_svg(g, {1: "Alpha", 2: "Beta <&>"}, [st], title="Test & circuit")
+    assert svg.startswith("<svg") and svg.rstrip().endswith("</svg>")
+    assert ">1<" in svg and ">2<" in svg and "Alpha" in svg
+    assert "Beta &lt;&amp;&gt;" in svg and "Test &amp; circuit" in svg  # escaped
+    assert write_svg(tmp_path / "a" / "m.svg", g, {}, ()).is_file()

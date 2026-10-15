@@ -12,6 +12,15 @@ pit-wall corners --track monza --any-layout       # try every layout; the length
 
 Set `analysis.ac_dirs` in `config/local.yaml` if your game is not in a usual Steam location.
 
+## Drawing the line with its numbers (2026-10-15)
+
+`pit-wall corners --track monza --length 5793 --map monza.svg` writes the racing line with its numbered
+apexes, the names, the start line and the straights (main in green, back in blue, named in orange).
+`pit-wall circuit-maps` does it for every circuit of the table that the local game has and writes an
+`index.html` with a checklist. The drawings are generated from the game's own lines on the author's PC and are
+**not** part of the repository. Orientation is the game's (the handedness is kept: a clockwise circuit
+stays clockwise).
+
 ## How the line is chosen
 
 * `static.track` is the folder; `static.track_configuration` the layout sub-folder (empty = none).

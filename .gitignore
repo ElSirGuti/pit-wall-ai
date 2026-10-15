@@ -56,3 +56,6 @@ config/bindings.yaml
 
 # Private reference material from the author (never committed)
 /docs/private/
+
+# generated locally from the game racing lines (not redistributed)
+/circuit_maps/
