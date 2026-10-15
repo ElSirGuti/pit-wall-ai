@@ -675,7 +675,7 @@ def test_layout_aware_table():
     assert nat and [e["name"] for e in nat["corners"]][0] == "Niki Lauda Kurve" and nat["straights"] == []
     # an unknown layout of the same circuit with a different length gets nothing
     assert CN.circuit_for_layout("ks_red_bull_ring", "layout_xyz", 2336) is None
-    assert CN.numbering_verified("ks_red_bull_ring", "layout_national", 2317) is False
+    assert CN.numbering_verified("ks_red_bull_ring", "layout_national", 2317) is True
     assert CN.numbering_verified("ks_red_bull_ring", "layout_gp", 4318) is True
 
 

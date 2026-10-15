@@ -615,8 +615,8 @@
       }
      ],
      "straights": [],
-     "numbering_verified": false,
-     "map_note": "National layout (2.3 km, skips the Remus/Schlossgold loop); names from the author's map (racingcircuits.info), numbers 1-6 assumed sequential along the lap, not yet confirmed"
+     "numbering_verified": true,
+     "map_note": "National layout (2.3 km, skips the Remus/Schlossgold loop); names from the author's map, numbers 1-6 along the lap confirmed by the author (2026-10-15); 2 and 4 have no name"
     }
    }
   },
