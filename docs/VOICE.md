@@ -1,5 +1,7 @@
 # Voice: talk to the engineer
 
+*Deutsch: [VOICE.de.md](VOICE.de.md)*
+
 Hold a button, ask, release, and hear the answer. The rule alerts (lock-ups, fuel, lap summaries...) keep
 going out by themselves. This page is the user guide; the design and the measurements are in
 `docs/PHASE6_PLAN.md`.

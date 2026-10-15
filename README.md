@@ -5,13 +5,14 @@ telemetry, warns you about what matters (tyres, brakes, fuel, pace, braking poin
 when you talk to it. Rule-based alerts are local and instant; a language model (Gemini's free API, swappable) is
 only used for the conversation.
 
-*Español: [README.es.md](README.es.md)*
+*Español: [README.es.md](README.es.md) · Deutsch: [README.de.md](README.de.md)*
 
-> **Status: phase 4 of 7 (in progress)** — live telemetry, session and lap tracking, recording and replay, a
-> rule-based race engineer with a local Windows voice (lock-ups, spins, fuel, tyres, lap summaries) and, new,
-> per-corner braking analysis against your best lap, built from the racing line of **your own** game install
-> (nothing from the game is shipped). Still to verify live: the spoken braking hint. The Gemini chat and full
-> voice come next (see the [roadmap](#roadmap)).
+> **Status: usable for the original Assetto Corsa; what is still pending is mainly the live test of the
+> push-to-talk with a wheel.** Live telemetry, session and lap tracking, recording and replay, a rule-based
+> engineer with a local Windows voice, per-corner braking analysis against your best lap, tyre wear by corner,
+> a text and voice chat (local answers first, a cloud model only when you allow it), three languages (Spanish,
+> English, German), spoken congratulations on the pole and the result, and a memory of what was said. See the
+> [roadmap](#roadmap).
 
 <!-- DEMO: add a GIF or video here (terminal dashboard now, voice demo later) -->
 <p align="center"><em>Demo placeholder: a GIF of the dashboard will go here.</em></p>
@@ -104,7 +105,7 @@ pit-wall run --mute                  # same rules, printed instead of spoken
 pit-wall tyre-corners race.pwrec.gz   # which corners work the tyres hardest (estimate, validated or not)
 pit-wall say "Box this lap"          # test the voice and see its latency
 
-# Talk to the engineer (push-to-talk): see docs/VOICE.md
+# Talk to the engineer (push-to-talk): see docs/VOICE.md (German: docs/VOICE.de.md)
 pit-wall devices                     # microphones and outputs
 pit-wall voices --test               # hear every installed voice
 pit-wall voice                       # live conversation (button + microphone)

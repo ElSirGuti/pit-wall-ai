@@ -5,13 +5,14 @@ telemetría en vivo del juego, te avisa de lo importante (neumáticos, frenos, c
 fases posteriores, te responde cuando le hablas. Las alertas por reglas son locales e instantáneas; un modelo de
 lenguaje (la API gratuita de Gemini, intercambiable) se usa solo para la conversación.
 
-*English: [README.md](README.md)*
+*English: [README.md](README.md) · Deutsch: [README.de.md](README.de.md)*
 
-> **Estado: fase 4 de 7 (en curso)**: telemetría en vivo, detección de sesión y vueltas, grabación y replay, ingeniero
-> de carrera por reglas con voz local de Windows (bloqueos, trompos, gasolina, neumáticos, resumen de vuelta, ver
-> [docs/ENGINEER.md](docs/ENGINEER.md)) y, novedad, análisis de frenadas por curva contra tu mejor vuelta, construido con la línea
-> de carrera de **tu propia** instalación del juego (no se distribuye nada del juego). Falta comprobar en vivo el
-> aviso hablado de frenadas. El chat con Gemini y la voz completa llegan después (ver [hoja de ruta](#hoja-de-ruta)).
+> **Estado: utilizable con el Assetto Corsa original; lo que falta es sobre todo la prueba en vivo del
+> push-to-talk con volante.** Telemetría en vivo, detección de sesión y vueltas, grabación y replay, ingeniero
+> por reglas con voz local de Windows, análisis de frenadas por curva contra tu mejor vuelta, desgaste de
+> neumáticos por curva, un chat de texto y de voz (respuestas locales primero, un modelo en la nube solo si lo
+> permites), tres idiomas (español, inglés, alemán), felicitaciones habladas por la pole y el resultado, y una
+> memoria de lo dicho. Ver la [hoja de ruta](#hoja-de-ruta).
 
 <!-- DEMO: añade aquí un GIF o vídeo (panel de terminal ahora, demo de voz más adelante) -->
 <p align="center"><em>Espacio para la demo: aquí irá un GIF del panel.</em></p>

@@ -81,8 +81,9 @@ Con el desgaste real ya medido (ver "Ya cerrado"), de aquella lista quedan:
 * **Motor de estrategia** (`docs/PHASE8_PLAN.md`, sección 4b): combustible, ventana de parada con tráfico y
   clima; sin dependencia del safety car. Pide que midamos la pérdida en pit lane con tus paradas reales.
 * **Visor remoto de muro abierto** (`docs/MULTI_SIM_PLAN.md`, sección 9): idea; decide si merece una fase.
-* **README en alemán** (`README.de.md`) para el portafolio: puedo traducir el README y los documentos clave;
-  dime si lo quieres y con qué alcance (solo README o también `docs/VOICE.md`).
+* ~~**README en alemán**~~ (2026-10-15): `README.de.md` y `docs/VOICE.de.md` hechos, con el estado del
+  proyecto actualizado en los tres README. Léelos tú: una revisión de un hablante nativo (o tuya) antes de
+  usarlos en una candidatura es lo que da la última pulida. Si quieres más documentos en alemán, dime cuáles.
 
 ## 6. Opcional, sin prisa
 
