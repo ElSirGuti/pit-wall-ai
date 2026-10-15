@@ -1,7 +1,7 @@
 # Pendientes del autor
 
 Lista viva de lo que **tiene que hacer una persona** (no el código). Se actualiza cuando algo se cierra.
-Última actualización: 2026-10-15.
+Última actualización: 2026-10-15 (noche).
 
 El orden es por lo que más desbloquea. Lo que ya está hecho está al final, en "Ya cerrado".
 
@@ -110,6 +110,15 @@ nombre; 6 Rauch; 7 Würth Kurve; 8 sin nombre; 9 Rindt; 10 Red Bull Mobile. La l
 curva suave de la subida) y la 5 (la izquierda rápida tras Schlossgold) son planas y no tienen ápice. El
 sentido de los 8 ápices (D D D I I D D D) coincide con el de las curvas 1, 3, 4, 6, 7, 8, 9 y 10 del mapa.
 Marcado como **numeración verificada**. Si alguna asignación no te cuadra, dímelo.
+
+## 5k. Trazados y Silverstone verificado (2026-10-15)
+
+La tabla de circuitos distingue ahora el trazado (`layouts`): un trazado cuya longitud no coincide con la de la
+tabla (±8 %) no recibe nombres de otro; los inversos reutilizan los nombres con el orden invertido (derivado,
+sin verificar). **Red Bull Ring national** (6 curvas: Niki Lauda, Würth, Rindt, Red Bull Mobile; 2 y 4 sin
+nombre) y **Silverstone** con tus mapas: GP con 18 curvas (Maggotts 10-11, Becketts 12-13, Chapel 14, Stowe 15,
+Vale 16-17, Club 18; dos curvas ligeras sin número), International (8) y National (7). Pendiente: confirmar en
+el juego que en el National el 3 y el 4 son la misma horquilla, y el mapa de los inversos de cada circuito.
 
 ## 5e. Verificar la numeración de los circuitos (nuevo, con tu idea)
 
