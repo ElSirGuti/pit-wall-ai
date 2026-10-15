@@ -820,7 +820,203 @@
     }
    ],
    "numbering_verified": true,
-   "map_note": "18-turn numbering (F1/official since 2010): Maggotts 10-11 and Becketts 12-13 are one apex each on the game's line (Maggotts' 10 is a flat kink, both numbers map to the 3560 m apex), Vale 16-17. Two light kinks the line detects (1022 m after The Loop, 5170 m between Stowe and Vale) have no map number. Confirmed by the author (2026-10-15). The older 15-turn numbering (Chapel 12, Stowe 13, Vale 14, Club 15) is not used."
+   "map_note": "18-turn numbering (F1/official since 2010): Maggotts 10-11 and Becketts 12-13 are one apex each on the game's line (Maggotts' 10 is a flat kink, both numbers map to the 3560 m apex), Vale 16-17. Two light kinks the line detects (1022 m after The Loop, 5170 m between Stowe and Vale) have no map number. Confirmed by the author (2026-10-15). The older 15-turn numbering (Chapel 12, Stowe 13, Vale 14, Club 15) is not used.",
+   "layouts": {
+    "international": {
+     "length_m": 2945,
+     "corners": [
+      {
+       "order": 1,
+       "name": "Abbey",
+       "apex_fraction": 0.098
+      },
+      {
+       "order": 2,
+       "name": "Farm Curve",
+       "apex_fraction": 0.167
+      },
+      {
+       "order": 3,
+       "name": "Village",
+       "apex_fraction": 0.259
+      },
+      {
+       "order": 4,
+       "name": "The Link",
+       "apex_fraction": 0.307
+      },
+      {
+       "order": 5,
+       "name": "Becketts",
+       "apex_fraction": 0.355
+      },
+      {
+       "order": 6,
+       "name": "Stowe",
+       "apex_fraction": 0.68
+      },
+      {
+       "order": 7,
+       "name": "Vale",
+       "apex_fraction": 0.838
+      },
+      {
+       "order": 7,
+       "name": "Vale",
+       "apex_fraction": 0.858
+      },
+      {
+       "order": 8,
+       "name": "Club",
+       "apex_fraction": 0.912
+      }
+     ],
+     "official_numbers": [
+      {
+       "number": 1,
+       "apex_fraction": 0.098
+      },
+      {
+       "number": 2,
+       "apex_fraction": 0.167
+      },
+      {
+       "number": 3,
+       "apex_fraction": 0.259
+      },
+      {
+       "number": 4,
+       "apex_fraction": 0.307
+      },
+      {
+       "number": 5,
+       "apex_fraction": 0.355
+      },
+      {
+       "number": 6,
+       "apex_fraction": 0.68
+      },
+      {
+       "number": 7,
+       "apex_fraction": 0.838
+      },
+      {
+       "number": 7,
+       "apex_fraction": 0.858
+      },
+      {
+       "number": 8,
+       "apex_fraction": 0.912
+      }
+     ],
+     "straights": [
+      {
+       "name": "Hamilton Straight",
+       "from_fraction": 0.958,
+       "to_fraction": 0.069,
+       "role": "main"
+      },
+      {
+       "name": "Hangar Straight",
+       "from_fraction": 0.388,
+       "to_fraction": 0.638,
+       "role": "back"
+      }
+     ],
+     "numbering_verified": true,
+     "map_note": "International layout (2.9 km): 8 turns, Vale (7) is two apexes on the line, The Link is 4; names and numbers from the author's map (2026-10-15)"
+    },
+    "national": {
+     "length_m": 2600,
+     "corners": [
+      {
+       "order": 1,
+       "name": "Copse",
+       "apex_fraction": 0.07
+      },
+      {
+       "order": 1,
+       "name": "Copse",
+       "apex_fraction": 0.101
+      },
+      {
+       "order": 2,
+       "name": "Maggotts",
+       "apex_fraction": 0.274
+      },
+      {
+       "order": 3,
+       "name": "Maggotts",
+       "apex_fraction": 0.35
+      },
+      {
+       "order": 5,
+       "name": "Brooklands",
+       "apex_fraction": 0.685
+      },
+      {
+       "order": 6,
+       "name": "Luffield",
+       "apex_fraction": 0.743
+      },
+      {
+       "order": 7,
+       "name": "Woodcote",
+       "apex_fraction": 0.918
+      }
+     ],
+     "official_numbers": [
+      {
+       "number": 1,
+       "apex_fraction": 0.07
+      },
+      {
+       "number": 1,
+       "apex_fraction": 0.101
+      },
+      {
+       "number": 2,
+       "apex_fraction": 0.274
+      },
+      {
+       "number": 3,
+       "apex_fraction": 0.35
+      },
+      {
+       "number": 4,
+       "apex_fraction": 0.35
+      },
+      {
+       "number": 5,
+       "apex_fraction": 0.685
+      },
+      {
+       "number": 6,
+       "apex_fraction": 0.743
+      },
+      {
+       "number": 7,
+       "apex_fraction": 0.918
+      }
+     ],
+     "straights": [
+      {
+       "name": "National Pits Straight",
+       "from_fraction": 0.943,
+       "to_fraction": 0.055,
+       "role": "main"
+      },
+      {
+       "name": "Wellington Straight",
+       "from_fraction": 0.411,
+       "to_fraction": 0.641,
+       "role": "back"
+      }
+     ],
+     "numbering_verified": true,
+     "map_note": "National layout (2.6 km): 7 turns; Copse (1) is two apexes on the line; the slow hairpin carries 3 and 4 (the map puts both on the same bend). Names and numbers from the author's map (2026-10-15)"
+    }
+   }
   },
   {
    "id": "brands_hatch",

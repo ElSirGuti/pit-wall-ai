@@ -353,7 +353,7 @@ def _shared_numbers(geometry, track: str | None = None) -> dict[int, int]:
             if d <= best_d:
                 best, best_d = c, d
         if best is not None:
-            out[int(e["number"])] = best.number
+            out.setdefault(int(e["number"]), best.number)
     return out
 
 
