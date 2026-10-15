@@ -270,7 +270,7 @@ def test_names_are_attached_only_where_the_table_has_a_corner_inside():
     }  # Malmedy is 0.03 away
     assert circuit_names.circuit_for("fn_imola")["id"] == "imola"
     assert circuit_names.circuit_for("some_mod_track") is None
-    g.track = "monza"
+    g.track = "zandvoort"
     assert circuit_names.corner_names(g) == {}  # an empty table gives no names
 
 
@@ -439,3 +439,21 @@ def test_numbering_verified_flag_comes_from_the_table():
     assert circuit_names.numbering_verified("magione") is True
     assert circuit_names.numbering_verified("spa") is False
     assert circuit_names.numbering_verified("some_mod_track") is False
+
+
+def test_monza_and_mugello_tables_cover_their_corners_in_order():
+    monza = circuit_names.circuit_for("monza")["corners"]
+    assert [c["order"] for c in monza] == list(range(1, 13))
+    assert (
+        monza[0]["name"].startswith("Variante del Rettifilo") and monza[-1]["name"] == "Parabolica"
+    )
+    mugello = circuit_names.circuit_for("mugello")["corners"]
+    assert [c["order"] for c in mugello] == list(range(1, 16))
+    assert [c["name"] for c in mugello][-1] == "Bucine"
+    for table in (monza, mugello):
+        fr = [c["apex_fraction"] for c in table]
+        assert fr == sorted(fr) and 0 < fr[0] and fr[-1] < 1
+    # nothing is "verified" until the author checks the numbering against the real circuit
+    assert (
+        circuit_names.table_names("monza") is None and circuit_names.table_names("mugello") is None
+    )

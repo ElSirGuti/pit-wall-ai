@@ -144,7 +144,68 @@
    ],
    "length_m": 5793,
    "confidence": "medium",
-   "corners": []
+   "corners": [
+    {
+     "order": 1,
+     "name": "Variante del Rettifilo 1",
+     "apex_fraction": 0.161
+    },
+    {
+     "order": 2,
+     "name": "Variante del Rettifilo 2",
+     "apex_fraction": 0.168
+    },
+    {
+     "order": 3,
+     "name": "Curva Grande 1",
+     "apex_fraction": 0.197
+    },
+    {
+     "order": 4,
+     "name": "Curva Grande 2",
+     "apex_fraction": 0.23
+    },
+    {
+     "order": 5,
+     "name": "Variante della Roggia 1",
+     "apex_fraction": 0.371
+    },
+    {
+     "order": 6,
+     "name": "Variante della Roggia 2",
+     "apex_fraction": 0.379
+    },
+    {
+     "order": 7,
+     "name": "Lesmo 1",
+     "apex_fraction": 0.441
+    },
+    {
+     "order": 8,
+     "name": "Lesmo 2",
+     "apex_fraction": 0.497
+    },
+    {
+     "order": 9,
+     "name": "Variante Ascari 1",
+     "apex_fraction": 0.683
+    },
+    {
+     "order": 10,
+     "name": "Variante Ascari 2",
+     "apex_fraction": 0.702
+    },
+    {
+     "order": 11,
+     "name": "Variante Ascari 3",
+     "apex_fraction": 0.716
+    },
+    {
+     "order": 12,
+     "name": "Parabolica",
+     "apex_fraction": 0.9
+    }
+   ]
   },
   {
    "id": "red_bull_ring",
@@ -301,6 +362,46 @@
      "order": 7,
      "name": "Savelli",
      "apex_fraction": 0.4
+    },
+    {
+     "order": 8,
+     "name": "Arrabbiata 1",
+     "apex_fraction": 0.466
+    },
+    {
+     "order": 9,
+     "name": "Arrabbiata 2",
+     "apex_fraction": 0.509
+    },
+    {
+     "order": 10,
+     "name": "Scarperia",
+     "apex_fraction": 0.585
+    },
+    {
+     "order": 11,
+     "name": "Palagio",
+     "apex_fraction": 0.61
+    },
+    {
+     "order": 12,
+     "name": "Correntaio",
+     "apex_fraction": 0.696
+    },
+    {
+     "order": 13,
+     "name": "Biondetti 1",
+     "apex_fraction": 0.74
+    },
+    {
+     "order": 14,
+     "name": "Biondetti 2",
+     "apex_fraction": 0.764
+    },
+    {
+     "order": 15,
+     "name": "Bucine",
+     "apex_fraction": 0.862
     }
    ]
   },
@@ -342,7 +443,28 @@
    ],
    "length_m": 3602,
    "confidence": "medium",
-   "corners": []
+   "corners": [
+    {
+     "order": 2,
+     "name": "Andretti Hairpin",
+     "apex_fraction": 0.142
+    },
+    {
+     "order": 8,
+     "name": "Corkscrew 1",
+     "apex_fraction": 0.685
+    },
+    {
+     "order": 9,
+     "name": "Corkscrew 2",
+     "apex_fraction": 0.7
+    },
+    {
+     "order": 10,
+     "name": "Rainey Curve",
+     "apex_fraction": 0.761
+    }
+   ]
   },
   {
    "id": "zandvoort",
