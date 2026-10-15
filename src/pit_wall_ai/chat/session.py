@@ -205,6 +205,7 @@ class ChatSession:
                 track=inp.track,
                 now=inp.now,
                 lang=self.lang,
+                previous=self._previous(inp),
             )
             if mem is not None:
                 self.stats.local += 1
@@ -226,6 +227,19 @@ class ChatSession:
             self.stats.unavailable += 1
             return ChatReply(self._unavailable_text(), "unavailable", note="no model")
         return self._ask_model(question, inp, sheet)
+
+    @staticmethod
+    def _previous(inp: ChatInputs):
+        """Alerts of earlier sessions on this track (empty when the memory is off or this is a replay)."""
+        mem = inp.memory
+        if mem is None:
+            return []
+        track = inp.track.track if inp.track is not None else None
+        try:
+            return mem.previous(track)
+        except Exception:  # noqa: BLE001 - a damaged memory file must never break the chat
+            log.exception("could not read the alert memory")
+            return []
 
     def _ask_model(self, question: str, inp: ChatInputs, sheet: FactSheet) -> ChatReply:
         assert self.client is not None

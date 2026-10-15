@@ -373,7 +373,16 @@ def _start_engineer(
         lambda snap, state, tracker, events: eng.on_sample(snap, state, tracker, events)
     )
     from .chat.session import make_client
+    from .engineer.memory_store import AlertMemory
+    from .engineer.memory_store import listener as memory_listener
     from .engineer.milestones import attach as attach_milestones
+
+    if cfg.engineer.memory.enabled:
+        eng.listeners.append(
+            memory_listener(
+                AlertMemory(cfg.engineer.memory.path, max_records=cfg.engineer.memory.max_records)
+            )
+        )
 
     client, _why = make_client(cfg)
     attach_milestones(engine, speech, cfg, client=client, quiet=lambda: eng.quiet)

@@ -51,6 +51,10 @@ engineer:               # phase 3: rule alerts spoken by the race engineer
   enabled: false        # opt in: `pit-wall run --voice` (or true here)
   language: es          # es | en | de : text AND voice language
   startup_quiet_s: 5    # silence right after a session starts / restarts
+  memory:               # what the engineer said, kept between sessions (a local file, never sent anywhere)
+    enabled: true
+    path: null          # null = ~/.pit-wall-ai/memory.jsonl
+    max_records: 500
   milestones:           # pole, grid and result messages at the end of a qualifying / race
     enabled: true
     use_model: true     # the wording is written by the model (needs llm.allow_cloud); false = fixed variants

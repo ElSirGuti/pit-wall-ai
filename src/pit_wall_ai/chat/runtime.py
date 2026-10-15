@@ -18,6 +18,8 @@ from ..analysis.trackctx import TrackAnalysis
 from ..analysis.tyre_corners import TyreLoadWatch
 from ..config import AppConfig
 from ..engineer.engine import Engineer
+from ..engineer.memory_store import AlertMemory
+from ..engineer.memory_store import listener as memory_listener
 from ..engineer.milestones import attach as attach_milestones
 from ..engineer.rules import build_rules
 from ..session.engine import SessionEngine
@@ -52,6 +54,13 @@ class ChatRuntime:
             speaker or _SilentSpeaker(),
             rules=build_rules(cfg.engineer, cfg.analysis, self.track),
         )
+        # only a live run is remembered: a replayed recording is not something the engineer said
+        self.memory = None
+        if live and cfg.engineer.memory.enabled:
+            self.memory = AlertMemory(
+                cfg.engineer.memory.path, max_records=cfg.engineer.memory.max_records
+            )
+            self.engineer.listeners.append(memory_listener(self.memory))
         self.engine.add_sample_hook(
             lambda snap, state, tracker, events: self.engineer.on_sample(
                 snap, state, tracker, events
@@ -101,5 +110,6 @@ class ChatRuntime:
             track=info,
             brakes=self.brakes,
             tyre_watch=self.tyre_watch,
+            memory=self.memory,
             now=now,
         )

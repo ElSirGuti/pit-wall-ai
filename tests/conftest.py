@@ -16,3 +16,9 @@ def _isolate_local_config(monkeypatch, tmp_path):
     monkeypatch.setenv("PIT_WALL_CONFIG", str(empty))  # instead of config/local.yaml
     monkeypatch.setattr("pit_wall_ai.config.load_dotenv", lambda *a, **k: False)  # no .env
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+
+
+@pytest.fixture(autouse=True)
+def _isolate_alert_memory(monkeypatch, tmp_path):
+    """A test must never write to (or read from) the author's real alert memory."""
+    monkeypatch.setenv("PIT_WALL_AI_HOME", str(tmp_path / "pit-wall-ai-home"))

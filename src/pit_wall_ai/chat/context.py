@@ -83,6 +83,7 @@ class ChatInputs:
     track: TrackInfo | None = None
     brakes: BrakeWatch | None = None
     tyre_watch: object | None = None  # TyreLoadWatch: the index of the laps of this set of tyres
+    memory: object | None = None  # AlertMemory: what was said in earlier sessions
     now: float | None = None  # same clock as ``snap.t``
 
 

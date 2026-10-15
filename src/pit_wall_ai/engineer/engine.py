@@ -103,6 +103,8 @@ class Engineer:
         self._clock = clock
         self._last_said_t = -1e9
         self._session_started_t: float | None = None
+        # called with (record, snapshot, session state) for every alert fired: the memory between sessions
+        self.listeners: list[Callable] = []
         self.quiet = False  # the driver asked not to be disturbed: only critical alerts go out
 
     def set_quiet(self, on: bool) -> None:
@@ -151,6 +153,11 @@ class Engineer:
             rec = AlertRecord(snap.t, a.rule, a.text, a.priority.name, dict(a.values))
             self.recent.append(rec)
             self._records[a.key] = rec
+            for listener in self.listeners:
+                try:
+                    listener(rec, snap, state)
+                except Exception:  # noqa: BLE001 - a memory problem must not silence the engineer
+                    log.exception("alert listener failed")
             log.info(
                 "alert fired",
                 extra={

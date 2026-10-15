@@ -286,12 +286,21 @@ class MilestonesConfig(_Model):
     )
 
 
+class MemoryConfig(_Model):
+    """What the engineer said, kept between sessions in a local file (``pit-wall`` never sends it anywhere)."""
+
+    enabled: bool = True
+    path: str | None = None  # None = ~/.pit-wall-ai/memory.jsonl
+    max_records: int = Field(500, ge=50, le=20000)
+
+
 class EngineerConfig(_Model):
     enabled: bool = False  # opt in: `pit-wall run --voice` or enabled: true
     language: Literal["es", "en", "de"] = "es"
     voice: VoiceConfig = VoiceConfig()
     persona: PersonaConfig = PersonaConfig()
     milestones: MilestonesConfig = MilestonesConfig()
+    memory: MemoryConfig = MemoryConfig()
     calm: CalmConfig = CalmConfig()
     policies: PoliciesConfig = PoliciesConfig()
     rules: RulesConfig = RulesConfig()

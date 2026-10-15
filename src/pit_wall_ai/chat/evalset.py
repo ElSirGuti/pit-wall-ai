@@ -112,6 +112,41 @@ CASES: tuple[Case, ...] = (
     Case("loc-corner", "local", "¿cuál es la prima esse?", expect_source="local"),
     Case("loc-notyet", "local", "¿qué setup me recomiendas?", refuse=True, expect_source="local"),
     Case("loc-weather", "local", "¿va a llover?", refuse=True, expect_source="local"),
+    # added with the later features: they skip themselves on a session that has no such data
+    Case(
+        "loc-tyre-corners",
+        "local",
+        "¿en qué curvas estoy gastando más los neumáticos?",
+        ("tyre_corners.front.R0.corner",),
+        expect_source="local",
+        needs=("tyre_corners.front.R0.corner",),
+        note="an estimate: it must say so and give the share of the corner",
+    ),
+    Case(
+        "loc-tyre-corners-early",
+        "local",
+        "¿en qué curvas gasto más los neumáticos?",
+        ("tyre_corners.laps",),
+        expect_source="local",
+        needs=("tyre_corners.laps",),
+        note="with fewer laps than needed it says how many are missing, it never guesses",
+    ),
+    Case(
+        "loc-loss-corner",
+        "local",
+        "¿cuánto perdí en la curva 6?",
+        ("analysis.corners.C6.time_diff_s",),
+        expect_source="local",
+        needs=("analysis.corners.C6.time_diff_s",),
+        note="about THAT corner, not the worst one",
+    ),
+    Case(
+        "loc-recall-corner",
+        "local",
+        "¿qué me dijiste de la curva 2?",
+        expect_source="local",
+        note="quotes what was said, or says there is nothing on record",
+    ),
     # open: the model, with the context
     Case(
         "open-summary",
@@ -144,6 +179,15 @@ CASES: tuple[Case, ...] = (
         "¿hay diferencia de presión entre el eje delantero y el trasero?",
         any_of=("tyres.axles.front_minus_rear_pressure_psi", "tyres.axles.front_pressure_psi"),
         model_only=True,
+    ),
+    Case(
+        "open-lap-clock",
+        "open",
+        "dime mi mejor vuelta en una frase",
+        ("laps.best.time_s",),
+        needs=("laps.best.time_s",),
+        model_only=True,
+        note="a lap time is said as minutes and seconds (1:24,913), never as 84,913 seconds",
     ),
     Case(
         "open-alert",
