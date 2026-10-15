@@ -66,6 +66,24 @@ terminando al volver. Para que sirva a todo a la vez:
 Mientras tanto, **di en voz alta o apunta en el móvil la hora de cada cosa**: las banderas se localizan por
 el valor que cambia en la memoria compartida y es mucho más rápido si sé el segundo aproximado.
 
+## 3b. Calibración de lluvia (cuando quieras; sesión aparte)
+
+Para que el motor de estrategia sepa cuánto se gana con mojados donde nunca ha llovido
+(`docs/PHASE8_PLAN.md` 4b.2). Un coche y un circuito por serie; graba cada tramo con `pit-wall record` y
+apunta qué hacías:
+
+| Tramo | Qué | Vueltas |
+|---|---|---|
+| A | seco, limpio, mismo coche y circuito | 3 |
+| B | lluvia **ligera y constante**, con slicks | 3 |
+| C | la misma lluvia, con mojados o intermedios (la vuelta de calentamiento no cuenta) | 3 |
+| D | lluvia **fuerte**, con slicks, hasta que sea inconducible (anota la vuelta) | 2 a 3 |
+| E | la misma lluvia fuerte con mojados | 3 |
+
+Si el simulador te deja fijar el nivel de lluvia (Content Manager con CSP lo permite), usa los mismos
+niveles en todas las series. Cuantos más pares coche y circuito, mejor la tabla; con 3 o 4 ya sirve de
+primera estimación.
+
 ## 4. Frases habladas, tanda B: con motor (10 min)
 
 * [ ] En los boxes, coche con el motor a unas 4000 rpm sostenidas (o en la parrilla), micrófono en su sitio.

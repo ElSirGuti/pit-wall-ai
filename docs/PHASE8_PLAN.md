@@ -339,6 +339,41 @@ tyres give back over what is left**, and only override that when staying out bec
   (to check the measured signals and the lap-time loss), the author's pit-lane loss at a few circuits, and
   which fields each simulator gives for rain and track wetness (`docs/MULTI_SIM_PLAN.md`, the `probe`).
 
+### 4b.2 When the wet pace at this circuit is not known (added 2026-10-15, from the author)
+
+At many circuits no session has been run in the rain, so there is no lap time on wets to compare with. The
+engineer must not pretend to know it. The sources, in the order they are trusted:
+
+1. **Own laps on wets at this circuit and car** (the local memory of earlier sessions): measured, used as is.
+2. **Other cars that have already stopped for wets** ("wait for a brave one"): once a rival comes out on
+   wet tyres, the gap it makes to the cars still on slicks, lap after lap, is the best live measurement of
+   the gain. It needs the rivals feed (8b) **and** the tyre compound of each car, which each simulator
+   exposes differently (unverified: to be checked with the `probe`). Without it, only the gaps are visible,
+   and the engineer says what is observed ("el coche de delante salió con mojados y nos saca 2 s por
+   vuelta") and does not claim a cause.
+3. **A calibration table learned from recordings** (below): the typical ratio between a wet and a dry lap by
+   car class and circuit type, with its spread. It is a **prior**, labelled as such, and it is replaced by 1 or
+   2 as soon as they exist.
+4. **Nothing**: with no data at all the engineer says so, keeps the rule of 4b.1 on the safe side (the
+   downpour override still works, because it is measured on the car's own behaviour) and does not
+   recommend a stop for lap-time reasons.
+
+The Monte Carlo treats the unknown gain as a **distribution**, so an unknown circuit gives a wide answer and
+the report says how much of the uncertainty is the missing wet pace.
+
+**Calibration sessions** (the author offers to run them in the simulator and record them):
+
+| Step | What | Recorded as |
+|---|---|---|
+| 1 | a car and a circuit; 3 clean dry laps | the dry reference |
+| 2 | the same, with a steady light rain, on slicks, 3 laps | the loss on slicks (light) |
+| 3 | the same rain, on the wet or intermediate tyre, 3 laps (warm-up lap not counted) | the gain on wets (light) |
+| 4 | repeat 2 and 3 with a heavy rain | the same for a downpour; the point where slicks become unsafe |
+
+`pit-wall record` captures each stint; a small analysis writes one row per (car class, circuit, rain level)
+into a local calibration file. The recordings are not committed (they are the author's own and large); the
+resulting table can be, as numbers, once it has enough rows to be useful.
+
 * **Rules that stay**: numbers from code, the model only phrases, "no tengo ese dato" when the input is
   missing (no rivals, no wetness field), and every estimate labelled as such.
 * **Open**: which sims expose the wetness field and the cars' gaps (the 9 and 10 phases of

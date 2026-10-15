@@ -105,6 +105,13 @@ tiempo, deslizamientos y salidas de pista, agarre estimado, campo de lluvia del 
 Para construirla necesito: una grabación con una carrera o práctica en que empiece a llover y pares, tu
 pérdida en pit lane en algún circuito, y revisar qué campos de lluvia da cada simulador.
 
+## 5g. Calibración de lluvia (cuando quieras, sin prisa)
+
+* graba las series de `docs/SESION_MEDICION.md` 3b (seco, lluvia ligera con slicks y con mojados, lluvia
+  fuerte con ambos) con unos pocos coches y circuitos; con ello el motor de estrategia tendrá una tabla
+  de partida para circuitos donde nunca ha llovido (`docs/PHASE8_PLAN.md` 4b.2);
+* anota qué campos de lluvia o humedad ves en el juego (Content Manager) por si el `probe` los muestra.
+
 ## 5d. Nombres de curvas (nuevo)
 
 Añadidos el 2026-10-15 a `data/circuits.json`, con la posición medida en la línea de tu instalación:
