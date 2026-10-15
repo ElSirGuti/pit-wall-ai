@@ -98,6 +98,13 @@ tiene prioridad. Medidas en tu instalación: Monza 1 192 m y 952 m, Imola 1 186 
 Laguna Seca 464 m (la trasera es la Rahal), Brands Hatch 300 m y 566 m. Revisa que coincidan con lo que tú
 llamas recta principal / trasera en tus circuitos.
 
+**Monza, con tu mapa** (2026-10-15): la recta principal es *Rettifilo Tribune* y la trasera *Curva del
+Serraglio* (el tramo de Lesmo 2 a la Variante Ascari). Ojo con **tres numeraciones distintas** del mismo
+circuito: tu mapa agrupa en 8 curvas (1 Variante del Rettifilo, 2 Curva Grande, 3 Roggia, 4 y 5 Lesmo, 6
+Serraglio, 7 Ascari, 8 Parabolica), la de la F1 usa 11 y la línea del juego da 12 ápices. Por eso Monza **no
+está marcado como verificado** y el ingeniero dice los nombres, no "curva N". Si prefieres que hable con
+la numeración de tu mapa (8), se añade una tabla ápice a número del mapa; dime si la quieres.
+
 **Rectas con nombre** (idea tuya, 2026-10-15): `data/circuits.json` admite `straights` (de qué fracción
 de la vuelta a cuál); hay Rahal Straight (Laguna Seca), Kemmel Straight (Spa) y Hangar Straight
 (Silverstone), y el chat contesta "¿qué es la recta Rahal?" diciendo entre qué curvas va. Comprueba que

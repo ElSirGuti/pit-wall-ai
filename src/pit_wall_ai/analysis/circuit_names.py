@@ -87,7 +87,12 @@ def straights_for(track: str) -> list[Straight]:
     if not c:
         return []
     return [
-        Straight(str(s["name"]), float(s["from_fraction"]), float(s["to_fraction"]))
+        Straight(
+            str(s["name"]),
+            float(s["from_fraction"]),
+            float(s["to_fraction"]),
+            str(s.get("role", "named")),
+        )
         for s in c.get("straights", [])
     ]
 
@@ -172,10 +177,13 @@ def all_straights(track: str, geometry=None) -> list[Straight]:
     named = straights_for(track)
     out = list(named)
     if geometry is not None:
+        roles = {s.role for s in named}
         for g in generic_straights(geometry):
             mid = (g.start + g.fraction_of_lap / 2) % 1.0
-            if not any(n.contains(mid) for n in named):
-                out.append(g)
+            # a named straight that is the main or back one (Monza's Rettifilo Tribune) replaces the generic
+            if g.role in roles or any(n.contains(mid) for n in named):
+                continue
+            out.append(g)
     return out
 
 
@@ -187,20 +195,22 @@ def find_straight(track: str, query: str, geometry=None) -> Straight | None:
         words = [w for w in _norm_words(s.name).split() if w not in _GENERIC]
         if words and all(w in q.split() for w in words):
             return s
-    if geometry is not None:
-        wanted = None
-        if any(f" {w} " in padded for w in _MAIN_WORDS):
-            wanted = "main"
-        elif any(f" {w} " in padded for w in _BACK_WORDS):
-            wanted = "back"
-        if wanted:
-            return next((g for g in all_straights(track, geometry) if g.role == wanted), None)
+    wanted = None
+    if any(f" {w} " in padded for w in _MAIN_WORDS):
+        wanted = "main"
+    elif any(f" {w} " in padded for w in _BACK_WORDS):
+        wanted = "back"
+    if wanted:
+        return next((g for g in all_straights(track, geometry) if g.role == wanted), None)
     return None
 
 
 def straight_label(s: Straight, lang: str) -> str:
     """The name a straight is spoken with: its own, or the generic one in the language."""
-    if s.role in GENERIC_NAMES:
+    if s.role in GENERIC_NAMES and s.name in (
+        "main",
+        "back",
+    ):  # the generic ones have no name of their own
         return GENERIC_NAMES[s.role].get(lang, GENERIC_NAMES[s.role]["en"])
     return s.name
 

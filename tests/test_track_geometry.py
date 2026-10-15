@@ -554,3 +554,23 @@ def test_the_chat_finds_the_main_and_the_back_straight():
         track=track,
     )
     assert a.text.startswith("La recta principal es la recta que va de la curva 4 a la curva 1")
+
+
+def test_monzas_straights_are_named_and_answer_to_the_generic_words():
+    st = {s.role: s for s in circuit_names.straights_for("monza")}
+    assert st["main"].name == "Rettifilo Tribune" and st["back"].name == "Curva del Serraglio"
+    assert st["main"].contains(0.0)  # the pit straight crosses the start line
+    for q, name in (
+        ("¿cuál es la recta trasera?", "Curva del Serraglio"),
+        ("what is the back straight", "Curva del Serraglio"),
+        ("¿qué es la recta principal?", "Rettifilo Tribune"),
+        ("¿qué es la Curva del Serraglio?", "Curva del Serraglio"),
+    ):
+        assert circuit_names.find_straight("monza", q).name == name, q
+    # no generic duplicate next to the named ones
+    g = _geom(
+        5759.0, [(900, 1000), (1100, 1200), (2000, 2100), (3500, 3600), (3700, 3800), (5100, 5200)]
+    )
+    roles = [s.role for s in circuit_names.all_straights("monza", g)]
+    assert roles.count("main") == 1 and roles.count("back") == 1
+    assert circuit_names.straight_label(st["back"], "es") == "Curva del Serraglio"

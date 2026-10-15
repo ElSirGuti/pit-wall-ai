@@ -212,6 +212,20 @@
      "name": "Parabolica",
      "apex_fraction": 0.9
     }
+   ],
+   "straights": [
+    {
+     "name": "Rettifilo Tribune",
+     "role": "main",
+     "from_fraction": 0.949,
+     "to_fraction": 0.156
+    },
+    {
+     "name": "Curva del Serraglio",
+     "role": "back",
+     "from_fraction": 0.509,
+     "to_fraction": 0.675
+    }
    ]
   },
   {
