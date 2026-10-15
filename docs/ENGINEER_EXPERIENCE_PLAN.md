@@ -195,7 +195,14 @@ added) and measuring the recognition with real German phrases.
 * **Memory** (`chat/recall.py`): "¿qué me habías dicho de la curva 4?" quotes the alerts and the earlier
   answers that mention that corner (most recent first, with how long ago). A quote is not re-checked against
   the current facts: it is what was said. Without a corner, "qué me dijiste" is still the last-alert
-  explanation. Not done yet: recall by topic ("qué me dijiste de la gasolina"), and persistence across sessions.
+  explanation.
+* **By topic** (2026-10-15): "¿qué me dijiste de la gasolina / los neumáticos / los frenos / las frenadas /
+  las vueltas / las banderas?" quotes the alerts of the rules of that topic (`chat/recall.py`, `TOPICS`).
+* **Between sessions** (2026-10-15): the alerts of live runs are kept in a local file
+  (`~/.pit-wall-ai/memory.jsonl`, `engineer.memory`; last 500, one JSON line each with the time, track, car,
+  session type, rule and sentence; `PIT_WALL_AI_HOME` moves it; deleting the file forgets everything). "¿qué
+  me dijiste de la curva 4 la última vez / en la sesión anterior?" searches the earlier runs on the same
+  track. Replays of recordings are never stored; nothing in it is sent anywhere.
 
 ## Resumen en español
 

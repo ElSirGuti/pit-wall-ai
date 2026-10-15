@@ -65,6 +65,12 @@ Con el desgaste real ya medido (ver "Ya cerrado"), de aquella lista quedan:
   provisional, la victoria y el final de carrera;
 * una **carrera por tiempo** (sin número de vueltas): hoy el final no se detecta; con una grabación se añade.
 
+## 5b. Memoria del ingeniero
+
+* tras unas sesiones en vivo, pregunta "¿qué me dijiste de la curva 4 la última vez?" o "¿qué me dijiste de la
+  gasolina?" y dime si la respuesta tiene sentido; el archivo es `.pit-wall-ai/memory.jsonl` en tu carpeta de
+  usuario (borrarlo olvida todo; `engineer.memory.enabled: false` lo apaga).
+
 ## 6. Opcional, sin prisa
 
 * **Una tanda manual variando** (6 a 8 vueltas, bloqueando, con mucho volante y con gas brusco) con captura de
