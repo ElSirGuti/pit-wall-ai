@@ -636,61 +636,191 @@
     {
      "order": 1,
      "name": "Abbey",
-     "apex_fraction": 0.06
+     "apex_fraction": 0.051
     },
     {
      "order": 2,
-     "name": "Village",
-     "apex_fraction": 0.133
+     "name": "Farm Curve",
+     "apex_fraction": 0.08
     },
     {
      "order": 3,
-     "name": "The Loop",
-     "apex_fraction": 0.159
+     "name": "Village",
+     "apex_fraction": 0.135
     },
     {
      "order": 4,
-     "name": "Aintree",
-     "apex_fraction": 0.191
+     "name": "The Loop",
+     "apex_fraction": 0.158
     },
     {
      "order": 5,
-     "name": "Brooklands",
-     "apex_fraction": 0.321
+     "name": "Aintree",
+     "apex_fraction": 0.194
     },
     {
      "order": 6,
-     "name": "Luffield",
-     "apex_fraction": 0.35
+     "name": "Brooklands",
+     "apex_fraction": 0.315
     },
     {
      "order": 7,
-     "name": "Copse",
-     "apex_fraction": 0.509
+     "name": "Luffield",
+     "apex_fraction": 0.354
     },
     {
      "order": 8,
-     "name": "Stowe",
-     "apex_fraction": 0.838
+     "name": "Woodcote",
+     "apex_fraction": 0.414
     },
     {
      "order": 9,
-     "name": "Vale",
-     "apex_fraction": 0.921
+     "name": "Copse",
+     "apex_fraction": 0.507
     },
     {
      "order": 10,
+     "name": "Maggotts",
+     "apex_fraction": 0.613
+    },
+    {
+     "order": 12,
+     "name": "Becketts",
+     "apex_fraction": 0.639
+    },
+    {
+     "order": 13,
+     "name": "Becketts",
+     "apex_fraction": 0.656
+    },
+    {
+     "order": 14,
+     "name": "Chapel",
+     "apex_fraction": 0.694
+    },
+    {
+     "order": 15,
+     "name": "Stowe",
+     "apex_fraction": 0.84
+    },
+    {
+     "order": 16,
+     "name": "Vale",
+     "apex_fraction": 0.918
+    },
+    {
+     "order": 17,
+     "name": "Vale",
+     "apex_fraction": 0.931
+    },
+    {
+     "order": 18,
      "name": "Club",
-     "apex_fraction": 0.955
+     "apex_fraction": 0.962
     }
    ],
    "straights": [
     {
+     "name": "Hamilton Straight",
+     "from_fraction": 0.977,
+     "to_fraction": 0.034,
+     "role": "main"
+    },
+    {
+     "name": "Wellington Straight",
+     "from_fraction": 0.212,
+     "to_fraction": 0.303,
+     "role": "named"
+    },
+    {
+     "name": "National Pits Straight",
+     "from_fraction": 0.437,
+     "to_fraction": 0.486,
+     "role": "named"
+    },
+    {
      "name": "Hangar Straight",
      "from_fraction": 0.694,
-     "to_fraction": 0.838
+     "to_fraction": 0.838,
+     "role": "back"
     }
-   ]
+   ],
+   "official_numbers": [
+    {
+     "number": 1,
+     "apex_fraction": 0.051
+    },
+    {
+     "number": 2,
+     "apex_fraction": 0.08
+    },
+    {
+     "number": 3,
+     "apex_fraction": 0.135
+    },
+    {
+     "number": 4,
+     "apex_fraction": 0.158
+    },
+    {
+     "number": 5,
+     "apex_fraction": 0.194
+    },
+    {
+     "number": 6,
+     "apex_fraction": 0.315
+    },
+    {
+     "number": 7,
+     "apex_fraction": 0.354
+    },
+    {
+     "number": 8,
+     "apex_fraction": 0.414
+    },
+    {
+     "number": 9,
+     "apex_fraction": 0.507
+    },
+    {
+     "number": 10,
+     "apex_fraction": 0.613
+    },
+    {
+     "number": 11,
+     "apex_fraction": 0.613
+    },
+    {
+     "number": 12,
+     "apex_fraction": 0.639
+    },
+    {
+     "number": 13,
+     "apex_fraction": 0.656
+    },
+    {
+     "number": 14,
+     "apex_fraction": 0.694
+    },
+    {
+     "number": 15,
+     "apex_fraction": 0.84
+    },
+    {
+     "number": 16,
+     "apex_fraction": 0.918
+    },
+    {
+     "number": 17,
+     "apex_fraction": 0.931
+    },
+    {
+     "number": 18,
+     "apex_fraction": 0.962
+    }
+   ],
+   "numbering_verified": true,
+   "map_note": "18-turn numbering (F1/official since 2010): Maggotts 10-11 and Becketts 12-13 are one apex each on the game's line (Maggotts' 10 is a flat kink, both numbers map to the 3560 m apex), Vale 16-17. Two light kinks the line detects (1022 m after The Loop, 5170 m between Stowe and Vale) have no map number. Confirmed by the author (2026-10-15). The older 15-turn numbering (Chapel 12, Stowe 13, Vale 14, Club 15) is not used."
   },
   {
    "id": "brands_hatch",

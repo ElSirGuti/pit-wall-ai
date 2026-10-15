@@ -593,7 +593,7 @@ def test_the_table_names_corners_without_the_game_only_for_a_verified_circuit():
     assert names is not None and len(names) == 11 and names[6] == "Curvone"
     spa = circuit_names.table_names("spa")  # verified with the author's map: its numbers are the map's
     assert spa is not None and spa[17] == "Blanchimont" and 2 not in spa and 6 not in spa
-    assert circuit_names.table_names("silverstone") is None  # its table order is not the circuit numbering
+    assert circuit_names.table_names("brands_hatch") is None  # its table order is not the circuit numbering
     assert circuit_names.table_names("some_mod_track") is None
 
 

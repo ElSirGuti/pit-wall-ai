@@ -439,7 +439,7 @@ def test_numbering_verified_flag_comes_from_the_table():
     assert circuit_names.numbering_verified("magione") is True
     assert circuit_names.numbering_verified("imola") is True  # the author's map, 2026-10-15
     assert circuit_names.numbering_verified("spa") is True
-    assert circuit_names.numbering_verified("silverstone") is False
+    assert circuit_names.numbering_verified("brands_hatch") is False
     assert circuit_names.numbering_verified("some_mod_track") is False
 
 

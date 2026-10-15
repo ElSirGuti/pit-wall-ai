@@ -340,9 +340,27 @@ def official_map(geometry, track: str | None = None) -> dict[int, int] | None:
     return out
 
 
+def _shared_numbers(geometry, track: str | None = None) -> dict[int, int]:
+    """{map number: apex} for the numbers that lost their apex to a later number on the same one."""
+    circuit = _of_geometry(track, geometry)
+    entries = (circuit or {}).get("official_numbers") or []
+    out: dict[int, int] = {}
+    for e in entries:
+        f = float(e["apex_fraction"])
+        best, best_d = None, TOLERANCE
+        for c in geometry.apexes:
+            d = abs(((f - c.apex_fraction) + 0.5) % 1.0 - 0.5)
+            if d <= best_d:
+                best, best_d = c, d
+        if best is not None:
+            out[int(e["number"])] = best.number
+    return out
+
+
 def attach_official(geometry, track: str | None = None) -> None:
     """Store the map numbering on the geometry (``geometry.official``) for everything that speaks numbers."""
     geometry.official = official_map(geometry, track)  # type: ignore[attr-defined]
+    geometry.official_shared = _shared_numbers(geometry, track)  # type: ignore[attr-defined]
 
 
 def official_of(geometry, apex_number: int) -> int | None:
@@ -358,6 +376,9 @@ def apex_of(geometry, number: int) -> int | None:
     m = getattr(geometry, "official", None)
     if m is None:
         return number
+    shared = getattr(geometry, "official_shared", None) or {}
+    if number in shared:  # two map numbers on one apex (Maggotts 10-11 at Silverstone)
+        return shared[number]
     return next((a for a, o in m.items() if o == number), None)
 
 
