@@ -419,8 +419,14 @@
      "role": "back",
      "from_fraction": 0.509,
      "to_fraction": 0.675
+    },
+    {
+     "name": "Rettifilo Centrale",
+     "from_fraction": 0.716,
+     "to_fraction": 0.9
     }
-   ]
+   ],
+   "map_note": "Names from two maps given by the author on 2026-10-15 (racingcircuits.info and a Wikimedia schematic): Prima Variante = Variante del Rettifilo, Curva Biassono = Curva Grande, Seconda Variante = Variante della Roggia, 1a and 2a Curva di Lesmo, Curva del Serraglio (the back straight), Variante Ascari, Rettifilo Centrale (the straight from Ascari to the Parabolica), Curva Parabolica, Rettifilo Tribune (the pit straight). Numbering not applied yet: the maps have no numbers (see PENDIENTES)."
   },
   {
    "id": "red_bull_ring",
