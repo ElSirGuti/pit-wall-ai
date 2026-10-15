@@ -132,6 +132,15 @@ Todo lo que falta medir con tu PC está ordenado en **`docs/SESION_MEDICION.md`*
 sentada: micrófono y voces, frases (`docs/FRASES_VOZ.md`), fps con el reconocedor en CPU y GPU, y una sesión de
 pista con coche de desgaste real, banderas, daños y penalizaciones. Lo de arriba se resuelve con ese guion.
 
+## Desgaste de neumáticos por curva (en curso)
+
+* hecho: el indicador por rueda coincide con el desgaste que marca la app de neumáticos del juego (sesion3,
+  Cobra 427 SC en Magione): `pit-wall tyre-corners sesion3.pwrec.gz --reference 83,88,70,75`;
+* tuyo: terminar `sesion4` (piloto automático + 6 a 8 vueltas tuyas variando), capturar la app de
+  porcentajes al principio (83/87/69/74 %, vuelta 15) y al final con el contador "Laps", y pasarme los
+  números; con eso hay un segundo punto independiente;
+* mío después: habilitar que el ingeniero diga el consejo por curva solo si ambas sesiones lo validan.
+
 ## Varias claves de API (reserva)
 
 * hecho: `GEMINI_API_KEY`, `GEMINI_API_KEY_2` ... o `GEMINI_API_KEY_LIST=a,b,c` en `.env`; pasa a la

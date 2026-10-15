@@ -60,6 +60,12 @@ class LapLoad:
         float, float, float, float
     ]  # percentage points lost per wheel (FL, FR, RL, RR)
     samples: int
+    wheels: tuple[float, float, float, float] = (
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+    )  # the index per wheel (FL, FR, RL, RR)
 
 
 def corner_of(m: float, corners: list[Corner]) -> int | None:
@@ -102,6 +108,7 @@ def lap_loads(snaps: Iterable[Snapshot], corners: list[Corner], length_m: float)
             continue
         loads: dict[int, CornerLoad] = {}
         tf = tr = 0.0
+        wheels = [0.0, 0.0, 0.0, 0.0]
         prev_t = ss[0].t
         n = 0
         for s in ss:
@@ -118,6 +125,8 @@ def lap_loads(snaps: Iterable[Snapshot], corners: list[Corner], length_m: float)
             r = dt * sum(slip[i] * load[i] for i in REAR) / 1e3
             tf += f
             tr += r
+            for i in range(4):
+                wheels[i] += dt * slip[i] * load[i] / 1e3
             n += 1
             cn = corner_of(s.normalized_pos * length_m, corners)
             if cn is None:
@@ -127,7 +136,7 @@ def lap_loads(snaps: Iterable[Snapshot], corners: list[Corner], length_m: float)
             cl.rear[ph] += r
         a, b = ss[0].tyre_wear, ss[-1].tyre_wear
         drop = tuple(float(a[i] - b[i]) for i in range(4))
-        out.append(LapLoad(lap, loads, tf, tr, drop, n))  # type: ignore[arg-type]
+        out.append(LapLoad(lap, loads, tf, tr, drop, n, tuple(wheels)))  # type: ignore[arg-type]
     return out
 
 
@@ -201,6 +210,53 @@ def validate(laps: list[LapLoad]) -> Validation:
             False, len(rows), r, f"correlation with the measured wear is {r:.2f} (need {MIN_R:g})"
         )
     return Validation(True, len(rows), r, f"correlation {r:.2f} over {len(rows)} laps")
+
+
+REF_MIN_LAPS = 6
+REF_MIN_R = 0.9
+REF_MIN_TOTAL_DROP = (
+    10.0  # points, summed over the four wheels: smaller differences are read-out noise
+)
+
+
+def validate_reference(laps: list[LapLoad], drops: tuple[float, float, float, float]) -> Validation:
+    """Compare the index per wheel with the wear the driver read off the game's own tyre app.
+
+    ``drops`` are the points each wheel lost (start minus end, FL FR RL RR) over the same laps. What is
+    compared is the *distribution* between the wheels (correlation and the order of the four), so it holds
+    whatever the unit of the app is. It validates the proxy at wheel level, not corner by corner.
+    """
+    if len(laps) < REF_MIN_LAPS:
+        return Validation(
+            False, len(laps), None, f"only {len(laps)} complete laps (need {REF_MIN_LAPS})"
+        )
+    total = sum(max(0.0, d) for d in drops)
+    if total < REF_MIN_TOTAL_DROP:
+        return Validation(
+            False,
+            len(laps),
+            None,
+            f"the reference wear is only {total:.0f} points in total (need {REF_MIN_TOTAL_DROP:g})",
+        )
+    proxy = np.array([sum(lp.wheels[i] for lp in laps) for i in range(4)])
+    ref = np.array(drops, dtype=float)
+    if float(np.std(proxy)) == 0.0 or float(np.std(ref)) == 0.0:
+        return Validation(False, len(laps), None, "no difference between the wheels")
+    r = float(np.corrcoef(proxy, ref)[0, 1])
+    same_order = list(np.argsort(proxy)) == list(np.argsort(ref))
+    if r < REF_MIN_R or not same_order:
+        why = f"correlation {r:.2f}" + (
+            "" if same_order else " and a different order of the wheels"
+        )
+        return Validation(
+            False, len(laps), r, f"the index does not follow the reference wear: {why}"
+        )
+    return Validation(
+        True,
+        len(laps),
+        r,
+        f"correlation {r:.2f} with the reference wear of the four wheels, same order",
+    )
 
 
 ADVICE_ES = {

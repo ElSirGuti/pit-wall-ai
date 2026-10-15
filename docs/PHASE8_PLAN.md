@@ -200,6 +200,16 @@ engineer does **not** say it. It is enabled by one recording with a car that rea
 (`docs/SESION_MEDICION.md`, block 3). The proxy units are not slip ratio: `wheel_slip` in this car's data is
 0.04 braking and 0.12 coasting at the median, so thresholds are relative (shares), never absolute.
 
+**Update (2026-10-15): the game's wear channel does not move on the author's setup, but the game's own
+tyre app does.** On the Shelby Cobra 427 SC at 200 % tyre wear the shared-memory `tyre_wear` stayed at 100
+(0.17 points over 13 laps) while the tyre app showed 83 / 88 / 70 / 75 % after 15 laps. So the check uses a
+**reference read off the app**: `pit-wall tyre-corners FILE --reference 83,88,70,75 [--start-wear
+100,100,100,100]`. On `sesion3` (13 complete laps, one incident lap left out) the index per wheel is
+20.7 / 13.7 / 36.4 / 29.1 % against 20.2 / 14.3 / 35.7 / 29.8 % of the measured drop: correlation 1.00 and the
+same order of the four wheels. **Limits to keep in mind:** four points only (a chance match of the order has a
+probability of 1 in 24), one car, one circuit, and it validates the distribution between wheels, not corner by
+corner. A second independent stint (`sesion4`) is the next check before the corner advice is voiced.
+
 ### 3.3 The learning loop: a ledger of suggestions and what happened
 
 The language model does not learn between sessions (its weights never change). What improves is a **local

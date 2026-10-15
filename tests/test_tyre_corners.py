@@ -115,3 +115,23 @@ def test_a_lap_from_snapshots_is_attributed_to_the_corner_and_phase():
     cl = laps[0].corners[1]
     assert cl.dominant("front") == "brake" and cl.front["brake"] > 0
     assert 2 not in laps[0].corners
+
+
+# -- validation against the game's own tyre app (reference given by the driver) --------------------------
+def wheel_lap(n, w):
+    return TC.LapLoad(n, {}, w[0] + w[1], w[2] + w[3], (0.0,) * 4, 1000, tuple(w))
+
+
+def test_reference_accepts_an_index_that_ranks_the_wheels_like_the_app():
+    laps = [wheel_lap(i, (140, 93, 246, 197)) for i in range(8)]
+    v = TC.validate_reference(laps, (17.0, 12.0, 30.0, 25.0))
+    assert v.ok and v.r is not None and v.r > 0.95
+
+
+def test_reference_rejects_a_different_order_few_laps_and_a_tiny_total_drop():
+    laps = [wheel_lap(i, (140, 93, 246, 197)) for i in range(8)]
+    assert not TC.validate_reference(laps, (30.0, 25.0, 12.0, 17.0)).ok  # front worn most: opposite
+    assert "complete laps" in TC.validate_reference(laps[:3], (17.0, 12.0, 30.0, 25.0)).reason
+    assert "in total" in TC.validate_reference(laps, (1.0, 0.0, 2.0, 1.0)).reason
+    flat = [wheel_lap(i, (100, 100, 100, 100)) for i in range(8)]
+    assert not TC.validate_reference(flat, (17.0, 12.0, 30.0, 25.0)).ok

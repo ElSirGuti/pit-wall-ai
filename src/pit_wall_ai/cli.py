@@ -141,6 +141,11 @@ def _parser() -> argparse.ArgumentParser:
     tc.add_argument("--session", default="practice")
     tc.add_argument("--ac-dir", action="append", help="AC folder (repeatable)")
     tc.add_argument("--top", type=int, default=6, help="how many corners to list")
+    tc.add_argument(
+        "--reference",
+        help="wear read off the game's tyre app at the END of the laps, FL,FR,RL,RR (e.g. 83,88,70,75)",
+    )
+    tc.add_argument("--start-wear", help="the same at the START (default 100,100,100,100)")
     st = sub.add_parser("stt-test", help="speech recognition: latency, accuracy, cpu vs gpu")
     st.add_argument("--config", help="YAML config")
     st.add_argument("files", nargs="*", help="wav files (none: synthesised phrases)")

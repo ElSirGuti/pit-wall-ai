@@ -10,7 +10,14 @@ from ..config import AppConfig
 from .circuit_names import corner_names
 from .offline import iter_snapshots
 from .tracks import resolve
-from .tyre_corners import ADVICE_ES, drop_incident_laps, lap_loads, ranking, validate
+from .tyre_corners import (
+    ADVICE_ES,
+    drop_incident_laps,
+    lap_loads,
+    ranking,
+    validate,
+    validate_reference,
+)
 
 
 def cmd_tyre_corners(
@@ -42,6 +49,17 @@ def cmd_tyre_corners(
         out("no complete lap in the recording")
         return 1
     v = validate(laps)
+    if a.reference and not v.ok:
+        try:
+            start = [float(x) for x in (a.start_wear or "100,100,100,100").split(",")]
+            end = [float(x) for x in a.reference.split(",")]
+            assert len(start) == len(end) == 4
+        except (ValueError, AssertionError):
+            print("--reference and --start-wear need four numbers: FL,FR,RL,RR", file=sys.stderr)
+            return 2
+        ref = validate_reference(laps, tuple(s - e for s, e in zip(start, end, strict=True)))
+        v = ref
+        out("(the game's wear channel does not move: using the reference you gave)")
     out(("VALIDATED: " if v.ok else "NOT VALIDATED (an estimate, not to be voiced): ") + v.reason)
     for axle in ("front", "rear"):
         rows = ranking(laps, axle)[: a.top]
