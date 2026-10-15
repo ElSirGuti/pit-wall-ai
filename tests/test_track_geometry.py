@@ -452,8 +452,41 @@ def test_monza_and_mugello_tables_cover_their_corners_in_order():
     assert [c["name"] for c in mugello][-1] == "Bucine"
     for table in (monza, mugello):
         fr = [c["apex_fraction"] for c in table]
-        assert fr == sorted(fr) and 0 < fr[0] and fr[-1] < 1
+        assert fr == sorted(fr) and fr[0] > 0 and fr[-1] < 1
     # nothing is "verified" until the author checks the numbering against the real circuit
     assert (
         circuit_names.table_names("monza") is None and circuit_names.table_names("mugello") is None
     )
+
+
+def test_named_straights_are_found_by_position_and_by_question():
+    st = circuit_names.straights_for("ks_laguna_seca")
+    assert [s.name for s in st] == ["Rahal Straight"]
+    assert circuit_names.straight_at("laguna_seca", 0.6).name == "Rahal Straight"
+    assert circuit_names.straight_at("laguna_seca", 0.2) is None
+    for q in ("¿qué es la recta Rahal?", "where is the Rahal Straight", "Rahal"):
+        assert circuit_names.find_straight("laguna_seca", q).name == "Rahal Straight"
+    assert circuit_names.find_straight("laguna_seca", "la recta principal") is None
+    wrap = circuit_names.Straight("Pit straight", 0.9, 0.1)  # crosses the start line
+    assert wrap.contains(0.95) and wrap.contains(0.05) and not wrap.contains(0.5)
+    assert abs(wrap.fraction_of_lap - 0.2) < 1e-9
+
+
+def test_the_chat_says_between_which_corners_a_straight_runs():
+    from types import SimpleNamespace
+
+    from pit_wall_ai.chat import local as L
+    from pit_wall_ai.chat.facts import FactSheet
+
+    apexes = [
+        SimpleNamespace(number=n, apex_fraction=f)
+        for n, f in ((5, 0.43), (6, 0.542), (7, 0.659), (8, 0.685))
+    ]
+    track = SimpleNamespace(
+        track="ks_laguna_seca", names={8: "Corkscrew 1"}, geometry=SimpleNamespace(apexes=apexes)
+    )
+    r = L.route("¿Qué es la recta Rahal?", track, "es")
+    assert r is not None and r.intents[0].value == "straight"
+    a = L.answer(r, FactSheet(lang="es"), lang="es", track=track)
+    assert "Rahal Straight" in a.text and "curva 6" in a.text and "Corkscrew 1" in a.text
+    assert L.route("¿cuánta gasolina queda?", track, "es").intents[0].value == "fuel"

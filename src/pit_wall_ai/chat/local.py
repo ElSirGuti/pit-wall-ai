@@ -39,6 +39,7 @@ class Intent(StrEnum):
     NOT_YET = "not_yet"  # setup and race strategy: planned for phase 8
     TIME_LEFT = "time_left"
     TYRE_CORNERS = "tyre_corners"  # where the tyres are worked hardest (an estimate)
+    STRAIGHT = "straight"  # what a named straight is and between which corners
 
 
 # keyword tables: every entry is a normalised phrase searched as whole words
@@ -283,6 +284,12 @@ def route(question: str, track: TrackInfo | None = None, lang: str = "es") -> Ro
     found: list[Intent] = []
     corners: tuple[int, ...] = ()
     hits: list[int] = []
+    if track is not None:
+        from ..analysis.circuit_names import find_straight
+
+        st = find_straight(track.track, question)
+        if st is not None and _has(q, DE.IDENTITY if de else _IDENTITY):
+            return Routed((Intent.STRAIGHT,), (), (f"straight:{st.name}",))
     if track is not None and track.geometry is not None:
         hits = find_corner(track.geometry, question, track.names)
         if hits and _has(q, identity):
@@ -863,6 +870,40 @@ def tyre_corners_answer(sheet, lang, names, corner_ref):
     return head + body + tail, keys
 
 
+def straight_answer(sheet, lang, track, routed, corner_ref):
+    """ "The Rahal Straight goes from corner 6 to the entry of the Corkscrew 1": no number that is not a corner."""
+    from ..analysis.circuit_names import straights_for
+
+    name = next((f.split(":", 1)[1] for f in routed.flags if f.startswith("straight:")), None)
+    st = next((s for s in straights_for(track.track) if s.name == name), None) if track else None
+    g = track.geometry if track is not None else None
+    if st is None:
+        return NO_DATA[lang], []
+    if g is None or not g.apexes:
+        text = {
+            "es": f"{st.name} es una recta nombrada de este circuito, pero no tengo su línea para situarla.",
+            "en": f"{st.name} is a named straight of this circuit, but I have no racing line to place it.",
+            "de": f"{st.name} ist eine benannte Gerade dieser Strecke, aber ich habe keine Ideallinie, um sie einzuordnen.",
+        }[lang]
+        return text, []
+
+    def near(f: float) -> int:
+        return min(g.apexes, key=lambda c: abs(((f - c.apex_fraction) + 0.5) % 1.0 - 0.5)).number
+
+    a, b = near(st.start), near(st.end)
+    text = {
+        "es": f"{st.name} es la recta que va de {corner_ref(a)} a {corner_ref(b)}.",
+        "en": f"{st.name} is the straight that runs from {corner_ref(a)} to {corner_ref(b)}.",
+        "de": f"{st.name} ist die Gerade von {corner_ref(a)} bis {corner_ref(b)}.",
+    }[lang]
+    return text, []
+
+
+def _straight(sheet, lang, track, routed, th):
+    names = track.names if track is not None else {}
+    return straight_answer(sheet, lang, track, routed, lambda c: _corner_ref(sheet, c, names, lang))
+
+
 def _tyre_corners(sheet, lang, track, routed, th):
     names = track.names if track is not None else {}
     return tyre_corners_answer(sheet, lang, names, lambda c: _corner_ref(sheet, c, names, lang))
@@ -927,4 +968,5 @@ _BUILDERS = {
     Intent.NOT_YET: _not_yet,
     Intent.TIME_LEFT: _time_left,
     Intent.TYRE_CORNERS: _tyre_corners,
+    Intent.STRAIGHT: _straight,
 }

@@ -91,7 +91,11 @@ Añadidos el 2026-10-15 a `data/circuits.json`, con la posición medida en la l�
 **Monza** (12 curvas, de la Variante del Rettifilo a la Parabolica), **Mugello** (completo, 15) y **Laguna
 Seca** (Andretti Hairpin, Corkscrew 1 y 2, Rainey Curve). Ninguno está marcado como verificado: para que el
 ingeniero diga "curva N" con el número del circuito hace falta que compruebes la numeración contra el mapa
-real (`pit-wall corners --track monza --length 5793` y el plano de la pista). Si me dices cuáles
+real (`pit-wall corners --track monza --length 5793` y el plano de la pista). **Rectas con nombre** (idea tuya, 2026-10-15): `data/circuits.json` admite `straights` (de qué fracción
+de la vuelta a cuál); hay Rahal Straight (Laguna Seca), Kemmel Straight (Spa) y Hangar Straight
+(Silverstone), y el chat contesta "¿qué es la recta Rahal?" diciendo entre qué curvas va. Comprueba que
+la recta empieza y acaba donde tú la conoces; si me das las de otros circuitos las añado igual.
+Si me dices cuáles
 circuitos usas más, completo esos primero (los que dejé sin nombres porque la línea del juego no coincide
 con la tabla: Zandvoort, Vallelunga; con dudas sobre el orden: Red Bull Ring, Barcelona, Brands Hatch).
 

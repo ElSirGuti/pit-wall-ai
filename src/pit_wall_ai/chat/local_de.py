@@ -458,6 +458,13 @@ def unknown(sheet, track, routed, th):
     ), []
 
 
+def straight(sheet, track, routed, th):
+    from . import local as L
+
+    names = track.names if track is not None else {}
+    return L.straight_answer(sheet, "de", track, routed, lambda c: corner_ref(sheet, c, names))
+
+
 def tyre_corners(sheet, track, routed, th):
     from . import local as L
 
@@ -466,6 +473,7 @@ def tyre_corners(sheet, track, routed, th):
 
 
 BUILDERS = {
+    "straight": straight,
     "tyre_corners": tyre_corners,
     "fuel": fuel,
     "laps": laps,

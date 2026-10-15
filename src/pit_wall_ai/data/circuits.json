@@ -130,6 +130,13 @@
      "name": "Bus Stop",
      "apex_fraction": 0.968
     }
+   ],
+   "straights": [
+    {
+     "name": "Kemmel Straight",
+     "from_fraction": 0.186,
+     "to_fraction": 0.348
+    }
    ]
   },
   {
@@ -283,6 +290,13 @@
      "order": 10,
      "name": "Club",
      "apex_fraction": 0.955
+    }
+   ],
+   "straights": [
+    {
+     "name": "Hangar Straight",
+     "from_fraction": 0.694,
+     "to_fraction": 0.838
     }
    ]
   },
@@ -463,6 +477,13 @@
      "order": 10,
      "name": "Rainey Curve",
      "apex_fraction": 0.761
+    }
+   ],
+   "straights": [
+    {
+     "name": "Rahal Straight",
+     "from_fraction": 0.542,
+     "to_fraction": 0.685
     }
    ]
   },
