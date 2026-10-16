@@ -1,44 +1,40 @@
 # Pendientes del autor
 
 Lista viva de lo que **tiene que hacer una persona** (no el código). Se actualiza cuando algo se cierra.
-Última actualización: 2026-10-15 (noche).
+Última actualización: 2026-10-16.
 
 El orden es por lo que más desbloquea. Lo que ya está hecho está al final, en "Ya cerrado".
 
 ## 1. Una sentada de mediciones  ·  guion en `docs/SESION_MEDICION.md`
 
-Con el desgaste real ya medido (ver "Ya cerrado"), de aquella lista quedan:
-
-* **FPS con el reconocedor de voz**: medir tres bloques de 3 vueltas, misma pista y coche, y anotar FPS medio y
-  mínimo en cada uno. Ya tienes un dato: 142 FPS de media con `record` y `run --voice` corriendo.
+* **FPS con el reconocedor de voz**: la voz ya funciona en pista con la GPU y el juego limitado a unos 60 FPS
+  (reconocimiento de 0,6 a 2 s con `small`, 0,8 a 1 s con `medium` en el menú). Falta la tabla de FPS: tres
+  bloques de 3 vueltas, misma pista y coche, anotando FPS medio y mínimo. Con ella se decide `stt.model`
+  (`small`, `medium`, `turbo`) y si conviene limitar los FPS del juego.
 
   | Bloque | En paralelo | FPS medio | FPS mínimo |
   |---|---|---|---|
   | 1 | nada (juego solo) | ? | ? |
-  | 2 | `pit-wall stt-test --device cpu --repeat 30` | ? | ? |
-  | 3 | `pit-wall stt-test --device cuda --repeat 30` | ? | ? |
+  | 2 | `pit-wall voice --stt-device cpu` | ? | ? |
+  | 3 | `pit-wall voice --stt-device cuda --stt-model medium` | ? | ? |
+  | 4 | `pit-wall voice --stt-device cuda --stt-model turbo` | ? | ? |
 
-  Con eso se fija `stt.device` para Assetto Corsa.
-* **Eventos del juego** (una grabación corta con `pit-wall record` alrededor de cada uno; apunta la hora):
-  bandera amarilla, azul, blanca, negra y las penalizaciones de AC nativo (límites de pista y salida en falso);
-  un contacto que cause daño; y safety car si algún modo lo ofrece. Si usas Real Penalty, el log de la sesión
-  (`...\assettocorsa\apps\python\RealPenalty\logs\session_<fecha>.log`). Con eso se activan las reglas con
-  datos reales (hoy están apagadas porque nunca se ha capturado un evento).
+* **Eventos del juego**: el puente CSP (5l) ya envía banderas, penalización y daño; falta **provocarlos y
+  grabar con `pit-wall record`** (apunta la hora): bandera amarilla, azul, blanca y negra, límites de pista y
+  salida en falso, un contacto con daño y safety car. Con eso se encienden las reglas con datos reales (hoy
+  apagadas porque nunca se ha capturado un evento). Si usas Real Penalty, su log de la sesión.
 
-## 2. Voz: probarla con tu equipo  ·  `docs/VOICE.md`
+## 2. Voz: lo que falta de probar  ·  `docs/VOICE.md`
 
-* En casa, con `pip install -e ".[voice,stt]"`: `pit-wall devices`, `pit-wall mic-test --device <nombre>` y
-  `pit-wall voices --test`; anotar el micrófono, la salida y la voz que prefieres y ponerlos en
-  `config/local.yaml`.
-* **El botón del volante**: con G HUB abierto, `pit-wall input-test --seconds 30` (pulsa botones y paletas del
-  G29, una tecla y un botón del ratón), y después `pit-wall bind push_to_talk` y `pit-wall bindings`. Es lo
-  único de la voz que no se ha podido probar sin ti.
-* **Frases habladas** (`docs/FRASES_VOZ.md`): las 40 en español, en silencio y con el coche sonando, con el
-  micrófono o con el móvil (en `frases/telefono/`). Con ellas se cierra el paso 5 de la voz y se decide si
-  `small` basta o conviene `medium`.
-* **Probar la conversación en vivo**: `pit-wall voice` (botón + micrófono) o al menos `pit-wall chat` con una
-  práctica abierta; sobre todo "¿dónde pierdo tiempo?", "¿en qué curvas gasto más los neumáticos?" y
-  "no molestes".
+Hecho el 2026-10-16: micrófono (Razer Seiren Mini), voz (Sabina), botón del volante (el 10, como joystick; el 9
+quedó descartado), conversación en vivo con el juego, y la pronunciación de "psi". Falta:
+
+* **Frases habladas** (`docs/FRASES_VOZ.md`): las 40 en español, en silencio y con el coche sonando (con el
+  micrófono o con el móvil, en `frases/telefono/`). Con ellas se cierra el paso 5 de la voz y se decide el modelo
+  con datos. Mientras tanto se van corrigiendo los fallos que salgan hablando (hoy: "desgaste", "pits",
+  "Magione"); pásame lo que oiga mal.
+* **Conducir con la voz**: una carrera completa con `pit-wall voice` (ahora solo se ha probado en boxes y en
+  vueltas de calentamiento): ¿se oye bien con el motor?, ¿molestan las alertas mientras hablas?, "no molestes".
 
 ## 3. Idiomas (alemán e inglés)
 
@@ -52,10 +48,12 @@ Con el desgaste real ya medido (ver "Ya cerrado"), de aquella lista quedan:
 * **Rotar la clave de Gemini.** Las dos claves que has usado quedaron escritas en la conversación. Entra a
   Google AI Studio > API keys, borra las usadas y crea una nueva solo para el proyecto; ponla en `.env` como
   `GEMINI_API_KEY=...` (`.env` está ignorado por git).
-* **Claves de reserva**: decidir cuáles poner (`GEMINI_API_KEY_2`... o `GEMINI_API_KEY_LIST=a,b,c`). Revisa
-  los términos de Google antes de usar muchas cuentas gratuitas: las cuotas son por proyecto y los términos
-  pueden prohibir abrir cuentas para sortear los límites. Una alternativa es otro proveedor como reserva
-  (`docs/PROVIDERS_PLAN.md`). Con 2 o más claves, `pit-wall llm-check` debe listarlas como aceptadas.
+* **Claves de reserva**: Gemini devuelve a menudo 503 ("high demand") y timeouts (2026-10-16) y el ingeniero cae al
+  texto de respaldo. Una segunda clave (`GEMINI_API_KEY_2` o `GEMINI_API_KEY_LIST=a,b,c`) o un proveedor de
+  reserva (`docs/PROVIDERS_PLAN.md`) lo reduce. Revisa los términos de Google antes de usar muchas cuentas
+  gratuitas. El timeout bajó a 3,5 s (`llm.timeout_s`); si se pierden respuestas buenas, súbelo a 4,5.
+* **Disco C: lleno** (quedan unos 800 MB): Windows y el juego escriben ahí. Los modelos de reconocimiento ya van
+  a `E:\Documents\pit-wall-models` (`stt.model_dir`); libera algo más en C:.
 * **Aprobar el plan de carrera (fase 8a)** y el resto de la fase 8 antes de empezar: `docs/PHASE8_PLAN.md`.
 
 ## 5. Mensajes de pole y de resultado (nuevo)
@@ -120,26 +118,19 @@ nombre) y **Silverstone** con tus mapas: GP con 18 curvas (Maggotts 10-11, Becke
 Vale 16-17, Club 18; dos curvas ligeras sin número), International (8) y National (7). Pendiente: confirmar en
 el juego que en el National el 3 y el 4 son la misma horquilla, y el mapa de los inversos de cada circuito.
 
-## 5l. Puente CSP: el desgaste real (2026-10-15, hay que probarlo en el juego)
+## 5l. Puente CSP: banderas, penalización y daño (el desgaste ya está)
 
-La memoria compartida clásica de AC se queda en 100 % de desgaste con CSP; las apps (CMRT) lo leen por la API
-Lua. `tools/csp_bridge/` es una app Lua mínima que envía el desgaste real (y banderas, penalización, daño y
-lluvia) a `127.0.0.1:28271`; `pit-wall` la recibe y la mezcla en la telemetría (`telemetry.csp_bridge`).
-Ya está copiada en `...ssettocorsapps\lua\pitwall_bridge`. Falta: 1) en el juego, abrir la barra de apps
-y activar **Pit Wall Bridge** una vez; 2) con una práctica abierta, `pit-wall bridge-test` debe mostrar los
-cuatro porcentajes (los de tu app CMRT); 3) con `pit-wall voice`, "¿cómo están los neumáticos?" ya dirá el
-desgaste real. Si algo no llega, dime el mensaje del juego (log de CSP) o la salida de `bridge-test`.
+El desgaste real ya llega y coincide con tu app CMRT (99/98/69/62 % contra 99,7/98,8/69,9/62,3 %). El mismo
+mensaje trae bandera, penalización, daño por zona y lluvia, que nadie usa todavía: ver "Eventos del juego" en la
+sección 1. Sin el puente (app no activada o juego cerrado) el ingeniero no dice el desgaste, no lo inventa.
 
-## 5e. Verificar la numeración de los circuitos (nuevo, con tu idea)
+## 5e. Verificar la numeración de los circuitos
 
-1. `pit-wall circuit-maps` dibuja la línea de carrera de cada circuito de la tabla con sus ápices numerados,
-   las rectas coloreadas y los nombres, y crea `circuit_maps\index.html` (local, no se sube: está en
-   `.gitignore`). Orientación del juego, que puede estar girada respecto a un mapa publicado.
-2. Abre el índice y, circuito por circuito, compara con tu mapa: ¿mismo número de curvas?, ¿mismo orden?,
-   ¿izquierda y derecha coinciden?, ¿los nombres están donde deben?
-3. Dime cuáles quedan bien y los marco `numbering_verified`; para los que agrupan chicanes en una sola
-   curva (Monza en tu mapa: 8; la línea da 12) decidimos si añadimos una tabla ápice a número del mapa.
-4. Los que no se dibujan (Oran Park, Lime Rock) no tienen línea en tu instalación.
+Verificados con tu mapa: Magione, Imola, Spa, Monza, Red Bull Ring (GP y national) y Silverstone (GP,
+International y National). **Faltan los mapas con números** de Mugello, Laguna Seca, Brands Hatch, Barcelona,
+Zandvoort, Vallelunga, Nordschleife, Le Mans, Mónaco y Sepang (Oran Park y Lime Rock no tienen línea en tu
+instalación). Para cada uno necesito el mapa con los números y los nombres; los demás trazados (national,
+inverso) con su mapa si lo tienes. `pit-wall circuit-maps` genera el dibujo local de la línea para comparar.
 
 ## 5f. Lluvia al final de la carrera (planificación)
 
@@ -184,6 +175,18 @@ Si me dices cuáles
 circuitos usas más, completo esos primero (los que dejé sin nombres porque la línea del juego no coincide
 con la tabla: Zandvoort, Vallelunga; con dudas sobre el orden: Red Bull Ring, Barcelona, Brands Hatch).
 
+## 5m. Lo que falta del lado del código (sin ti, o con una prueba tuya al final)
+
+* **Reglas de banderas, daño y penalización** con los datos del puente: necesitan las capturas de la sección 1.
+* **Índice de desgaste por curva en vivo** con el porcentaje real del puente: el análisis ya existe (`tyre-corners`);
+  falta usarlo en la conversación en vivo y compararlo con tu app.
+* **Estimación del desgaste cuando el simulador no lo da** (iRacing: solo al parar): plan en `PHASE8_PLAN.md` 3.5.
+* **Final de carrera por tiempo**: hoy no se detecta; necesita una grabación (sección 5).
+* **Motor de estrategia / decisión de parada** (fase 8): hoy "¿debería entrar a pits?" contesta solo el desgaste
+  medido; el plan espera tu aprobación (sección 4).
+* **Debrief** (fase 7) y **voces con efecto de radio**: esperan tu aprobación de los planes (sección 5c).
+* **Más traducciones al alemán** y más correcciones del reconocimiento a medida que salgan fallos hablando.
+
 ## 6. Opcional, sin prisa
 
 * **Una tanda manual variando** (6 a 8 vueltas, bloqueando, con mucho volante y con gas brusco) con captura de
@@ -197,6 +200,16 @@ con la tabla: Zandvoort, Vallelunga; con dudas sobre el orden: Red Bull Ring, Ba
 
 ## Ya cerrado
 
+* ~~Voz en vivo con tu equipo~~ (2026-10-16): micrófono Razer Seiren Mini, voz Sabina, botón 10 del G29 como
+  joystick, reconocimiento en la GPU (`stt.device: cuda`; `small`, `medium` y `turbo` configurables con
+  `stt.model` o `--stt-model`), "psi" dicho letra a letra, y las preguntas sobre un neumático, un eje o una sola
+  medida contestadas solo con eso.
+* ~~Desgaste real de los neumáticos~~ (2026-10-16): puente CSP (`tools/csp_bridge`, `pit-wall bridge-install` y
+  `bridge-test`); coincide con la app CMRT. En iRacing el desgaste solo se conoce al parar: ver
+  `docs/PHASE8_PLAN.md` 3.5.
+* ~~Trazados y circuitos~~ (2026-10-15): tabla sensible al trazado (national, inversos), Red Bull Ring national y
+  Silverstone GP, International y National verificados; el ingeniero lista los nombres de las curvas.
+* ~~Mensaje de respaldo cuando el modelo falla~~ (2026-10-16): sin el error técnico ni las partes vacías.
 * ~~Segunda sesión grabada y evaluación del chat~~ (2026-10-15): sesiones con el Shelby Cobra 427 SC en
   Magione; el chat evaluado sobre `sesion3` (13 vueltas, otro coche y otro compuesto): **29 de 30** casos, 17
   respuestas del modelo sin afirmaciones eliminadas, mediana 2,2 s (p95 4,1 s); el único fallo era un caso mal
