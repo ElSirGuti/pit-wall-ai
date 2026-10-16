@@ -200,6 +200,32 @@ def _parser() -> argparse.ArgumentParser:
     it.add_argument("--config", help="YAML config")
     it.add_argument("--seconds", type=float, default=30.0, help="how long to listen (30)")
 
+    ph = sub.add_parser(
+        "phrases",
+        help="record the phrases of docs/FRASES_VOZ.md and measure the recogniser on them",
+    )
+    ph_sub = ph.add_subparsers(dest="action", required=True)
+    for name, helptext in (
+        ("record", "record each phrase from the microphone (Enter to start, Enter to stop)"),
+        ("test", "transcribe what was recorded and report the word error rate"),
+    ):
+        p = ph_sub.add_parser(name, help=helptext)
+        p.add_argument("--config", help="YAML config")
+        p.add_argument("--lang", choices=["es", "de", "en"], default="es")
+        p.add_argument("--set", default="A", help="A = quiet, B = with the engine on (A)")
+        p.add_argument("--out", default="frases", help="folder of the recordings (frases)")
+        if name == "record":
+            p.add_argument("--device", help="part of the microphone name")
+            p.add_argument("--only", help="e.g. 3,6-8: only these phrases")
+            p.add_argument(
+                "--redo", action="store_true", help="record again the ones already saved"
+            )
+            p.add_argument("--seconds", type=float, default=10.0, help="longest recording (10)")
+        else:
+            p.add_argument("--dir", help="another folder (e.g. frases/telefono)")
+            p.add_argument("--device", choices=["cpu", "cuda"], help="override stt.device")
+            p.add_argument("--model", help="tiny | base | small | medium | high | turbo")
+
     bi = sub.add_parser(
         "bridge-install", help="copy the CSP Lua bridge app into the game's apps/lua"
     )
@@ -696,6 +722,12 @@ def _cmd_input_test(cfg: AppConfig, a: argparse.Namespace) -> int:
     return cmd_input_test(cfg, a)
 
 
+def _cmd_phrases(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .stt.cli_phrases import cmd_phrases_record, cmd_phrases_test
+
+    return (cmd_phrases_record if a.action == "record" else cmd_phrases_test)(cfg, a)
+
+
 def _cmd_bridge_install(cfg: AppConfig, a: argparse.Namespace) -> int:
     from .telemetry.cli_bridge import cmd_bridge_install
 
@@ -843,6 +875,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "tyre-corners": _cmd_tyre_corners,
             "bindings": _cmd_bindings,
             "input-test": _cmd_input_test,
+            "phrases": _cmd_phrases,
             "bridge-install": _cmd_bridge_install,
             "bridge-test": _cmd_bridge_test,
             "chat": _cmd_chat,

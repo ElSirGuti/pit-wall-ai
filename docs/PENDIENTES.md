@@ -29,8 +29,11 @@ El orden es por lo que más desbloquea. Lo que ya está hecho está al final, en
 Hecho el 2026-10-16: micrófono (Razer Seiren Mini), voz (Sabina), botón del volante (el 10, como joystick; el 9
 quedó descartado), conversación en vivo con el juego, y la pronunciación de "psi". Falta:
 
-* **Frases habladas** (`docs/FRASES_VOZ.md`): las 40 en español, en silencio y con el coche sonando (con el
-  micrófono o con el móvil, en `frases/telefono/`). Con ellas se cierra el paso 5 de la voz y se decide el modelo
+* **Frases habladas** (`docs/FRASES_VOZ.md`): las 40 en español, en silencio y con el coche sonando. Ahora es
+  guiado: `pit-wall phrases record --set A` te muestra cada frase y graba (Enter para empezar, Enter para parar;
+  `--set B` con el motor, `--only 3,6-8` para algunas) y `pit-wall phrases test --set A --device cuda` las mide
+  (palabras mal, tiempo; `--model medium` o `turbo` para comparar; `--dir frases/telefono` para las del móvil).
+  También con `--lang de` y `--lang en`. Con ellas se cierra el paso 5 de la voz y se decide el modelo
   con datos. Mientras tanto se van corrigiendo los fallos que salgan hablando (hoy: "desgaste", "pits",
   "Magione"); pásame lo que oiga mal.
 * **Conducir con la voz**: una carrera completa con `pit-wall voice` (ahora solo se ha probado en boxes y en
@@ -201,7 +204,8 @@ es/en/de. El **final de una carrera por tiempo** ya se detecta con el puente (el
 * **Motor de estrategia / decisión de parada** (fase 8): hoy "¿debería entrar a pits?" contesta solo el desgaste
   medido; el plan espera tu aprobación (sección 4).
 * **Debrief** (fase 7) y **voces con efecto de radio**: esperan tu aprobación de los planes (sección 5c).
-* **Más traducciones al alemán** y más correcciones del reconocimiento a medida que salgan fallos hablando.
+* **Más traducciones al alemán**: hecho `docs/ENGINEER.de.md` y `tools/csp_bridge/README.de.md` (además de README y
+  VOICE); si quieres otros, dime cuáles. Y más correcciones del reconocimiento a medida que salgan fallos hablando.
 * Qué datos tienen las apps de tu instalación y cuáles usamos: `docs/AC_APPS_NOTES.md`. Los logs de Real Penalty
   (`apps/python/RealPenalty/logs`) listan cortes, entradas y salidas de boxes de tus carreras online; tienen nombres
   de otros pilotos, así que se leen en local y no se suben.

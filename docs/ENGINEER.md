@@ -41,6 +41,9 @@ Every fired alert is logged (`alert fired`) with its rule and the values that ma
 | `brake_hot` | brake temperature > 800 °C | on | auto-ignored when the sensor does not move (Supra GT4) |
 | `penalty` | `penalty_time` rises | on | unit of `penalty_time` still to be confirmed |
 | `flags`, `damage` | flag / damage changes | **off** | no flag or damage seen in a real capture yet |
+| `rival_close` | in a race, the car behind (or ahead) is within `gap_s` and the gap shrank by `min_closing_s` in 30 s | **off** | needs the CSP bridge (`tools/csp_bridge`); gaps measured from position history |
+| `rival_pit` | the car ahead in the standings enters the pit lane | **off** | needs the bridge |
+| `csp_flags` | the flag reported by CSP changes (yellow, blue with the name of the car, black, penalty, white, chequered) | **off** | needs the bridge; off until each flag is seen live |
 | `lap_summary` | a lap is completed | on | time and delta to the best |
 | `best_sector` | a sector is a best | off | chatty |
 

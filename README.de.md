@@ -117,7 +117,7 @@ pit-wall stt-test --device both      # Spracherkennung: Geschwindigkeit und Gena
 pit-wall rules                       # aktive Regeln, Schwellen und Richtlinien pro Sitzung
 ```
 
-In [docs/ENGINEER.md](docs/ENGINEER.md) steht, wie eine Meldung entschieden wird, welche Regeln es gibt und die
+In [docs/ENGINEER.de.md](docs/ENGINEER.de.md) steht, wie eine Meldung entschieden wird, welche Regeln es gibt und die
 gemessene Latenz; [docs/TRACK_GEOMETRY.md](docs/TRACK_GEOMETRY.md) beschreibt die Kurvengeometrie, den
 Bremsvergleich, den gesprochenen Hinweis und wie die Ausrichtung zur Rundenposition des Spiels verifiziert
 wurde (Fehler unter 0,5 m in Magione, Imola, Spa).
@@ -196,10 +196,10 @@ liegen in `tests/fixtures/`, und `tests/test_live_reports.py` prüft bei jedem L
 |---|---|---|
 | 1 | Telemetrie-Leser, Mock/Replay, Konsolenansicht, LLM-Grundlagen | fertig |
 | 2 | Sitzungserkennung (Training / Qualifying / Rennen), Runden- und Sektorverfolgung, `pit-wall record` | fertig, an einem echten Qualifying + Rennen geprüft ([Docs](docs/SESSION_AND_LAPS.md)) |
-| 3 | Regelbasierte Warn-Engine mit lokalem TTS | fertig ([Docs](docs/ENGINEER.md)); Schwellen konservativ, noch zu kalibrieren |
+| 3 | Regelbasierte Warn-Engine mit lokalem TTS | fertig ([Docs](docs/ENGINEER.de.md)); Schwellen konservativ, noch zu kalibrieren |
 | 4 | Bremsanalyse pro Kurve gegen die Bestzeit (lokal erzeugte Streckengeometrie) | fertig ([Docs](docs/TRACK_GEOMETRY.md)): Geometrie, Nummerierung, Vergleich pro Kurve und gesprochener Hinweis, an echten Strecken geprüft |
 | 5 | Text-Chat mit dem Cloud-Modell (Gemini): kompakte Telemetrie-Zusammenfassung, lokale Antworten zuerst, Prüfung jeder Zahl ([Docs](docs/PHASE5_PLAN.md), [docs/LLM.md](docs/LLM.md)) | fertig: Evaluation 34/34, mehrere Schlüssel als Reserve |
-| 6 | Sprache: Push-to-Talk auf jeder Taste jedes Geräts, Auswahl von Mikrofon und Stimme, lokale Spracherkennung (CPU oder GPU), gesprochene Antworten, Halbduplex-Funkregeln, „nicht stören“ ([Anleitung](docs/VOICE.de.md), [Plan](docs/PHASE6_PLAN.md)) | fertig und durchgängig simuliert; der Live-Test mit Lenkrad steht aus |
+| 6 | Sprache: Push-to-Talk auf jeder Taste jedes Geräts, Auswahl von Mikrofon und Stimme, lokale Spracherkennung (CPU oder GPU), gesprochene Antworten, Halbduplex-Funkregeln, „nicht stören“ ([Anleitung](docs/VOICE.de.md), [Plan](docs/PHASE6_PLAN.md)) | fertig und live mit Mikrofon, Lenkrad-Taste und GPU-Erkennung getestet (Erkennungsfehler werden laufend korrigiert); die 40 gesprochenen Sätze lassen sich mit `pit-wall phrases record` / `test` aufnehmen und messen |
 | 6b | Der Ingenieur als Charakter: Persona und Namen, Gedächtnis der Unterhaltung pro Kurve, Sprachen es / en / de | teilweise fertig ([Docs](docs/ENGINEER_EXPERIENCE_PLAN.md)): Persona, Gedächtnis, Sprachen, Ruhemodus; Profile pro Simulator und Spritsparen pro Kurve offen |
 | 6c | Der Ingenieur als MCP-Server, für Leute ohne API-Schlüssel ([Vorschlag](docs/MCP_PLAN.md)) | Vorschlag, zurückgestellt |
 | 6d | Lokale neuronale Stimmen (Piper und Zero-Shot-Server mit eigenem Referenzaudio des Nutzers), Stimmprofile, Funkeffekt ([Plan](docs/VOICES_PLAN.md)) | Vorschlag |
