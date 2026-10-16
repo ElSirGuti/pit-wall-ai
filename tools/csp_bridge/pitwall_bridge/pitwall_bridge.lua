@@ -9,6 +9,7 @@ local sinceSend = 0
 local sent, failed = 0, 0
 local lastError = ''
 local busy = false
+local ticks, built, errors = 0, 0, 0
 
 local function build()
   local sim = ac.getSim()
@@ -42,14 +43,17 @@ local function build()
 end
 
 function script.update(dt)
+  ticks = ticks + 1
   sinceSend = sinceSend + dt
   if busy or sinceSend < PERIOD then return end
   sinceSend = 0
   local ok, payload = pcall(build)
   if not ok or payload == nil then
-    lastError = tostring(payload)
+    errors = errors + 1
+    lastError = 'build: ' .. tostring(payload)
     return
   end
+  built = built + 1
   busy = true
   web.post(URL, { ['Content-Type'] = 'application/json' }, JSON.stringify(payload), function(err, _)
     busy = false
@@ -68,5 +72,6 @@ function windowMain()
   else
     ui.text('Waiting for pit-wall-ai (is `pit-wall voice` or `run` open?)')
   end
-  if failed > 0 then ui.text('Failed: ' .. failed .. ' ' .. lastError) end
+  ui.text(string.format('updates %d, built %d, sent %d, failed %d, build errors %d', ticks, built, sent, failed, errors))
+  if lastError ~= '' then ui.textWrapped(lastError) end
 end
