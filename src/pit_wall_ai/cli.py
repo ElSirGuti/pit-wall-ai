@@ -52,7 +52,9 @@ def build_source(cfg: AppConfig) -> TelemetrySource:
         from .telemetry.csp_bridge import BridgedSource, BridgeReceiver
 
         return BridgedSource(
-            source, BridgeReceiver(t.csp_bridge.port, max_age_s=t.csp_bridge.max_age_s)
+            source,
+            BridgeReceiver(t.csp_bridge.port, max_age_s=t.csp_bridge.max_age_s),
+            crewchief=t.csp_bridge.crewchief,
         )
     return source
 

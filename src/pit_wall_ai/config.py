@@ -37,6 +37,8 @@ class CspBridgeConfig(_Model):
     enabled: bool = True  # listens on 127.0.0.1 only; harmless when the app is not installed
     port: int = Field(28271, ge=1024, le=65535)
     max_age_s: float = Field(3.0, gt=0)  # older than this = the app is not sending
+    # without the Lua app, read the rivals from the CrewChiefEx page (apps/python/CrewChiefEx, if enabled in game)
+    crewchief: bool = True
 
 
 class TelemetryConfig(_Model):

@@ -284,6 +284,9 @@ class RivalTracker:
         self._session = SessionInfo()
         self._flag = (0, -1, 0, 0)
         self._t = 0.0
+        self._cached: RivalBoard | None = (
+            None  # the engine asks 60 times a second; the data changes 2-10
+        )
         self.track_length_m = track_length_m
 
     def update(self, payload: dict) -> bool:
@@ -298,6 +301,7 @@ class RivalTracker:
         if not cars:
             return False
         with self._lock:
+            self._cached = None
             self._t = t
             self._cars = {c.index: c for c in cars}
             try:
@@ -319,6 +323,8 @@ class RivalTracker:
         with self._lock:
             if not self._cars:
                 return None
+            if self._cached is not None:
+                return self._cached
             me = self._cars.get(self._me) if self._me is not None else None
             gaps: dict[int, RivalGap] = {}
             hme = self._hist.get(self._me) if self._me is not None else None
@@ -327,9 +333,10 @@ class RivalTracker:
                     if idx == me.index:
                         continue
                     gaps[idx] = self._gap(me, hme, c, self._hist.get(idx))
-            return RivalBoard(
+            self._cached = RivalBoard(
                 self._t, me, tuple(self._cars.values()), self._session, gaps, *self._flag
             )
+            return self._cached
 
     def _gap(self, me: RivalCar, hme: _History, c: RivalCar, hc: _History | None) -> RivalGap:
         if hc is None or hme.now is None or hc.now is None:

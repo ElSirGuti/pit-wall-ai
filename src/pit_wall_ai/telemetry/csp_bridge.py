@@ -109,12 +109,21 @@ class BridgeReceiver:
 class BridgedSource:
     """Wraps a telemetry source: the wear (and nothing else) comes from the bridge while it is sending."""
 
-    def __init__(self, inner: TelemetrySource, receiver: BridgeReceiver) -> None:
+    def __init__(
+        self, inner: TelemetrySource, receiver: BridgeReceiver, *, crewchief: bool = False
+    ) -> None:
         self.inner, self.receiver = inner, receiver
+        self._crewchief = None
+        if crewchief:
+            from .crewchief import CrewChiefFeeder
+
+            self._crewchief = CrewChiefFeeder(receiver)
         self.name = inner.name
 
     def open(self) -> None:
         self.receiver.start()
+        if self._crewchief is not None:
+            self._crewchief.start()
         self.inner.open()
 
     def read(self) -> Snapshot | None:
@@ -130,6 +139,8 @@ class BridgedSource:
         try:
             self.inner.close()
         finally:
+            if self._crewchief is not None:
+                self._crewchief.stop()
             self.receiver.stop()
 
     def __getattr__(self, item):  # whatever else the wrapped source offers

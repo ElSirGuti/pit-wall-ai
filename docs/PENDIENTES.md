@@ -185,18 +185,26 @@ con la tabla: Zandvoort, Vallelunga; con dudas sobre el orden: Red Bull Ring, Ba
 
 ## 5m. Lo que falta del lado del código (sin ti, o con una prueba tuya al final)
 
-* **Reglas de banderas, daño y penalización** con los datos del puente: necesitan las capturas de la sección 1.
-* **Alertas de rivales** (se acerca el de atrás, el de delante entra a boxes, bandera azul con el nombre de quien la
-  provoca, última vuelta del líder) y **final de carrera por tiempo** con `session.over`: los datos ya llegan en
-  el puente 0.2; faltan las reglas, que conviene escribir cuando se vea cómo llegan en una carrera real.
+Hecho el 2026-10-16, apagado hasta que lo veas en una carrera real (`config/local.yaml` > `engineer.rules`):
+`rival_close` (el de atrás se acerca / el de delante a tiro), `rival_pit` (el de delante entra a boxes) y
+`csp_flags` (amarilla, azul con el nombre de a quién cedes, negra, penalización, blanca, cuadros), con textos en
+es/en/de. El **final de una carrera por tiempo** ya se detecta con el puente (el coche terminó). Falta:
+
+* **Encender y afinar esas reglas** con una carrera real: umbrales (`gap_s`, `min_closing_s`), si dicen el nombre
+  (`use_names`), y si molestan. Para encender una: `engineer.rules.rival_close.enabled: true`.
 * **Índice de desgaste por curva en vivo** con el porcentaje real del puente: el análisis ya existe (`tyre-corners`);
   falta usarlo en la conversación en vivo y compararlo con tu app.
-* **Estimación del desgaste cuando el simulador no lo da** (iRacing: solo al parar): plan en `PHASE8_PLAN.md` 3.5.
-* **Final de carrera por tiempo**: hoy no se detecta; necesita una grabación (sección 5).
+* **Estimación del desgaste cuando el simulador no lo da** (iRacing, solo al parar): el cálculo ya existe
+  (`analysis/wear_estimate.py`, con pruebas); falta conectarlo a una fuente de iRacing (fase multi-simulador).
+* **Rivales sin CSP**: `telemetry/crewchief.py` lee la página `acpmf_crewchief` si activas la app **CrewChiefEx**
+  (apps de Python); solo se usa cuando la app Lua no envía. Pruébalo activando CrewChiefEx y sin la Pit Wall Bridge.
 * **Motor de estrategia / decisión de parada** (fase 8): hoy "¿debería entrar a pits?" contesta solo el desgaste
   medido; el plan espera tu aprobación (sección 4).
 * **Debrief** (fase 7) y **voces con efecto de radio**: esperan tu aprobación de los planes (sección 5c).
 * **Más traducciones al alemán** y más correcciones del reconocimiento a medida que salgan fallos hablando.
+* Qué datos tienen las apps de tu instalación y cuáles usamos: `docs/AC_APPS_NOTES.md`. Los logs de Real Penalty
+  (`apps/python/RealPenalty/logs`) listan cortes, entradas y salidas de boxes de tus carreras online; tienen nombres
+  de otros pilotos, así que se leen en local y no se suben.
 
 ## 6. Opcional, sin prisa
 
