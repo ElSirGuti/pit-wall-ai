@@ -28,7 +28,7 @@ dependencies = [
 voice = ["pywin32>=306; sys_platform == 'win32'", "sounddevice>=0.4"]
 stt = ["faster-whisper>=1.0"]
 stt-cuda = ["nvidia-cublas-cu12; sys_platform == 'win32'", "nvidia-cudnn-cu12; sys_platform == 'win32'"]
-dev = ["pytest>=8.0", "ruff>=0.5"]
+dev = ["pytest>=8.0", "ruff>=0.5", "lupa>=2.0"]
 
 [project.scripts]
 pit-wall = "pit_wall_ai.cli:main"
