@@ -68,6 +68,10 @@ class BridgeReceiver:
 
     # -- server ------------------------------------------------------------------------------------------------
     def start(self) -> bool:
+        if (
+            self._server is not None
+        ):  # the poller reopens the source every second while the game is closed
+            return True
         receiver = self
 
         class Handler(BaseHTTPRequestHandler):

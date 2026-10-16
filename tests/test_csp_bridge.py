@@ -87,3 +87,11 @@ def test_cars_posted_by_the_app_become_a_board():
     finally:
         rx.stop()
     assert current_board() is None
+
+
+def test_starting_twice_is_harmless():
+    rx = BridgeReceiver(port=28997)
+    assert rx.start() and rx.start()  # the poller reopens the source while the game is closed
+    rx.stop()
+    assert rx.start()
+    rx.stop()
