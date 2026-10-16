@@ -106,6 +106,19 @@ def build_hotwords(
     return ", ".join(seen)
 
 
+# friendly sizes -> faster-whisper model names (anything else is passed as it is: a name, a path, a Hugging Face id)
+MODEL_ALIASES = {
+    "high": "large-v3",
+    "large": "large-v3",
+    "turbo": "large-v3-turbo",
+    "fast": "base",
+}
+
+
+def resolve_model(name: str) -> str:
+    return MODEL_ALIASES.get(name.strip().lower(), name.strip())
+
+
 class FasterWhisperTranscriber:
     name = "faster-whisper"
 
@@ -120,7 +133,7 @@ class FasterWhisperTranscriber:
         language: str | None = "es",
         model_dir: str | None = None,
     ) -> None:
-        self.model_name, self.device, self.compute_type = model, device, compute_type
+        self.model_name, self.device, self.compute_type = resolve_model(model), device, compute_type
         self.threads, self.beam_size, self.language = threads, beam_size, language
         self.model_dir = model_dir
         self._model = None

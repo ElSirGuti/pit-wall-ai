@@ -87,7 +87,12 @@ def cmd_voice(
     simulated = bool(a.file)
     tr = transcriber
     if tr is None:
-        s = cfg.stt.model_copy(update={"device": a.stt_device} if a.stt_device else {})
+        upd = {}
+        if a.stt_device:
+            upd["device"] = a.stt_device
+        if getattr(a, "stt_model", None):
+            upd["model"] = a.stt_model
+        s = cfg.stt.model_copy(update=upd)
         tr = create_transcriber(s, cfg.engineer.language)
         try:
             loaded = tr.load()

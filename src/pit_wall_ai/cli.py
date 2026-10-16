@@ -139,6 +139,10 @@ def _parser() -> argparse.ArgumentParser:
     vo.add_argument("--wav", action="append", help="a spoken question as a WAV file (repeatable)")
     vo.add_argument("--session", default="practice")
     vo.add_argument(
+        "--stt-model",
+        help="tiny | base | small | medium | high (large-v3) | turbo: override stt.model",
+    )
+    vo.add_argument(
         "--tts", choices=["console", "real"], default=None, help="console prints the voice"
     )
     vo.add_argument("--stt-device", choices=["auto", "cpu", "cuda"], help="override stt.device")

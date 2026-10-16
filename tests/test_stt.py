@@ -122,3 +122,10 @@ def test_a_phrase_can_be_rendered_to_a_wav(tmp_path):
     T.synth_to_wav("Hola, quedan dos vueltas", p, language="es")
     u = read_wav(p)
     assert u.duration_s > 0.5 and u.peak > 0.05
+
+
+def test_model_sizes_have_friendly_names():
+    from pit_wall_ai.stt import resolve_model
+
+    assert resolve_model("high") == "large-v3" and resolve_model("Turbo") == "large-v3-turbo"
+    assert resolve_model("medium") == "medium" and resolve_model("D:/m/whisper") == "D:/m/whisper"
