@@ -157,6 +157,7 @@ class ACSharedMemorySource:
         self._reads_since_static = 0
         self._last_packet = -1
         self._last_new_t = 0.0
+        self._opened_before = False
 
     # -- lifecycle ---------------------------------------------------------------------------------
     def open(self) -> None:
@@ -176,7 +177,10 @@ class ACSharedMemorySource:
         self._static = None
         self._last_packet = -1
         self._last_new_t = self._clock()
-        log.info("shared memory opened", extra={"pages": list(opened)})
+        # a paused or menu game stops the packets and the source is reopened every few seconds: say it once
+        level = logging.DEBUG if self._opened_before else logging.INFO
+        self._opened_before = True
+        log.log(level, "shared memory opened", extra={"pages": list(opened)})
 
     def close(self) -> None:
         for v in self._views.values():

@@ -794,3 +794,8 @@ def test_a_question_about_some_tyres_answers_only_those():
     assert "trasero derecho" in a.text and "delantero" not in a.text and "°C" not in a.text
     _, a, _ = ask("¿cómo están los neumáticos traseros?")
     assert "trasero izquierdo" in a.text and "delantero" not in a.text
+
+
+def test_corner_names_list_skips_the_placeholders():
+    r = L.route("¿Cuáles son los nombres de las curvas?")
+    assert r is not None and r.intents == (L.Intent.CORNER_NAMES,)

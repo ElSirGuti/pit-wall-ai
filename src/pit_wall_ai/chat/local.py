@@ -40,6 +40,7 @@ class Intent(StrEnum):
     TIME_LEFT = "time_left"
     TYRE_CORNERS = "tyre_corners"  # where the tyres are worked hardest (an estimate)
     STRAIGHT = "straight"  # what a named straight is and between which corners
+    CORNER_NAMES = "corner_names"  # the list of the circuit's named corners
 
 
 # keyword tables: every entry is a normalised phrase searched as whole words
@@ -242,6 +243,20 @@ _PIT_DECISION = (
     "box now",
 )
 _KEYS[Intent.NOT_YET] = (*_KEYS[Intent.NOT_YET], *_PIT_DECISION)
+_KEYS[Intent.CORNER_NAMES] = (
+    "nombres de las curvas",
+    "como se llaman las curvas",
+    "como se llaman las curvas de este circuito",
+    "que curvas hay",
+    "lista de curvas",
+    "curvas con nombre",
+    "nombres de curvas",
+    "names of the corners",
+    "corner names",
+    "list the corners",
+    "name the corners",
+    "what are the corners called",
+)
 _KEYS[Intent.TYRE_CORNERS] = (
     "en que curvas gasto",
     "en que curvas estoy gastando",
@@ -301,6 +316,7 @@ _ORDER = (
     Intent.LAPS,
     Intent.SESSION,
     Intent.TIME_LEFT,
+    Intent.CORNER_NAMES,
     Intent.NOT_YET,
     Intent.UNKNOWN_DATA,
 )
@@ -458,7 +474,7 @@ def route(question: str, track: TrackInfo | None = None, lang: str = "es") -> Ro
             (Intent.NOT_YET,), corners, ("pit_decision",) if _has(q, _PIT_DECISION) else ()
         )
     # a corner or an alert explanation is a question on its own
-    for solo in (Intent.CORNER, Intent.TYRE_CORNERS, Intent.LAST_ALERT):
+    for solo in (Intent.CORNER_NAMES, Intent.CORNER, Intent.TYRE_CORNERS, Intent.LAST_ALERT):
         if solo in found:
             return Routed((solo,), corners)
     # a braking/losing question already covers "frenadas": do not also dump the brake temperatures
@@ -1071,6 +1087,29 @@ def _straight(sheet, lang, track, routed, th):
     return straight_answer(sheet, lang, track, routed, lambda c: _corner_ref(sheet, c, names, lang))
 
 
+def _corner_names(sheet, lang, track, routed, th):
+    # "Curva 7" is the table's placeholder for an unnamed corner, not a name
+    names = {
+        a: n
+        for a, n in (track.names if track is not None else {}).items()
+        if not re.fullmatch(r"(?i)(curva|corner|turn|kurve)\s+\d+", n.strip())
+    }
+    if not names:
+        return {
+            "es": "De este circuito no tengo nombres de curvas.",
+            "de": "Von dieser Strecke habe ich keine Kurvennamen.",
+        }.get(lang, "I have no corner names for this circuit."), []
+    official = getattr(track.geometry, "official", None)
+    items = []
+    for apex in sorted(names):
+        shown = apex if official is None else official.get(apex)
+        items.append(f"{shown}: {names[apex]}" if shown is not None else names[apex])
+    head = {"es": "Las curvas con nombre son", "de": "Die benannten Kurven sind"}.get(
+        lang, "The named corners are"
+    )
+    return f"{head} " + "; ".join(items) + ".", []
+
+
 def _tyre_corners(sheet, lang, track, routed, th):
     names = track.names if track is not None else {}
     return tyre_corners_answer(sheet, lang, names, lambda c: _corner_ref(sheet, c, names, lang))
@@ -1160,5 +1199,6 @@ _BUILDERS = {
     Intent.NOT_YET: _not_yet,
     Intent.TIME_LEFT: _time_left,
     Intent.TYRE_CORNERS: _tyre_corners,
+    Intent.CORNER_NAMES: _corner_names,
     Intent.STRAIGHT: _straight,
 }
