@@ -145,6 +145,19 @@ engineer:               # phase 3: rule alerts spoken by the race engineer
       enabled: false      # UNVERIFIED: no damage seen in a real capture
       min_increase: 5
       cooldown_s: 10
+    rival_close:          # needs the CSP bridge (tools/csp_bridge): a car right behind / ahead and closing
+      enabled: false      # off until the gaps are checked against a real race (docs/PENDIENTES.md 5l)
+      gap_s: 1.0
+      min_closing_s: 0.2
+      use_names: false
+      cooldown_s: 90
+    rival_pit:
+      enabled: false
+      cooldown_s: 60
+    csp_flags:            # flags from the CSP bridge: yellow, blue (with who), black, penalty, white, chequered
+      enabled: false
+      use_names: true
+      cooldown_s: 10
     lap_summary:
       enabled: true
       include_delta: true

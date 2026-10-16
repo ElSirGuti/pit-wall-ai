@@ -142,7 +142,9 @@ class Engineer:
             and snap.t - self._session_started_t < self.cfg.startup_quiet_s
         )
         fired: list[Alert] = []
-        ctx = RuleContext(snap, state, tracker, events, self.cfg.language)
+        from ..telemetry.csp_bridge import current_board
+
+        ctx = RuleContext(snap, state, tracker, events, self.cfg.language, current_board())
         for rule in self.rules:
             try:
                 fired += rule.evaluate(ctx)

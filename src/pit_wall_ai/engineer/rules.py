@@ -40,6 +40,7 @@ class RuleContext:
     tracker: LapTracker
     events: list[Event]
     lang: str
+    rivals: object | None = None  # RivalBoard from the CSP bridge (live runs with the app on)
 
 
 class Sustain:
@@ -455,6 +456,98 @@ class DamageRule(Rule):
         return [a] if a else []
 
 
+class RivalCloseRule(Rule):
+    id = "rival_close"
+    priority = Priority.MEDIUM
+    ttl_s = 10.0
+
+    def evaluate(self, ctx):
+        board = ctx.rivals
+        if board is None or board.session.kind != "race":
+            return []
+        out = []
+        for side, text_key in (("behind", "rival_behind"), ("ahead", "rival_ahead")):
+            g = getattr(board, side)()
+            if g is None or g.gap_s is None or g.car.in_pit or g.car.retired or g.car.finished:
+                continue
+            if abs(g.gap_s) > self.cfg.gap_s:
+                continue
+            # worth saying when it is close and the gap is shrinking (the one behind closes in, the one ahead is caught)
+            if g.closing_s is None or g.closing_s < self.cfg.min_closing_s:
+                continue
+            text = M.say(ctx.lang, text_key, gap=M.gap_phrase(ctx.lang, g.gap_s))
+            if self.cfg.use_names and g.car.name:
+                text += f", {g.car.name}"
+            a = self._fire(
+                ctx, f"{side}:{g.car.index}", text, gap_s=round(abs(g.gap_s), 2), car=g.car.index
+            )
+            if a:
+                out.append(a)
+        return out
+
+
+class RivalPitRule(Rule):
+    id = "rival_pit"
+    priority = Priority.MEDIUM
+    ttl_s = 10.0
+
+    def __init__(self, cfg) -> None:
+        super().__init__(cfg)
+        self._was_in_pit: dict[int, bool] = {}
+
+    def evaluate(self, ctx):
+        board = ctx.rivals
+        if board is None or board.session.kind != "race":
+            return []
+        g = board.ahead()
+        out = []
+        for c in board.others():
+            was = self._was_in_pit.get(c.index)
+            self._was_in_pit[c.index] = c.in_pit
+            if g is not None and c.index == g.car.index and c.in_pit and was is False:
+                a = self._fire(ctx, str(c.index), M.say(ctx.lang, "rival_pit"), car=c.index)
+                if a:
+                    out.append(a)
+        return out
+
+
+class CspFlagsRule(Rule):
+    """Flags as CSP reports them (``sim.raceFlagType``); one alert when a flag appears."""
+
+    id = "csp_flags"
+    priority = Priority.HIGH
+    ttl_s = 6.0
+    _KEYS = {
+        2: ("flag_yellow", Priority.HIGH),
+        5: ("flag_black", Priority.CRITICAL),
+        8: ("flag_return", Priority.HIGH),
+        12: ("flag_blue", Priority.HIGH),
+        13: ("flag_finish", Priority.MEDIUM),
+        14: ("flag_white", Priority.MEDIUM),
+    }
+
+    def __init__(self, cfg) -> None:
+        super().__init__(cfg)
+        self._prev = 0
+
+    def evaluate(self, ctx):
+        board = ctx.rivals
+        if board is None:
+            return []
+        flag, prev = board.flag, self._prev
+        self._prev = flag
+        if flag == prev or flag not in self._KEYS:
+            return []
+        key, prio = self._KEYS[flag]
+        text = M.say(ctx.lang, key)
+        if flag == 12 and self.cfg.use_names and board.flag_cause >= 0:
+            who = next((c for c in board.cars if c.index == board.flag_cause and c.name), None)
+            if who is not None:
+                text = M.say(ctx.lang, "flag_blue_by", name=who.name)
+        a = self._fire(ctx, key, text, priority=prio, flag=flag, cause=board.flag_cause)
+        return [a] if a else []
+
+
 class LapSummaryRule(Rule):
     id = "lap_summary"
     priority = Priority.MEDIUM
@@ -658,6 +751,9 @@ def build_rules(
         (r.penalty, PenaltyRule),
         (r.flags, FlagsRule),
         (r.damage, DamageRule),
+        (r.rival_close, RivalCloseRule),
+        (r.rival_pit, RivalPitRule),
+        (r.csp_flags, CspFlagsRule),
         (r.lap_summary, LapSummaryRule),
         (r.best_sector, BestSectorRule),
     ]

@@ -238,6 +238,29 @@ class DamageRule(_Model):
     cooldown_s: float = Field(10.0, ge=0)
 
 
+class RivalCloseRule(_Model):
+    """A car right behind (or ahead) and closing, in a race. Needs the CSP bridge (tools/csp_bridge)."""
+
+    enabled: bool = False  # off until the gaps have been checked against a real race
+    gap_s: float = Field(1.0, gt=0)  # within this many seconds
+    min_closing_s: float = Field(0.2, ge=0)  # and the gap shrank this much in the last 30 s
+    use_names: bool = False  # say the driver's name (online names are often hard to pronounce)
+    cooldown_s: float = Field(90.0, ge=0)
+
+
+class RivalPitRule(_Model):
+    enabled: bool = False
+    cooldown_s: float = Field(60.0, ge=0)
+
+
+class CspFlagsRule(_Model):
+    """Flags from the CSP bridge (yellow, blue with who it is for, black, penalty, white, chequered)."""
+
+    enabled: bool = False  # off until each flag has been seen in a real session
+    use_names: bool = True  # "deja pasar al <name>" on a blue flag
+    cooldown_s: float = Field(10.0, ge=0)
+
+
 class LapSummaryRule(_Model):
     enabled: bool = True
     include_delta: bool = True
@@ -265,6 +288,9 @@ class RulesConfig(_Model):
     penalty: PenaltyRule = PenaltyRule()
     flags: FlagsRule = FlagsRule()
     damage: DamageRule = DamageRule()
+    rival_close: RivalCloseRule = RivalCloseRule()
+    rival_pit: RivalPitRule = RivalPitRule()
+    csp_flags: CspFlagsRule = CspFlagsRule()
     lap_summary: LapSummaryRule = LapSummaryRule()
     best_sector: BestSectorRule = BestSectorRule()
     braking_hint: BrakingHintRule = BrakingHintRule()

@@ -39,6 +39,12 @@ TEXTS: dict[str, dict[str, str]] = {
         "flag_blue": "Bandera azul, cede",
         "flag_black": "Bandera negra, box",
         "flag_white": "Bandera blanca, última vuelta",
+        "flag_blue_by": "Bandera azul, deja pasar al {name}",
+        "flag_return": "Bandera de penalización, entra a boxes",
+        "flag_finish": "Bandera a cuadros, termina la vuelta",
+        "rival_behind": "El de atrás está a {gap}, se acerca",
+        "rival_ahead": "Tienes al de delante a {gap}, ataca",
+        "rival_pit": "El de delante entra a boxes",
         "damage": "Daño detectado, revisa",
         "lap": "Vuelta {n}, {time}, {delta}",
         "lap_best": "Mejor vuelta, {time}",
@@ -65,6 +71,12 @@ TEXTS: dict[str, dict[str, str]] = {
         "flag_blue": "Blue flag, let him by",
         "flag_black": "Black flag, box",
         "flag_white": "White flag, last lap",
+        "flag_blue_by": "Blue flag, let {name} by",
+        "flag_return": "Penalty flag, come into the pits",
+        "flag_finish": "Chequered flag, finish the lap",
+        "rival_behind": "The car behind is {gap} back and closing",
+        "rival_ahead": "The car ahead is {gap} away, go get him",
+        "rival_pit": "The car ahead is coming into the pits",
         "damage": "Damage detected, check",
         "lap": "Lap {n}, {time}, {delta}",
         "lap_best": "Best lap, {time}",
@@ -91,6 +103,12 @@ TEXTS: dict[str, dict[str, str]] = {
         "flag_blue": "Blaue Flagge, lass ihn vorbei",
         "flag_black": "Schwarze Flagge, Box",
         "flag_white": "Weiße Flagge, letzte Runde",
+        "flag_blue_by": "Blaue Flagge, lass {name} vorbei",
+        "flag_return": "Strafflagge, komm an die Box",
+        "flag_finish": "Zielflagge, fahr die Runde zu Ende",
+        "rival_behind": "Der Hintermann ist {gap} dran und kommt näher",
+        "rival_ahead": "Der Vordermann ist {gap} weg, hol ihn dir",
+        "rival_pit": "Der Vordermann fährt in die Box",
         "damage": "Schaden erkannt, prüfen",
         "lap": "Runde {n}, {time}, {delta}",
         "lap_best": "Schnellste Runde, {time}",
@@ -157,6 +175,11 @@ _NUM = {
         "zehn",
     ],
 }
+
+
+def gap_phrase(lang: str, seconds: float) -> str:
+    """A gap to another car as it is said: "8 décimas", "1 coma 3 segundos"."""
+    return _tenths(lang, abs(seconds))
 
 
 def laps_phrase(lang: str, remaining: float) -> str:

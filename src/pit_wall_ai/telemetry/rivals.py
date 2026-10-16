@@ -74,6 +74,13 @@ def _ints(v) -> tuple[int, ...]:
     return tuple(out)
 
 
+def _to_int(v, default: int = 0) -> int:
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return default
+
+
 def parse_car(d: dict) -> RivalCar | None:
     try:
         return RivalCar(
@@ -218,6 +225,12 @@ class RivalBoard:
     cars: tuple[RivalCar, ...]
     session: SessionInfo
     gaps: dict[int, RivalGap] = field(default_factory=dict)
+    flag: int = (
+        0  # ac.FlagType: 2 yellow, 5 black, 8 return to pits, 12 blue, 13 chequered, 14 white
+    )
+    flag_cause: int = -1  # index of the car that caused a blue or yellow flag
+    penalty: int = 0  # ac.PenaltyType of my car
+    penalty_param: int = 0
 
     def others(self) -> list[RivalCar]:
         return [c for c in self.cars if self.me is None or c.index != self.me.index]
@@ -269,6 +282,7 @@ class RivalTracker:
         self._cars: dict[int, RivalCar] = {}
         self._me: int | None = None
         self._session = SessionInfo()
+        self._flag = (0, -1, 0, 0)
         self._t = 0.0
         self.track_length_m = track_length_m
 
@@ -291,6 +305,10 @@ class RivalTracker:
             except (TypeError, ValueError):
                 self._me = None
             self._session = parse_session(payload.get("session"))
+            self._flag = tuple(
+                _to_int(payload.get(k), d)
+                for k, d in (("flag", 0), ("flag_cause", -1), ("penalty", 0), ("penalty_param", 0))
+            )
             for c in cars:
                 self._hist.setdefault(c.index, _History()).add(t, c.laps, c.spline)
             for gone in set(self._hist) - set(self._cars):
@@ -309,7 +327,9 @@ class RivalTracker:
                     if idx == me.index:
                         continue
                     gaps[idx] = self._gap(me, hme, c, self._hist.get(idx))
-            return RivalBoard(self._t, me, tuple(self._cars.values()), self._session, gaps)
+            return RivalBoard(
+                self._t, me, tuple(self._cars.values()), self._session, gaps, *self._flag
+            )
 
     def _gap(self, me: RivalCar, hme: _History, c: RivalCar, hc: _History | None) -> RivalGap:
         if hc is None or hme.now is None or hc.now is None:

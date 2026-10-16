@@ -60,7 +60,7 @@ class MilestoneDetector:
         self._quali_done = False
         self._grid_pos = 0
 
-    def update(self, s, state, events) -> list[Milestone]:
+    def update(self, s, state, events, board=None) -> list[Milestone]:
         out: list[Milestone] = []
         for e in events:
             if isinstance(e, SessionChanged):
@@ -110,6 +110,9 @@ class MilestoneDetector:
             total = int(s.number_of_laps or 0)
             done = int(s.completed_laps or 0)
             finished = total > 0 and done >= total and self._moved
+            # a race by time has no lap count: the bridge says when my car has taken the chequered flag
+            if not finished and board is not None and getattr(board, "me", None) is not None:
+                finished = bool(board.me.finished) and self._moved
             if finished:
                 self._finished = True
                 out.append(self._race_result(done))
@@ -454,7 +457,9 @@ def attach(
     det = MilestoneDetector()
 
     def hook(snap, state, tracker, events):
-        for m in det.update(snap, state, events):
+        from ..telemetry.csp_bridge import current_board
+
+        for m in det.update(snap, state, events, current_board()):
             ann.announce(m)
 
     engine.add_sample_hook(hook)
