@@ -592,9 +592,13 @@ def test_the_table_names_corners_without_the_game_only_for_a_verified_circuit():
 
     names = circuit_names.table_names("magione")
     assert names is not None and len(names) == 11 and names[6] == "Curvone"
-    spa = circuit_names.table_names("spa")  # verified with the author's map: its numbers are the map's
+    spa = circuit_names.table_names(
+        "spa"
+    )  # verified with the author's map: its numbers are the map's
     assert spa is not None and spa[17] == "Blanchimont" and 2 not in spa and 6 not in spa
-    assert circuit_names.table_names("brands_hatch") is None  # its table order is not the circuit numbering
+    assert (
+        circuit_names.table_names("brands_hatch") is None
+    )  # its table order is not the circuit numbering
     assert circuit_names.table_names("some_mod_track") is None
 
 
@@ -778,3 +782,15 @@ def test_psi_is_spelled_for_the_synthesiser():
 def test_a_stop_question_is_not_answered_as_a_tyre_report():
     r = L.route("¿Debería entrar a pits en base al desgaste de los neumáticos?")
     assert r is not None and r.intents == (L.Intent.NOT_YET,) and "pit_decision" in r.flags
+
+
+def test_a_question_about_some_tyres_answers_only_those():
+    r = L.route("dime solo la presión del neumático trasero derecho")
+    assert r.flags == ("wheels:RR", "metric:pressure_psi")
+    assert L.route("¿cómo están los neumáticos traseros?").flags == ("wheels:RL,RR",)
+    assert L.route("temperatura de los delanteros").flags == ("wheels:FL,FR", "metric:core_c")
+    assert L.route("¿cómo están los neumáticos?").flags == ()
+    _, a, _ = ask("dime solo la presión del neumático trasero derecho")
+    assert "trasero derecho" in a.text and "delantero" not in a.text and "°C" not in a.text
+    _, a, _ = ask("¿cómo están los neumáticos traseros?")
+    assert "trasero izquierdo" in a.text and "delantero" not in a.text

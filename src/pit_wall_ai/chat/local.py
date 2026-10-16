@@ -104,6 +104,22 @@ _KEYS: dict[Intent, tuple[str, ...]] = {
         "tire",
         "tires",
         "pressure",
+        "delanteros",
+        "delanteras",
+        "traseros",
+        "traseras",
+        "delantero izquierdo",
+        "delantero derecho",
+        "trasero izquierdo",
+        "trasero derecho",
+        "delantera izquierda",
+        "delantera derecha",
+        "trasera izquierda",
+        "trasera derecha",
+        "front left",
+        "front right",
+        "rear left",
+        "rear right",
     ),
     Intent.BRAKES: ("freno", "frenos", "brake", "brakes", "brake temperature"),
     Intent.LAPS: (
@@ -290,6 +306,92 @@ _ORDER = (
 )
 
 
+_FRONT = (
+    "delantero",
+    "delantera",
+    "delanteros",
+    "delanteras",
+    "front",
+    "vorne",
+    "vordere",
+    "vorderen",
+)
+_REAR = (
+    "trasero",
+    "trasera",
+    "traseros",
+    "traseras",
+    "rear",
+    "back",
+    "hinten",
+    "hintere",
+    "hinteren",
+)
+_LEFT = ("izquierdo", "izquierda", "izquierdos", "left", "links", "linke", "linken")
+_RIGHT = ("derecho", "derecha", "derechos", "right", "rechts", "rechte", "rechten")
+_METRICS = {
+    "pressure_psi": ("presion", "presiones", "psi", "pressure", "druck"),
+    "core_c": (
+        "temperatura",
+        "temperaturas",
+        "temperature",
+        "temperatur",
+        "grados",
+    ),
+    "wear_pct": ("desgaste", "desgastado", "gastado", "wear", "worn", "verschleiss"),
+}
+
+
+def asked_wheels(q: str) -> tuple[str, ...]:
+    """The wheels a tyre question is about: one tyre, an axle or a side; empty = all of them."""
+    words = set(q.split())
+    stems = {w[:6] for w in words}  # vorderreifen, hinterreifen
+    front = bool(words & set(_FRONT)) or "vorder" in stems
+    rear = bool(words & set(_REAR)) or "hinter" in stems
+    left, right = bool(words & set(_LEFT)), bool(words & set(_RIGHT))
+    if front == rear and not (left ^ right):
+        return ()
+    if front and rear:
+        return ()
+    if front or rear:
+        axle = ("FL", "FR") if front else ("RL", "RR")
+        if left ^ right:
+            side = 0 if left else 1
+            return (axle[side],)
+        return axle
+    side = ("FL", "RL") if left else ("FR", "RR")
+    return side
+
+
+def asked_metric(q: str) -> str | None:
+    """The single measurement a tyre question names (pressure, temperature or wear), or ``None``."""
+    words = set(q.split())
+    hit = [m for m, ws in _METRICS.items() if words & set(ws)]
+    return hit[0] if len(hit) == 1 else None
+
+
+def _wheel_flags(q: str) -> tuple[str, ...]:
+    out = []
+    wheels = asked_wheels(q)
+    if wheels:
+        out.append("wheels:" + ",".join(wheels))
+    metric = asked_metric(q)
+    if metric:
+        out.append("metric:" + metric)
+    return tuple(out)
+
+
+def tyre_filter(routed) -> tuple[tuple[str, ...], str | None]:
+    wheels: tuple[str, ...] = ()
+    metric = None
+    for f in routed.flags:
+        if f.startswith("wheels:"):
+            wheels = tuple(f.split(":", 1)[1].split(","))
+        elif f.startswith("metric:"):
+            metric = f.split(":", 1)[1]
+    return wheels, metric
+
+
 def _has(text: str, phrases: tuple[str, ...]) -> bool:
     padded = f" {text} "
     return any(f" {p} " in padded for p in phrases)
@@ -368,6 +470,8 @@ def route(question: str, track: TrackInfo | None = None, lang: str = "es") -> Ro
         for f, words in (("hottest", hot), ("coldest", cold), ("pit_decision", _PIT_DECISION))
         if _has(q, words)
     )
+    if Intent.TYRES in found and not {"hottest", "coldest"} & set(flags):
+        flags += _wheel_flags(q)  # "the hottest tyre" already names which and how
     return Routed(tuple(found), corners, flags)
 
 
@@ -544,11 +648,18 @@ def _laps(sheet, lang, track, routed, th):
 def _tyres(sheet, lang, track, routed, th):
     rows: list[str] = []
     keys: list[str] = []
-    for w in ("FL", "FR", "RL", "RR"):
+    asked, metric = tyre_filter(routed)
+    for w in asked or ("FL", "FR", "RL", "RR"):
         core, p, wear = (
             sheet.value(f"tyres.{w}.{k}") for k in ("core_c", "pressure_psi", "wear_pct")
         )
-        if core is None and p is None:
+        if metric:  # "the pressure of the rear tyres": only that
+            core = core if metric == "core_c" else None
+            p = p if metric == "pressure_psi" else None
+            wear = wear if metric == "wear_pct" else None
+            if core is None and p is None and wear is None:
+                continue
+        elif core is None and p is None:
             continue
         bits = []
         if core is not None:

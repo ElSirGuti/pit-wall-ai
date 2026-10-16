@@ -222,13 +222,22 @@ def laps(sheet, track, routed, th):
 
 
 def tyres(sheet, track, routed, th):
+    from .local import tyre_filter
+
     rows: list[str] = []
     keys: list[str] = []
-    for w in ("FL", "FR", "RL", "RR"):
+    asked, metric = tyre_filter(routed)
+    for w in asked or ("FL", "FR", "RL", "RR"):
         core, p, wear = (
             sheet.value(f"tyres.{w}.{k}") for k in ("core_c", "pressure_psi", "wear_pct")
         )
-        if core is None and p is None:
+        if metric:
+            core = core if metric == "core_c" else None
+            p = p if metric == "pressure_psi" else None
+            wear = wear if metric == "wear_pct" else None
+            if core is None and p is None and wear is None:
+                continue
+        elif core is None and p is None:
             continue
         bits = []
         if core is not None:
