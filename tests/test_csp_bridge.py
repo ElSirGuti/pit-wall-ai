@@ -95,3 +95,25 @@ def test_starting_twice_is_harmless():
     rx.stop()
     assert rx.start()
     rx.stop()
+
+
+def test_a_second_pit_wall_follows_the_first_one():
+    import time
+
+    first, second = BridgeReceiver(port=28996), BridgeReceiver(port=28996)
+    assert (
+        first.start() and second.start()
+    )  # the second finds the port taken and reads from the first
+    try:
+        for k in range(3):
+            body = json.dumps({"wear": [70, 71, 60, 61], "t": float(k)}).encode()
+            req = urllib.request.Request("http://127.0.0.1:28996/", data=body, method="POST")
+            urllib.request.urlopen(req, timeout=3)
+            time.sleep(0.3)
+        deadline = time.time() + 3
+        while second.latest() is None and time.time() < deadline:
+            time.sleep(0.1)
+        assert second.latest() is not None and second.latest()["wear"] == [70, 71, 60, 61]
+    finally:
+        second.stop()
+        first.stop()

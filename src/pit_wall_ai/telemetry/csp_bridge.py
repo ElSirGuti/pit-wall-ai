@@ -12,6 +12,7 @@ import json
 import logging
 import threading
 import time
+import urllib.request
 from dataclasses import replace
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -33,6 +34,12 @@ def current_board() -> RivalBoard | None:
     return rx.board() if rx is not None else None
 
 
+class _Server(ThreadingHTTPServer):
+    # on Windows SO_REUSEADDR lets a second process bind the same port: that would split the messages between
+    # two receivers. Without it the second bind fails and the second pit-wall follows the first.
+    allow_reuse_address = False
+
+
 class BridgeReceiver:
     """A tiny HTTP endpoint that keeps the newest payload the Lua app posted."""
 
@@ -45,7 +52,8 @@ class BridgeReceiver:
         self._at = 0.0
         self.received = 0
         self.rivals = RivalTracker()
-        self._server: ThreadingHTTPServer | None = None
+        self._server: _Server | None = None
+        self._following = False
         self._thread: threading.Thread | None = None
 
     # -- data --------------------------------------------------------------------------------------------------
@@ -69,8 +77,8 @@ class BridgeReceiver:
     # -- server ------------------------------------------------------------------------------------------------
     def start(self) -> bool:
         if (
-            self._server is not None
-        ):  # the poller reopens the source every second while the game is closed
+            self._server is not None or self._following
+        ):  # the poller reopens the source every second
             return True
         receiver = self
 
@@ -84,14 +92,32 @@ class BridgeReceiver:
                     self.send_response(400)
                 self.end_headers()
 
+            def do_GET(self) -> None:  # noqa: N802 - a second pit-wall process follows the first one
+                data = receiver.latest()
+                if data is None:
+                    self.send_response(204)
+                    self.end_headers()
+                    return
+                body = json.dumps(data).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
             def log_message(self, *args) -> None:  # silence the per-request console line
                 return
 
         try:
-            self._server = ThreadingHTTPServer(("127.0.0.1", self.port), Handler)
-        except OSError as exc:
-            log.warning("CSP bridge port busy", extra={"port": self.port, "error": str(exc)})
-            return False
+            self._server = _Server(("127.0.0.1", self.port), Handler)
+        except OSError:
+            # another pit-wall (a `record` next to a `voice`) already listens: read from it instead
+            log.info(
+                "CSP bridge port in use by another pit-wall: following it",
+                extra={"port": self.port},
+            )
+            self._follow_start()
+            return True
         self._thread = threading.Thread(
             target=self._server.serve_forever, daemon=True, name="csp-bridge"
         )
@@ -100,8 +126,31 @@ class BridgeReceiver:
         _CURRENT = self
         return True
 
+    def _follow_start(self) -> None:
+        self._following = True
+        global _CURRENT
+        _CURRENT = self
+
+        def run() -> None:
+            last_t = None
+            while self._following:
+                try:
+                    with urllib.request.urlopen(f"http://127.0.0.1:{self.port}/", timeout=1.0) as r:
+                        if r.status == 200:
+                            data = json.loads(r.read())
+                            if data.get("t") != last_t:  # only a newer message counts as fresh
+                                last_t = data.get("t")
+                                self.feed(data)
+                except (OSError, ValueError):
+                    pass
+                time.sleep(0.2)
+
+        self._thread = threading.Thread(target=run, daemon=True, name="csp-bridge-follow")
+        self._thread.start()
+
     def stop(self) -> None:
         global _CURRENT
+        self._following = False
         if _CURRENT is self:
             _CURRENT = None
         if self._server is not None:
