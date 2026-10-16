@@ -799,3 +799,63 @@ def test_a_question_about_some_tyres_answers_only_those():
 def test_corner_names_list_skips_the_placeholders():
     r = L.route("¿Cuáles son los nombres de las curvas?")
     assert r is not None and r.intents == (L.Intent.CORNER_NAMES,)
+
+
+def _rival_inputs():
+    from pit_wall_ai.telemetry.rivals import RivalTracker
+
+    tr = RivalTracker(track_length_m=5000)
+    for k in range(121):
+        t = k * 0.5
+        base = t / 100.0
+
+        def c(i, off, pos, last, **kw):
+            d = {
+                "i": i,
+                "n": f"Piloto{i}",
+                "p": pos,
+                "l": 0,
+                "s": (off + base) % 1.0,
+                "v": 180,
+                "b": 90000 + i,
+                "a": 91000,
+                "ls": last,
+                "cmp": "S",
+            }
+            d.update(kw)
+            return d
+
+        tr.update(
+            {
+                "t": t,
+                "me": 0,
+                "session": {"type": 3, "laps": 10},
+                "cars": [
+                    c(0, 0.50, 2, [30000, 30000, 31000]),
+                    c(1, 0.55, 1, [29800, 30200, 30000]),
+                    c(2, 0.46, 3, [30500, 30000, 31200]),
+                ],
+            }
+        )
+    inp = synthetic_inputs()
+    inp.rivals = tr.board()
+    return inp
+
+
+def test_who_is_ahead_and_behind_with_the_gaps():
+    _, a, r = ask("¿quién tengo delante y a cuánto?", _rival_inputs())
+    assert "Piloto1" in a.text and "5,0 s" in a.text and "Piloto2" not in a.text
+    _, a, _ = ask("¿quiénes son mis rivales?", _rival_inputs())
+    assert "Piloto1" in a.text and "Piloto2" in a.text and "4,0 s" in a.text
+    _, a, _ = ask("¿quién tengo detrás?", _rival_inputs())
+    assert "Piloto2" in a.text and "Piloto1" not in a.text
+
+
+def test_sectors_against_the_rival_ahead():
+    _, a, _ = ask("¿cómo va el de delante en sectores?", _rival_inputs())
+    assert "sector 1: pierdes 0,20 s" in a.text and "sector 3: pierdes 1,00 s" in a.text
+
+
+def test_without_the_bridge_the_engineer_says_why():
+    _, a, _ = ask("¿quién tengo delante?")
+    assert "puente" in a.text

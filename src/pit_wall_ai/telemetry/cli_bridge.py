@@ -57,6 +57,27 @@ def cmd_bridge_install(cfg: AppConfig, a: argparse.Namespace, *, out=print) -> i
     return 0
 
 
+def _rivals_line(board) -> str:
+    def one(label, g):
+        if g is None:
+            return f"{label}: -"
+        who = g.car.name or f"#{g.car.index}"
+        if g.laps_diff:
+            return f"{label}: {who} {abs(g.laps_diff)} lap(s)"
+        return (
+            f"{label}: {who} {abs(g.gap_s or 0.0):.1f} s"
+            if g.gap_s is not None
+            else f"{label}: {who}"
+        )
+
+    s = board.session
+    return (
+        f"  rivals: {len(board.cars)} cars, I am P{board.me.position or '?'} ({s.kind or '?'}"
+        f"{', timed' if s.timed else ''}{', OVER' if s.over else ''})   "
+        f"{one('ahead', board.ahead())}   {one('behind', board.behind())}"
+    )
+
+
 def cmd_bridge_test(cfg: AppConfig, a: argparse.Namespace, *, out=print) -> int:
     port = cfg.telemetry.csp_bridge.port
     rx = BridgeReceiver(port, max_age_s=cfg.telemetry.csp_bridge.max_age_s)
@@ -77,6 +98,9 @@ def cmd_bridge_test(cfg: AppConfig, a: argparse.Namespace, *, out=print) -> int:
                     f"  wear FL/FR/RL/RR: {' / '.join(f'{x:.1f}' for x in w)} %   tyre {d.get('tyre', '?')}"
                     f"   flag {d.get('flag')}   penalty {d.get('penalty')}   damage {d.get('damage')}"
                 )
+                board = rx.board()
+                if board is not None and board.me is not None:
+                    out(_rivals_line(board))
     finally:
         rx.stop()
     out(f"{rx.received} messages received")

@@ -15,13 +15,22 @@ import time
 from dataclasses import replace
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+from .rivals import RivalBoard, RivalTracker
 from .snapshot import Snapshot
 from .source import SourceUnavailable, TelemetrySource
 
 log = logging.getLogger(__name__)
 
 DEFAULT_PORT = 28271
-MAX_BODY = 8192
+MAX_BODY = 262144  # 40 cars with their sectors are about 12 KB
+
+_CURRENT: BridgeReceiver | None = None
+
+
+def current_board() -> RivalBoard | None:
+    """The rivals the running bridge last saw, or ``None`` (no bridge, app off, nothing fresh)."""
+    rx = _CURRENT
+    return rx.board() if rx is not None else None
 
 
 class BridgeReceiver:
@@ -35,6 +44,7 @@ class BridgeReceiver:
         self._data: dict | None = None
         self._at = 0.0
         self.received = 0
+        self.rivals = RivalTracker()
         self._server: ThreadingHTTPServer | None = None
         self._thread: threading.Thread | None = None
 
@@ -43,6 +53,11 @@ class BridgeReceiver:
         with self._lock:
             self._data, self._at = payload, self._clock()
             self.received += 1
+        self.rivals.update(payload)
+
+    def board(self) -> RivalBoard | None:
+        """The rivals, only while the app is sending (a stale board would say who was ahead minutes ago)."""
+        return self.rivals.board() if self.latest() is not None else None
 
     def latest(self) -> dict | None:
         """The newest payload, or ``None`` when the app is not sending (not installed, game closed)."""
@@ -77,9 +92,14 @@ class BridgeReceiver:
             target=self._server.serve_forever, daemon=True, name="csp-bridge"
         )
         self._thread.start()
+        global _CURRENT
+        _CURRENT = self
         return True
 
     def stop(self) -> None:
+        global _CURRENT
+        if _CURRENT is self:
+            _CURRENT = None
         if self._server is not None:
             self._server.shutdown()
             self._server.server_close()

@@ -86,6 +86,9 @@ class ChatInputs:
     tyre_watch: object | None = None  # TyreLoadWatch: the index of the laps of this set of tyres
     memory: object | None = None  # AlertMemory: what was said in earlier sessions
     now: float | None = None  # same clock as ``snap.t``
+    rivals: object | None = (
+        None  # RivalBoard from the CSP bridge: the other cars, gaps, their times
+    )
 
 
 def _r(v: float, nd: int) -> float:
@@ -258,6 +261,8 @@ def build_facts(inp: ChatInputs) -> FactSheet:
             add(Fact("penalties.time_s", _r(snap.penalty_time, 1), "s"))
             add(Fact("penalties.unit_verified", False))
 
+    _add_rivals(inp, sheet)
+
     # -- the last lap against the best, corner by corner ------------------------------------------------
     _add_analysis(inp, sheet)
     _add_tyre_corners(inp, sheet)
@@ -283,6 +288,49 @@ def build_facts(inp: ChatInputs) -> FactSheet:
             float(x.replace(",", ".")) for x in re.findall(r"\d+(?:[.,]\d+)?", rec.text)
         ]
     return sheet
+
+
+def _add_rivals(inp: ChatInputs, sheet: FactSheet) -> None:
+    """The cars next to me, from the CSP bridge: who they are, the gap in seconds and how they are doing."""
+    board = inp.rivals
+    if board is None or board.me is None:
+        return
+    add = sheet.add
+    me = board.me
+    add(Fact("rivals.cars", len(board.cars)))
+    if me.position:
+        add(Fact("rivals.me.position", me.position))
+    for side, gap in (("ahead", board.ahead()), ("behind", board.behind())):
+        if gap is None:
+            continue
+        c = gap.car
+        k = f"rivals.{side}"
+        if c.name:
+            add(Fact(f"{k}.name", c.name))
+        if c.position:
+            add(Fact(f"{k}.position", c.position))
+        if gap.gap_s is not None:
+            add(Fact(f"{k}.gap_s", _r(abs(gap.gap_s), 1), "s"))
+        if gap.laps_diff:
+            add(Fact(f"{k}.laps_diff", abs(gap.laps_diff), "laps"))
+        if gap.closing_s is not None and abs(gap.closing_s) >= 0.1:
+            add(Fact(f"{k}.closing_s", _r(abs(gap.closing_s), 1), "s"))
+            add(Fact(f"{k}.is_closing", gap.closing_s > 0))
+        if c.best_ms > 0:
+            add(Fact(f"{k}.best_lap_ms", c.best_ms, "ms", numbers=_time_numbers(c.best_ms)))
+        if c.last_ms > 0:
+            add(Fact(f"{k}.last_lap_ms", c.last_ms, "ms", numbers=_time_numbers(c.last_ms)))
+        if c.compound:
+            add(Fact(f"{k}.compound", c.compound))
+        if c.in_pit:
+            add(Fact(f"{k}.in_pit", True))
+        # the last lap's sectors against mine: positive = I was slower there
+        a, b = me.last_splits, c.last_splits
+        if a and len(a) == len(b) and all(x > 0 for x in a) and all(x > 0 for x in b):
+            for n, (mine, theirs) in enumerate(zip(a, b), 1):
+                add(Fact(f"{k}.sector{n}_delta_s", _r((mine - theirs) / 1000.0, 2), "s"))
+    if board.session.over:
+        add(Fact("rivals.session_over", True))
 
 
 def _add_axles(sheet: FactSheet, snap: Snapshot) -> None:

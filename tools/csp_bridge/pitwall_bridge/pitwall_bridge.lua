@@ -18,6 +18,67 @@ local function try(fn, default)
   return default
 end
 
+local MAX_CARS = 40
+
+-- a CSP list (items start at 0, "#" gives the count) as a plain array of numbers
+local function list(t)
+  local out = {}
+  if t == nil then return out end
+  local n = #t
+  for k = 0, n - 1 do out[#out + 1] = t[k] or 0 end
+  return out
+end
+
+local function rounded(v, places)
+  local m = 10 ^ places
+  return math.floor(v * m + 0.5) / m
+end
+
+-- one entry per connected car, short keys to keep 40 cars small (see pit_wall_ai/telemetry/rivals.py)
+local function buildCars(sim)
+  local cars = {}
+  local count = math.min(sim.carsCount, MAX_CARS)
+  for i = 0, count - 1 do
+    local c = ac.getCar(i)
+    if c ~= nil and try(function() return c.isConnected end, true) then
+      cars[#cars + 1] = {
+        i = i,
+        n = try(function() return ac.getDriverName(i) end, ''),
+        p = try(function() return c.racePosition end, 0),
+        l = try(function() return c.lapCount end, 0),
+        s = rounded(try(function() return c.splinePosition end, 0), 5),
+        v = math.floor(try(function() return c.speedKmh end, 0) + 0.5),
+        b = try(function() return c.bestLapTimeMs end, 0),
+        a = try(function() return c.previousLapTimeMs end, 0),
+        c = try(function() return c.lapTimeMs end, 0),
+        sec = try(function() return c.currentSector end, 0),
+        sp = try(function() return list(c.currentSplits) end, {}),
+        ls = try(function() return list(c.lastSplits) end, {}),
+        bs = try(function() return list(c.bestSplits) end, {}),
+        pit = try(function() return c.isInPitlane and 1 or 0 end, 0),
+        ret = try(function() return c.isRetired and 1 or 0 end, 0),
+        fin = try(function() return c.isRaceFinished and 1 or 0 end, 0),
+        val = try(function() return c.isLapValid and 1 or 0 end, 1),
+        cmp = try(function() return ac.getTyresName(i, c.compoundIndex) end, ''),
+      }
+    end
+  end
+  return cars
+end
+
+local function buildSession(sim)
+  local ok, sess = pcall(function() return ac.getSession(sim.currentSessionIndex) end)
+  if not ok or sess == nil then return nil end
+  return {
+    type = try(function() return sess.type end, 0),
+    laps = try(function() return sess.laps end, 0),
+    dur = try(function() return sess.durationMinutes end, 0),
+    timed = try(function() return sess.isTimedRace and 1 or 0 end, 0),
+    leader_laps = try(function() return sess.leaderCompletedLaps end, 0),
+    over = try(function() return sess.isOver and 1 or 0 end, 0),
+  }
+end
+
 local function build()
   local sim = ac.getSim()
   local idx = sim.focusedCar
@@ -45,6 +106,10 @@ local function build()
     rain_intensity = try(function() return sim.rainIntensity end, 0),
     rain_wetness = try(function() return sim.rainWetness end, 0),
     rain_water = try(function() return sim.rainWater end, 0),
+    t = sim.time / 1000,
+    me = idx,
+    cars = try(function() return buildCars(sim) end, {}),
+    session = buildSession(sim),
   }
 end
 

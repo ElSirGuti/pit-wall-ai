@@ -41,6 +41,7 @@ class Intent(StrEnum):
     TYRE_CORNERS = "tyre_corners"  # where the tyres are worked hardest (an estimate)
     STRAIGHT = "straight"  # what a named straight is and between which corners
     CORNER_NAMES = "corner_names"  # the list of the circuit's named corners
+    RIVALS = "rivals"  # who is ahead and behind, the gaps, their times (CSP bridge)
 
 
 # keyword tables: every entry is a normalised phrase searched as whole words
@@ -243,6 +244,49 @@ _PIT_DECISION = (
     "box now",
 )
 _KEYS[Intent.NOT_YET] = (*_KEYS[Intent.NOT_YET], *_PIT_DECISION)
+_RIVAL_AHEAD = (
+    "el de delante",
+    "quien tengo delante",
+    "quien va delante",
+    "quien esta delante",
+    "rival de delante",
+    "coche de delante",
+    "car ahead",
+    "who is ahead",
+    "who s ahead",
+    "driver ahead",
+    "wer ist vor mir",
+    "der vor mir",
+)
+_RIVAL_BEHIND = (
+    "el de atras",
+    "el de detras",
+    "quien tengo detras",
+    "quien tengo atras",
+    "quien va detras",
+    "quien viene detras",
+    "rival de atras",
+    "coche de atras",
+    "car behind",
+    "who is behind",
+    "who s behind",
+    "driver behind",
+    "wer ist hinter mir",
+    "der hinter mir",
+)
+_KEYS[Intent.RIVALS] = (
+    *_RIVAL_AHEAD,
+    *_RIVAL_BEHIND,
+    "mis rivales",
+    "mi rival",
+    "my rivals",
+    "my rival",
+    "a cuanto esta el",
+    "a cuanto estan",
+    "intervalo",
+    "gap to",
+    "wie weit",
+)
 _KEYS[Intent.CORNER_NAMES] = (
     "nombres de las curvas",
     "como se llaman las curvas",
@@ -316,6 +360,7 @@ _ORDER = (
     Intent.LAPS,
     Intent.SESSION,
     Intent.TIME_LEFT,
+    Intent.RIVALS,
     Intent.CORNER_NAMES,
     Intent.NOT_YET,
     Intent.UNKNOWN_DATA,
@@ -474,8 +519,25 @@ def route(question: str, track: TrackInfo | None = None, lang: str = "es") -> Ro
             (Intent.NOT_YET,), corners, ("pit_decision",) if _has(q, _PIT_DECISION) else ()
         )
     # a corner or an alert explanation is a question on its own
-    for solo in (Intent.CORNER_NAMES, Intent.CORNER, Intent.TYRE_CORNERS, Intent.LAST_ALERT):
+    for solo in (
+        Intent.RIVALS,
+        Intent.CORNER_NAMES,
+        Intent.CORNER,
+        Intent.TYRE_CORNERS,
+        Intent.LAST_ALERT,
+    ):
         if solo in found:
+            if solo is Intent.RIVALS:
+                rival_flags = tuple(
+                    f
+                    for f, words in (
+                        ("ahead", _RIVAL_AHEAD),
+                        ("behind", _RIVAL_BEHIND),
+                        ("sectors", ("sector", "sectores", "sectors", "sektor", "sektoren")),
+                    )
+                    if _has(q, words)
+                )
+                return Routed((solo,), corners, rival_flags)
             return Routed((solo,), corners)
     # a braking/losing question already covers "frenadas": do not also dump the brake temperatures
     if Intent.LOSS in found and Intent.BRAKES in found:
@@ -483,7 +545,14 @@ def route(question: str, track: TrackInfo | None = None, lang: str = "es") -> Ro
     hot, cold = (DE.HOTTEST, DE.COLDEST) if de else (_HOTTEST, _COLDEST)
     flags = tuple(
         f
-        for f, words in (("hottest", hot), ("coldest", cold), ("pit_decision", _PIT_DECISION))
+        for f, words in (
+            ("hottest", hot),
+            ("coldest", cold),
+            ("pit_decision", _PIT_DECISION),
+            ("ahead", _RIVAL_AHEAD),
+            ("behind", _RIVAL_BEHIND),
+            ("sectors", ("sector", "sectores", "sectors", "sektor", "sektoren")),
+        )
         if _has(q, words)
     )
     if Intent.TYRES in found and not {"hottest", "coldest"} & set(flags):
@@ -1087,6 +1156,117 @@ def _straight(sheet, lang, track, routed, th):
     return straight_answer(sheet, lang, track, routed, lambda c: _corner_ref(sheet, c, names, lang))
 
 
+def _rival_line(sheet, lang, side: str, sectors: bool = False) -> tuple[str, list[str]] | None:
+    k = f"rivals.{side}"
+    name = sheet.value(f"{k}.name")
+    gap = sheet.value(f"{k}.gap_s")
+    laps = sheet.value(f"{k}.laps_diff")
+    pos = sheet.value(f"{k}.position")
+    if name is None and gap is None and laps is None:
+        return None
+    keys = [
+        f"{k}.{x}"
+        for x in ("name", "gap_s", "laps_diff", "position")
+        if sheet.value(f"{k}.{x}") is not None
+    ]
+    who = {"es": "el coche", "en": "the car", "de": "das Auto"}[
+        lang if lang in ("es", "de") else "en"
+    ]
+    if name:
+        who = name
+    where = {
+        "es": {"ahead": "delante", "behind": "detrás"},
+        "en": {"ahead": "ahead", "behind": "behind"},
+        "de": {"ahead": "vor dir", "behind": "hinter dir"},
+    }[lang if lang in ("es", "de") else "en"][side]
+    p = f" (P{pos})" if pos else ""
+    if laps:
+        n = int(laps)
+        text = {
+            "es": f"{where.capitalize()}: {who}{p}, a {n} vuelta{'s' if n != 1 else ''}.",
+            "de": f"{where.capitalize()}: {who}{p}, {n} Runde{'n' if n != 1 else ''}.",
+        }.get(lang, f"{where.capitalize()}: {who}{p}, {n} lap{'s' if n != 1 else ''}.")
+    elif gap is not None:
+        text = {
+            "es": f"{where.capitalize()}: {who}{p}, a {_num(gap, 1, lang)} s.",
+            "de": f"{where.capitalize()}: {who}{p}, {_num(gap, 1, lang)} s.",
+        }.get(lang, f"{where.capitalize()}: {who}{p}, {_num(gap, 1, lang)} s.")
+    else:
+        text = f"{where.capitalize()}: {who}{p}."
+    closing = sheet.value(f"{k}.closing_s")
+    if closing is not None:
+        is_closing = sheet.value(f"{k}.is_closing")
+        keys += [f"{k}.closing_s", f"{k}.is_closing"]
+        verb = {
+            "es": ("se acerca" if is_closing else "se aleja"),
+            "en": ("is closing in" if is_closing else "is pulling away"),
+            "de": ("kommt näher" if is_closing else "fährt weg"),
+        }[lang if lang in ("es", "de") else "en"]
+        unit = {
+            "es": "en los últimos 30 s",
+            "en": "over the last 30 s",
+            "de": "in den letzten 30 s",
+        }[lang if lang in ("es", "de") else "en"]
+        text += f" {verb.capitalize()}: {_num(closing, 1, lang)} s {unit}."
+    best = sheet.value(f"{k}.best_lap_ms")
+    if best is not None:
+        keys.append(f"{k}.best_lap_ms")
+        text += {
+            "es": f" Su mejor vuelta: {_clock(best / 1000.0, lang)}.",
+            "de": f" Seine schnellste Runde: {_clock(best / 1000.0, lang)}.",
+        }.get(lang, f" Best lap: {_clock(best / 1000.0, lang)}.")
+    if sectors:
+        deltas = [(n, sheet.value(f"{k}.sector{n}_delta_s")) for n in (1, 2, 3, 4, 5)]
+        deltas = [(n, d) for n, d in deltas if d is not None]
+        if deltas:
+            keys += [f"{k}.sector{n}_delta_s" for n, _ in deltas]
+            bits = []
+            for n, d in deltas:
+                if d > 0:
+                    bits.append(
+                        {
+                            "es": f"sector {n}: pierdes {_num(d, 2, lang)} s",
+                            "de": f"Sektor {n}: du verlierst {_num(d, 2, lang)} s",
+                        }.get(lang, f"sector {n}: you lose {_num(d, 2, lang)} s")
+                    )
+                else:
+                    bits.append(
+                        {
+                            "es": f"sector {n}: ganas {_num(-d, 2, lang)} s",
+                            "de": f"Sektor {n}: du gewinnst {_num(-d, 2, lang)} s",
+                        }.get(lang, f"sector {n}: you gain {_num(-d, 2, lang)} s")
+                    )
+            text += (
+                " "
+                + {"es": "En la última vuelta, ", "de": "In der letzten Runde: "}.get(
+                    lang, "On the last lap, "
+                )
+                + "; ".join(bits)
+                + "."
+            )
+    return text, keys
+
+
+def _rivals(sheet, lang, track, routed, th):
+    sides = [s for s in ("ahead", "behind") if s in routed.flags] or ["ahead", "behind"]
+    out: list[str] = []
+    keys: list[str] = []
+    for side in sides:
+        got = _rival_line(sheet, lang, side, "sectors" in routed.flags)
+        if got is not None:
+            out.append(got[0])
+            keys += got[1]
+    if not out:
+        return {
+            "es": "No veo a otros coches: necesito el puente de CSP activo (la app Pit Wall Bridge) y una sesión con rivales.",
+            "de": "Ich sehe keine anderen Autos: die CSP-Brücke (Pit Wall Bridge) muss aktiv sein und die Sitzung Gegner haben.",
+        }.get(
+            lang,
+            "I do not see other cars: the CSP bridge (Pit Wall Bridge app) must be on and the session must have rivals.",
+        ), []
+    return " ".join(out), keys
+
+
 def _corner_names(sheet, lang, track, routed, th):
     # "Curva 7" is the table's placeholder for an unnamed corner, not a name
     names = {
@@ -1200,5 +1380,6 @@ _BUILDERS = {
     Intent.TIME_LEFT: _time_left,
     Intent.TYRE_CORNERS: _tyre_corners,
     Intent.CORNER_NAMES: _corner_names,
+    Intent.RIVALS: _rivals,
     Intent.STRAIGHT: _straight,
 }

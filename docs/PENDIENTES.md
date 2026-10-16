@@ -124,6 +124,14 @@ El desgaste real ya llega y coincide con tu app CMRT (99/98/69/62 % contra 99,7/
 mensaje trae bandera, penalización, daño por zona y lluvia, que nadie usa todavía: ver "Eventos del juego" en la
 sección 1. Sin el puente (app no activada o juego cerrado) el ingeniero no dice el desgaste, no lo inventa.
 
+**Rivales (versión 0.2 del puente, 2026-10-16, sin probar en el juego)**: la app envía también todos los coches
+(posición, vueltas, distancia en la vuelta, tiempos, sectores, boxes, compuesto) y los datos de la sesión; pit-wall
+calcula los intervalos en segundos y contesta "¿quién tengo delante / detrás y a cuánto?", "mis rivales", "¿cómo va
+el de delante en sectores?". Para probarlo: volver a copiar la app (`pit-wall bridge-install`; ya está copiada),
+reiniciar AC, y con una carrera contra IA abierta `pit-wall bridge-test`: debe imprimir una línea `rivals:` con
+los coches, tu posición y los de delante y detrás. Si no sale o los intervalos no cuadran con la app CMRT (a ±0,2 s),
+pásame la línea. Los campos de CSP se leyeron de su documentación, sin ver el juego: es lo más probable que falle.
+
 ## 5e. Verificar la numeración de los circuitos
 
 Verificados con tu mapa: Magione, Imola, Spa, Monza, Red Bull Ring (GP y national) y Silverstone (GP,
@@ -178,6 +186,9 @@ con la tabla: Zandvoort, Vallelunga; con dudas sobre el orden: Red Bull Ring, Ba
 ## 5m. Lo que falta del lado del código (sin ti, o con una prueba tuya al final)
 
 * **Reglas de banderas, daño y penalización** con los datos del puente: necesitan las capturas de la sección 1.
+* **Alertas de rivales** (se acerca el de atrás, el de delante entra a boxes, bandera azul con el nombre de quien la
+  provoca, última vuelta del líder) y **final de carrera por tiempo** con `session.over`: los datos ya llegan en
+  el puente 0.2; faltan las reglas, que conviene escribir cuando se vea cómo llegan en una carrera real.
 * **Índice de desgaste por curva en vivo** con el porcentaje real del puente: el análisis ya existe (`tyre-corners`);
   falta usarlo en la conversación en vivo y compararlo con tu app.
 * **Estimación del desgaste cuando el simulador no lo da** (iRacing: solo al parar): plan en `PHASE8_PLAN.md` 3.5.

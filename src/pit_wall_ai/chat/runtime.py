@@ -93,6 +93,13 @@ class ChatRuntime:
         self.engine.flush()
         return n
 
+    def _rivals(self):
+        if not self.live:
+            return None
+        from ..telemetry.csp_bridge import current_board
+
+        return current_board()
+
     def inputs(self) -> ChatInputs:
         v = self.engine.view()
         snap = v.last_snapshot
@@ -112,4 +119,5 @@ class ChatRuntime:
             tyre_watch=self.tyre_watch,
             memory=self.memory,
             now=now,
+            rivals=self._rivals(),
         )
