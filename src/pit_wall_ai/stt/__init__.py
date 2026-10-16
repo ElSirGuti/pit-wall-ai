@@ -27,6 +27,8 @@ BASE_VOCABULARY = (
     "trasero derecho",
     "gasolina",
     "neumáticos",
+    "desgaste",
+    "pits",
     "frenada",
     "vuelta rápida",
     "box",

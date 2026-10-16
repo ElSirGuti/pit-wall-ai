@@ -20,3 +20,8 @@ def test_pizza_is_heard_for_pits():
 
 def test_circuit_names_misheard():
     assert fix("las curvas de mayones") == "las curvas de magione"
+
+
+def test_desgaste_misheard():
+    assert fix("dejaste de los neumáticos") == "desgaste de los neumáticos"
+    assert fix("el circuito es maguione") == "el circuito es magione"
