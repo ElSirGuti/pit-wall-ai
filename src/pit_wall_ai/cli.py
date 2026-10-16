@@ -209,22 +209,22 @@ def _parser() -> argparse.ArgumentParser:
         ("record", "record each phrase from the microphone (Enter to start, Enter to stop)"),
         ("test", "transcribe what was recorded and report the word error rate"),
     ):
-        p = ph_sub.add_parser(name, help=helptext)
-        p.add_argument("--config", help="YAML config")
-        p.add_argument("--lang", choices=["es", "de", "en"], default="es")
-        p.add_argument("--set", default="A", help="A = quiet, B = with the engine on (A)")
-        p.add_argument("--out", default="frases", help="folder of the recordings (frases)")
+        pp = ph_sub.add_parser(name, help=helptext)
+        pp.add_argument("--config", help="YAML config")
+        pp.add_argument("--lang", choices=["es", "de", "en"], default="es")
+        pp.add_argument("--set", default="A", help="A = quiet, B = with the engine on (A)")
+        pp.add_argument("--out", default="frases", help="folder of the recordings (frases)")
         if name == "record":
-            p.add_argument("--device", help="part of the microphone name")
-            p.add_argument("--only", help="e.g. 3,6-8: only these phrases")
-            p.add_argument(
+            pp.add_argument("--device", help="part of the microphone name")
+            pp.add_argument("--only", help="e.g. 3,6-8: only these phrases")
+            pp.add_argument(
                 "--redo", action="store_true", help="record again the ones already saved"
             )
-            p.add_argument("--seconds", type=float, default=10.0, help="longest recording (10)")
+            pp.add_argument("--seconds", type=float, default=10.0, help="longest recording (10)")
         else:
-            p.add_argument("--dir", help="another folder (e.g. frases/telefono)")
-            p.add_argument("--device", choices=["cpu", "cuda"], help="override stt.device")
-            p.add_argument("--model", help="tiny | base | small | medium | high | turbo")
+            pp.add_argument("--dir", help="another folder (e.g. frases/telefono)")
+            pp.add_argument("--device", choices=["cpu", "cuda"], help="override stt.device")
+            pp.add_argument("--model", help="tiny | base | small | medium | high | turbo")
 
     bi = sub.add_parser(
         "bridge-install", help="copy the CSP Lua bridge app into the game's apps/lua"
