@@ -773,3 +773,8 @@ def test_psi_is_spelled_for_the_synthesiser():
     assert pronounce("27,1 psi en el trasero", "es") == "27,1 pe ese i en el trasero"
     assert pronounce("psi", "en") == "P S I"
     assert pronounce("psicología", "es") == "psicología"
+
+
+def test_a_stop_question_is_not_answered_as_a_tyre_report():
+    r = L.route("¿Debería entrar a pits en base al desgaste de los neumáticos?")
+    assert r is not None and r.intents == (L.Intent.NOT_YET,) and "pit_decision" in r.flags

@@ -206,6 +206,26 @@ _KEYS[Intent.NOT_YET] = (
     "tyre strategy",
     "estrategia de neumaticos",
 )
+_PIT_DECISION = (
+    "deberia entrar",
+    "debo entrar",
+    "entrar a boxes",
+    "entrar a pits",
+    "entrar a pit",
+    "entrar a los boxes",
+    "entro a boxes",
+    "entro a pits",
+    "parar en boxes",
+    "parar a boxes",
+    "cambiar los neumaticos",
+    "cambio de neumaticos",
+    "should i pit",
+    "should i come in",
+    "should i box",
+    "pit now",
+    "box now",
+)
+_KEYS[Intent.NOT_YET] = (*_KEYS[Intent.NOT_YET], *_PIT_DECISION)
 _KEYS[Intent.TYRE_CORNERS] = (
     "en que curvas gasto",
     "en que curvas estoy gastando",
@@ -341,7 +361,11 @@ def route(question: str, track: TrackInfo | None = None, lang: str = "es") -> Ro
     if Intent.LOSS in found and Intent.BRAKES in found:
         found.remove(Intent.BRAKES)
     hot, cold = (DE.HOTTEST, DE.COLDEST) if de else (_HOTTEST, _COLDEST)
-    flags = tuple(f for f, words in (("hottest", hot), ("coldest", cold)) if _has(q, words))
+    flags = tuple(
+        f
+        for f, words in (("hottest", hot), ("coldest", cold), ("pit_decision", _PIT_DECISION))
+        if _has(q, words)
+    )
     return Routed(tuple(found), corners, flags)
 
 
@@ -960,7 +984,32 @@ def _time_left(sheet, lang, track, routed, th):
     ), []
 
 
+def _pit_decision(sheet, lang):
+    """A stop question before the strategy engine exists: say what the tyres measure, never decide."""
+    wear = {w: sheet.value(f"tyres.{w}.wear_pct") for w in ("FL", "FR", "RL", "RR")}
+    wear = {w: v for w, v in wear.items() if v is not None}
+    if not wear:
+        return None
+    keys = [f"tyres.{w}.wear_pct" for w in wear]
+    worst = min(wear, key=wear.get)
+    if lang == "es":
+        return (
+            f"La decisión de parada todavía no la calculo: el plan de carrera llega en una fase posterior. "
+            f"Lo que mido: el neumático más gastado es el {_WHEEL[lang][worst]}, con "
+            f"{_num(wear[worst], 1, lang)} % de vida; el mejor tiene {_num(max(wear.values()), 1, lang)} %."
+        ), keys
+    return (
+        f"I do not compute the stop decision yet: the race plan comes in a later phase. "
+        f"What I measure: the most worn tyre is the {_WHEEL[lang][worst]} one, with "
+        f"{_num(wear[worst], 1, lang)} % left; the best has {_num(max(wear.values()), 1, lang)} %."
+    ), keys
+
+
 def _not_yet(sheet, lang, track, routed, th):
+    if "pit_decision" in routed.flags:
+        got = _pit_decision(sheet, lang)
+        if got is not None:
+            return got
     if lang == "es":
         return (
             "Los consejos de reglaje y la estrategia de carrera todavía no están disponibles: "

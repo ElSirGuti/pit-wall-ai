@@ -12,3 +12,7 @@ def test_known_mishearings_are_replaced_and_the_rest_is_untouched():
 
 def test_sai_is_heard_for_psi():
     assert fix("cuántos sai tengo en el delantero") == "cuántos psi tengo en el delantero"
+
+
+def test_pizza_is_heard_for_pits():
+    assert fix("debería entrar a pizza ahora") == "debería entrar a pits ahora"
