@@ -16,3 +16,7 @@ def test_sai_is_heard_for_psi():
 
 def test_pizza_is_heard_for_pits():
     assert fix("debería entrar a pizza ahora") == "debería entrar a pits ahora"
+
+
+def test_circuit_names_misheard():
+    assert fix("las curvas de mayones") == "las curvas de magione"

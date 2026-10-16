@@ -48,12 +48,18 @@ def format_turn(t: VoiceTurn) -> str:
 
 
 def hotwords_for(runtime, lang: str = "es") -> str:
+    extra: list[str] = []
     try:
         info = runtime.inputs().track
         names = list(info.names.values()) if info is not None else []
+        if info is not None:  # the circuit itself: "Magione" was heard as "mayones"
+            from ..analysis.circuit_names import circuit_for
+
+            c = circuit_for(info.track)
+            extra.append(str(c["name"]) if c else info.track.replace("ks_", "").replace("_", " "))
     except Exception:  # noqa: BLE001
         names = []
-    return build_hotwords(names, lang=lang)
+    return build_hotwords(names, extra, lang=lang)
 
 
 def cmd_voice(
