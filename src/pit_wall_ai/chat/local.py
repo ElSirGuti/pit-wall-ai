@@ -352,7 +352,9 @@ def route(question: str, track: TrackInfo | None = None, lang: str = "es") -> Ro
         found.remove(Intent.UNKNOWN_DATA)
     # setup / strategy is a question on its own: a clear "not yet" instead of a half answer
     if Intent.NOT_YET in found:
-        return Routed((Intent.NOT_YET,), corners)
+        return Routed(
+            (Intent.NOT_YET,), corners, ("pit_decision",) if _has(q, _PIT_DECISION) else ()
+        )
     # a corner or an alert explanation is a question on its own
     for solo in (Intent.CORNER, Intent.TYRE_CORNERS, Intent.LAST_ALERT):
         if solo in found:
