@@ -93,7 +93,9 @@ class LLMConfig(_Model):
     base_url: str = "https://generativelanguage.googleapis.com/v1beta"
     temperature: float = Field(0.2, ge=0, le=2)
     api_key_env: str = "GEMINI_API_KEY"
-    timeout_s: float = Field(5.0, gt=0)
+    timeout_s: float = Field(
+        3.5, gt=0
+    )  # per model: with a reserve model a dead call costs at most twice this
     max_output_tokens: int = Field(300, ge=16)
     cache_ttl_s: float = Field(20.0, ge=0)
     rate_limit: RateLimitConfig = RateLimitConfig()

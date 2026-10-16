@@ -32,7 +32,7 @@ llm:                    # phase 5; the provider is swappable
   base_url: https://generativelanguage.googleapis.com/v1beta
   temperature: 0.2
   api_key_env: GEMINI_API_KEY
-  timeout_s: 5          # a stuck call gives way to the reserve model after this long
+  timeout_s: 3.5        # a stuck call gives way to the reserve model after this long (a good answer took up to 4.5 s once)
   max_output_tokens: 300
   cache_ttl_s: 20
   rate_limit:           # adaptive: backs off on HTTP 429, creeps up while calls succeed

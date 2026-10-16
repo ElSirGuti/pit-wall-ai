@@ -340,15 +340,23 @@ class ChatSession:
         return f"I cannot reach the cloud model: {why} Meanwhile I answer locally about {cap}."
 
     def _degraded_text(self, sheet: FactSheet, why: str) -> str:
+        log.warning("model unreachable, answering with what is known", extra={"why": why})
         parts = []
         for intents in ((L.Intent.SESSION,), (L.Intent.LAPS,), (L.Intent.FUEL,)):
+            if intents == (L.Intent.SESSION,) and sheet.value("session.kind") in (None, "unknown"):
+                continue  # "Sesión: unknown, menu" says nothing to a driver
             a = L.answer(L.Routed(intents), sheet, lang=self.lang)
-            if a.text and a.text != L.NO_DATA[self.lang]:
+            # a builder with nothing to say answers "no data (...)": that is not something I know
+            if a.text and not a.text.startswith(L.NO_DATA[self.lang].rstrip(".")):
                 parts.append(a.text)
+        # the technical reason goes to the log, not to the driver's ears
         head = {
-            "es": f"No he podido consultar el modelo ({why}). Esto es lo que sé:",
-            "en": f"I could not reach the model ({why}). This is what I know:",
-            "de": f"Ich konnte das Modell nicht erreichen ({why}). Das weiß ich:",
+            "es": "No he podido consultar el modelo ahora mismo."
+            + (" Esto es lo que sé:" if parts else ""),
+            "en": "I could not reach the model right now."
+            + (" This is what I know:" if parts else ""),
+            "de": "Ich konnte das Modell gerade nicht erreichen."
+            + (" Das weiß ich:" if parts else ""),
         }[self.lang]
         return " ".join([head, *parts]) if parts else head
 

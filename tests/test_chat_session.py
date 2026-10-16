@@ -122,10 +122,10 @@ def test_english_prompt_and_wording():
 
 
 # -- degradation -----------------------------------------------------------------------------------------
-def test_a_rate_limited_model_degrades_to_a_local_summary_with_the_reason():
+def test_a_rate_limited_model_degrades_to_a_local_summary_without_the_technical_reason():
     s, _ = session(LLMRateLimited("quota", 30.0))
     r = s.ask("¿qué opinas de mi ritmo?")
-    assert r.source == "degraded" and "provider_429" in r.text
+    assert r.source == "degraded" and "provider_429" not in r.text
     assert "Esto es lo que sé" in r.text and "Sesión" in r.text and "litros" in r.text
     assert s.stats.degraded == 1
 
