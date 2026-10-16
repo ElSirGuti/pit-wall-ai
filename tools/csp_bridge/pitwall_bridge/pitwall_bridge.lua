@@ -11,34 +11,40 @@ local lastError = ''
 local busy = false
 local ticks, built, errors = 0, 0, 0
 
+-- an optional field that does not exist in this CSP version must not cost the whole message
+local function try(fn, default)
+  local ok, v = pcall(fn)
+  if ok and v ~= nil then return v end
+  return default
+end
+
 local function build()
   local sim = ac.getSim()
   local idx = sim.focusedCar
   if idx < 0 then idx = 0 end
   local car = ac.getCar(idx)
   if car == nil then return nil end
-  local wear, blown, press = {}, {}, {}
+  local wear, blown = {}, {}
   for w = 0, 3 do
     local wheel = car.wheels[w]
     wear[#wear + 1] = math.floor((1 - wheel.tyreWear) * 1000 + 0.5) / 10
-    blown[#blown + 1] = wheel.isBlown and 1 or 0
+    blown[#blown + 1] = try(function() return wheel.isBlown and 1 or 0 end, 0)
   end
   return {
     v = 1,
     car = idx,
     wear = wear,
     blown = blown,
-    tyre = ac.getTyresName(idx),
-    flag = sim.raceFlagType,
-    flag_cause = sim.raceFlagCause,
-    black_flagged = car.blackFlagged and 1 or 0,
-    penalty = car.currentPenaltyType,
-    penalty_param = car.currentPenaltyParameter,
-    damage = { car.damage[0], car.damage[1], car.damage[2], car.damage[3] },
-    gearbox_damage = car.gearboxDamage,
-    rain_intensity = sim.rainIntensity,
-    rain_wetness = sim.rainWetness,
-    rain_water = sim.rainWater,
+    tyre = try(function() return ac.getTyresName(idx) end, ''),
+    flag = try(function() return sim.raceFlagType end, 0),
+    flag_cause = try(function() return sim.raceFlagCause end, -1),
+    penalty = try(function() return car.currentPenaltyType end, 0),
+    penalty_param = try(function() return car.currentPenaltyParameter end, 0),
+    damage = try(function() return { car.damage[0], car.damage[1], car.damage[2], car.damage[3] } end, {}),
+    gearbox_damage = try(function() return car.gearboxDamage end, 0),
+    rain_intensity = try(function() return sim.rainIntensity end, 0),
+    rain_wetness = try(function() return sim.rainWetness end, 0),
+    rain_water = try(function() return sim.rainWater end, 0),
   }
 end
 

@@ -4,7 +4,7 @@ A two-file Lua app for Assetto Corsa with Custom Shaders Patch. It reads the car
 and posts it, twice a second, to `127.0.0.1:28271`, where `pit-wall` listens (`telemetry.csp_bridge`).
 
 What it sends: the **real tyre wear** per wheel (remaining life in %, like the tyre apps), blown tyres, the
-tyre compound, the race flag and its cause, the black flag, the current penalty, the four damage zones,
+tyre compound, the race flag and its cause, the current penalty, the four damage zones,
 gearbox damage and the rain/wetness of the track. Only the wear is used by the engineer today; the rest is
 what the pending flag/damage/penalty rules will read once the events are captured.
 
