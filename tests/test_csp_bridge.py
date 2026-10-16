@@ -68,7 +68,7 @@ def test_cars_posted_by_the_app_become_a_board():
     rx = BridgeReceiver(port=28998)
     assert rx.start()
     try:
-        for k in range(6):
+        for k in range(12):
             t = k * 0.5
             cars = [
                 {"i": 0, "n": "Yo", "p": 2, "l": 0, "s": 0.50 + t / 100, "v": 180},

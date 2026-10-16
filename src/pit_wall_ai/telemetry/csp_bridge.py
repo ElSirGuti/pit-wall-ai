@@ -121,6 +121,9 @@ class BridgedSource:
         snap = self.inner.read()
         if snap is None:
             return None
+        length = getattr(snap.static, "track_length_m", 0.0)
+        if length:  # lets a gap be estimated from distance and speed before the history covers it
+            self.receiver.rivals.track_length_m = float(length)
         return overlay(snap, self.receiver.latest())
 
     def close(self) -> None:
