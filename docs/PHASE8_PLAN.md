@@ -217,6 +217,24 @@ the human and the autopilot (front: 6, 2, 1 for the author; 1, 2, 8, 3 for the a
 they describe the driving, not the circuit. Still not verified: the split by corner itself (the app gives
 no per-corner wear); the wheel-level agreement is the evidence that the index is a sound proxy.
 
+### 3.5 Tyre wear: what each simulator lets the engineer see (added 2026-10-15, from the author)
+
+Not every simulator shows the wear live. **In iRacing the wear of the tyres is only known when the car stops in
+the pits**: during the stint the telemetry does not carry it, and the driver reads it at the stop. So the wear
+is a *source-dependent* quantity and the engineer must say which kind it is talking about:
+
+| `wear_source` | Where it comes from | How it is spoken |
+|---|---|---|
+| `csp` / `shm` | read live every sample (Assetto Corsa with the CSP bridge, ACC) | "el trasero derecho está al 62 %" |
+| `pit` | read at the last stop; nothing in between (iRacing) | "en la última parada estaban al 71 %; desde entonces van 6 vueltas" |
+| `estimate` | none readable: derived from the stops and the laps | "estimo que andan por el 55 %, es una estimación" |
+
+The estimate is a simple model, honest about its error: wear per lap per compound and circuit, fitted on the
+stints already read at stops (wear at the stop / laps of the stint), applied to the laps run since the last
+reading, with a range that widens with the laps since that reading. It is a different number from the corner
+index of 3.4 (that one says *where*, this one says *how much*), and it would feed the strategy engine (4b) when no
+live value exists. Nothing in 3.4 needs it for Assetto Corsa now that the bridge gives the real value.
+
 ### 3.3 The learning loop: a ledger of suggestions and what happened
 
 The language model does not learn between sessions (its weights never change). What improves is a **local

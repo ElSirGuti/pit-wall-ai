@@ -15,7 +15,7 @@ the standard, and nothing is called supported until each simulator has been test
 | Assetto Corsa (original) | shared memory `acpmf_*`, **done** | not exposed (only `num_cars`) | verified here |
 | Assetto Corsa Competizione | shared memory with the same map names but a **different, larger layout**; UDP broadcasting API | all cars in the graphics page and the broadcasting API | has an official document; the `acVersion`/`smVersion` strings tell it apart from AC |
 | AC Evo | shared memory with **different names**, `Localcevo_pmf_*` (three blocks; not `acpmf_*`), per third-party readers; official MoTeC logs since 0.6 | unknown | **layout partially undocumented** and early access: see 1.1 |
-| iRacing | shared memory of the official SDK (memory-mapped file with a variable table and a YAML session string) | per-car arrays (lap distance, position, class, ...) | documented, 60 Hz; licence of the SDK to read before using its headers |
+| iRacing | shared memory of the official SDK (memory-mapped file with a variable table and a YAML session string) | per-car arrays (lap distance, position, class, ...) | documented, 60 Hz; licence of the SDK to read before using its headers. **Tyre wear is only known at a pit stop** (author, 2026-10-15): between stops it is an estimate from the stops and the laps, see `PHASE8_PLAN.md` 3.5 |
 | RaceRoom Racing Experience | shared memory `$R3E` | all drivers | public SDK; layout versioned |
 | rFactor 2 | **third-party plugin** (rF2 Shared Memory Map) that must be installed and enabled | all vehicles (scoring) | the user has to set it up |
 | Le Mans Ultimate | rFactor 2 engine: the same plugin or a native equivalent | all vehicles | which one the current build uses must be checked |
