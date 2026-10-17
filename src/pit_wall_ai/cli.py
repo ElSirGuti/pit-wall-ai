@@ -200,6 +200,17 @@ def _parser() -> argparse.ArgumentParser:
     it.add_argument("--config", help="YAML config")
     it.add_argument("--seconds", type=float, default=30.0, help="how long to listen (30)")
 
+    db = sub.add_parser("debrief", help="the post-session debrief of a recording (report + facts)")
+    db.add_argument("file", help="recording (.pwrec.gz, .ld, .csv)")
+    db.add_argument("--config", help="YAML config")
+    db.add_argument("--session", default="practice", help="for logs that do not say (practice)")
+    db.add_argument(
+        "--lang", choices=["es", "en"], default=None, help="report language (the engineer's)"
+    )
+    db.add_argument("--out", help="write the Markdown report (and the facts next to it) here")
+    db.add_argument("--json", action="store_true", help="print the facts instead of the report")
+    db.add_argument("--ac-dir", action="append", help="AC folder (repeatable)")
+
     ph = sub.add_parser(
         "phrases",
         help="record the phrases of docs/FRASES_VOZ.md and measure the recogniser on them",
@@ -722,6 +733,12 @@ def _cmd_input_test(cfg: AppConfig, a: argparse.Namespace) -> int:
     return cmd_input_test(cfg, a)
 
 
+def _cmd_debrief(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .analysis.cli_debrief import cmd_debrief
+
+    return cmd_debrief(cfg, a)
+
+
 def _cmd_phrases(cfg: AppConfig, a: argparse.Namespace) -> int:
     from .stt.cli_phrases import cmd_phrases_record, cmd_phrases_test
 
@@ -875,6 +892,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "tyre-corners": _cmd_tyre_corners,
             "bindings": _cmd_bindings,
             "input-test": _cmd_input_test,
+            "debrief": _cmd_debrief,
             "phrases": _cmd_phrases,
             "bridge-install": _cmd_bridge_install,
             "bridge-test": _cmd_bridge_test,

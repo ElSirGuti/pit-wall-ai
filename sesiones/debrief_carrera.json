@@ -1,0 +1,137 @@
+{
+ "result": {
+  "session": "race",
+  "track": "magione",
+  "layout": "",
+  "car": "ks_maserati_gt_mc_gt4",
+  "laps": 8,
+  "cars": 16,
+  "position_start": 11,
+  "position_end": 10
+ },
+ "pace": {
+  "best_ms": 77737,
+  "best_lap": 5,
+  "valid_laps": 6,
+  "ideal_ms": 77737,
+  "ideal_gap_ms": 0,
+  "consistency_ms": 867,
+  "consistency_laps": 5,
+  "spread_ms": 2067
+ },
+ "stints": {
+  "stints": [
+   {
+    "compound": "Slick Hard (H)",
+    "laps": 8,
+    "trend_s_per_lap": -0.303,
+    "trend_laps": 5
+   }
+  ],
+  "fuel_per_lap": 1.35,
+  "fuel_laps": 6
+ },
+ "time_loss": {
+  "corners": [
+   {
+    "corner": 7,
+    "apex": 7,
+    "name": "Curva 7",
+    "mean_loss_s": 0.56,
+    "laps": 7,
+    "brake_earlier_m": null
+   },
+   {
+    "corner": 11,
+    "apex": 11,
+    "name": "Prima Esse",
+    "mean_loss_s": 0.53,
+    "laps": 7,
+    "brake_earlier_m": null
+   },
+   {
+    "corner": 2,
+    "apex": 2,
+    "name": "Curva Vecchi Box",
+    "mean_loss_s": 0.3,
+    "laps": 7,
+    "brake_earlier_m": 1.1
+   }
+  ]
+ },
+ "tyres": {
+  "wear_used": {
+   "FL": 5.2,
+   "FR": 3.8,
+   "RL": 5.1,
+   "RR": 4.0
+  },
+  "wear_end": {
+   "FL": 94.8,
+   "FR": 96.2,
+   "RL": 94.9,
+   "RR": 96.0
+  },
+  "wear_source": "game",
+  "temp_front": {
+   "min": 60,
+   "max": 80
+  },
+  "temp_rear": {
+   "min": 57,
+   "max": 80
+  },
+  "corner_index": {
+   "validated": true,
+   "laps": 8,
+   "estimate": true,
+   "front": [
+    {
+     "corner": 1,
+     "apex": 1,
+     "name": "Curva Traliccio",
+     "share_pct": 14.2,
+     "phase": "turn"
+    },
+    {
+     "corner": 6,
+     "apex": 6,
+     "name": "Curvone",
+     "share_pct": 11.7,
+     "phase": "brake"
+    }
+   ],
+   "rear": [
+    {
+     "corner": 1,
+     "apex": 1,
+     "name": "Curva Traliccio",
+     "share_pct": 14.8,
+     "phase": "throttle"
+    },
+    {
+     "corner": 2,
+     "apex": 2,
+     "name": "Curva Vecchi Box",
+     "share_pct": 11.4,
+     "phase": "throttle"
+    }
+   ]
+  }
+ },
+ "incidents": {
+  "laps_with_incidents": [
+   6,
+   8
+  ],
+  "laps": 8
+ },
+ "penalties": {
+  "max_penalty_s": 10.0,
+  "flags": [
+   "penalty"
+  ],
+  "contacts": 3,
+  "worst_contact": 29.9
+ }
+}
