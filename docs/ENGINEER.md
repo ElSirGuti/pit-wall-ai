@@ -39,8 +39,9 @@ Every fired alert is logged (`alert fired`) with its rule and the values that ma
 | `tyre_hot` | core temperature > 115 °C for 3 s, re-armed below 105 °C | on | **uncalibrated per compound** |
 | `tyre_pressure` | > 40 psi, or a drop > 4 psi in 3 s (puncture) | on | |
 | `brake_hot` | brake temperature > 800 °C | on | auto-ignored when the sensor does not move (Supra GT4) |
-| `penalty` | `penalty_time` rises | on | unit of `penalty_time` still to be confirmed |
-| `flags`, `damage` | flag / damage changes | **off** | no flag or damage seen in a real capture yet |
+| `penalty` | `penalty_time` rises | on | seconds left to serve: seen as 10.0 at a 10 s penalty and then counting down in real time (2026-10-17) |
+| `flags` | the flag changes | **off** | seen live: 5 = chequered (end of a qualifying and of a race), 6 = penalty flag (together with a penalty; not announced, the penalty rule does it); blue, yellow, black and white not yet seen |
+| `damage` | the sum of the damage zones rises by `min_increase` | on | seen in real contacts: zones in km/h of the hit (7 to 40); allowed in a race |
 | `rival_close` | in a race, the car behind (or ahead) is within `gap_s` and the gap shrank by `min_closing_s` in 30 s | **off** | needs the CSP bridge (`tools/csp_bridge`); gaps measured from position history |
 | `rival_pit` | the car ahead in the standings enters the pit lane | **off** | needs the bridge |
 | `csp_flags` | the flag reported by CSP changes (yellow, blue with the name of the car, black, penalty, white, chequered) | **off** | needs the bridge; off until each flag is seen live |
@@ -59,5 +60,5 @@ All thresholds are in `config/default.yaml`, commented. `pit-wall rules` prints 
 
 ## Not verified yet
 
-Flags and car damage (no real capture), the unit of `penalty_time`, tyre temperature windows per compound and
-`brake_temp` on cars other than the MX-5.
+The blue, yellow, black and white flags, which zone is which in the damage values, tyre temperature windows per
+compound and `brake_temp` on the cars without the sensor.

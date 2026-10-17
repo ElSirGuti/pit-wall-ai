@@ -248,6 +248,10 @@ def build_facts(inp: ChatInputs) -> FactSheet:
             ] > 0:
                 add(Fact(f"tyres.{w}.wear_pct", _r(snap.tyre_wear[i], 1), "%", sub))
         _add_axles(sheet, snap)
+        if snap.air_temp:
+            add(Fact("weather.air_c", _r(snap.air_temp, 0), "C"))
+        if snap.road_temp:
+            add(Fact("weather.road_c", _r(snap.road_temp, 0), "C"))
         any_alive = False
         for i, w in enumerate(CORNERS):
             if inp.brakes is not None and inp.brakes.alive(w):
@@ -259,7 +263,8 @@ def build_facts(inp: ChatInputs) -> FactSheet:
             )
         if snap.penalty_time:
             add(Fact("penalties.time_s", _r(snap.penalty_time, 1), "s"))
-            add(Fact("penalties.unit_verified", False))
+            # seen live (2026-10-17): 10.0 at the moment of a 10 s penalty, then counting down in real time
+            add(Fact("penalties.unit_verified", True))
 
     _add_rivals(inp, sheet)
 
@@ -329,6 +334,25 @@ def _add_rivals(inp: ChatInputs, sheet: FactSheet) -> None:
         if a and len(a) == len(b) and all(x > 0 for x in a) and all(x > 0 for x in b):
             for n, (mine, theirs) in enumerate(zip(a, b), 1):
                 add(Fact(f"{k}.sector{n}_delta_s", _r((mine - theirs) / 1000.0, 2), "s"))
+    leader = next((c for c in board.cars if c.position == 1), None)
+    if leader is not None and me.position == 1:
+        add(Fact("rivals.i_lead", True))
+    elif leader is not None:
+        g = board.gaps.get(leader.index)
+        add(Fact("rivals.leader.name", leader.name or f"#{leader.index}"))
+        if g is not None and g.gap_s is not None:
+            add(Fact("rivals.leader.gap_s", _r(abs(g.gap_s), 1), "s"))
+        if g is not None and g.laps_diff:
+            add(Fact("rivals.leader.laps_diff", abs(g.laps_diff), "laps"))
+        if leader.best_ms > 0:
+            add(
+                Fact(
+                    "rivals.leader.best_lap_ms",
+                    leader.best_ms,
+                    "ms",
+                    numbers=_time_numbers(leader.best_ms),
+                )
+            )
     if board.session.over:
         add(Fact("rivals.session_over", True))
 

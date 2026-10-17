@@ -41,8 +41,9 @@ Grund: `policy:race`, `muted`, `expired`). Die Stimme nennt nie die Regel; das P
 | `tyre_hot` | Kerntemperatur > 115 °C für 3 s, wieder scharf unter 105 °C | an | **nicht je Mischung kalibriert** |
 | `tyre_pressure` | > 40 psi, oder Abfall > 4 psi in 3 s (Reifenschaden) | an | |
 | `brake_hot` | Bremstemperatur > 800 °C | an | wird automatisch ignoriert, wenn der Sensor sich nicht bewegt (Supra GT4) |
-| `penalty` | `penalty_time` steigt | an | Einheit von `penalty_time` noch zu bestätigen |
-| `flags`, `damage` | Flagge / Schaden ändert sich | **aus** | noch keine Flagge und kein Schaden in einer echten Aufnahme gesehen |
+| `penalty` | `penalty_time` steigt | an | Sekunden, die noch abzusitzen sind: 10,0 bei einer 10-s-Strafe, danach in Echtzeit herunterzählend (17.10.2026) |
+| `flags` | die Flagge ändert sich | **aus** | live gesehen: 5 = Zielflagge (Ende von Qualifying und Rennen), 6 = Strafflagge (zusammen mit einer Strafe, nicht angesagt: das macht die Strafregel); blau, gelb, schwarz und weiß noch nicht gesehen |
+| `damage` | die Summe der Schadenszonen steigt um `min_increase` | an | bei echten Kontakten gesehen: Zonen in km/h des Aufpralls (7 bis 40); im Rennen erlaubt |
 | `rival_close` | im Rennen liegt das Auto hinter (oder vor) dir innerhalb von `gap_s` und der Abstand ist in 30 s um `min_closing_s` geschrumpft | **aus** | braucht die CSP-Brücke (`tools/csp_bridge`); Abstände aus dem Positionsverlauf gemessen |
 | `rival_pit` | das Auto vor dir in der Wertung fährt in die Boxengasse | **aus** | braucht die Brücke |
 | `csp_flags` | die von CSP gemeldete Flagge ändert sich (gelb, blau mit Namen des Autos, schwarz, Strafe, weiß, Zielflagge) | **aus** | braucht die Brücke; aus, bis jede Flagge live gesehen wurde |
@@ -62,5 +63,5 @@ Alle Schwellen stehen kommentiert in `config/default.yaml`. `pit-wall rules` zei
 
 ## Noch nicht verifiziert
 
-Flaggen und Fahrzeugschaden (keine echte Aufnahme), die Einheit von `penalty_time`, Reifentemperaturfenster
-je Mischung und `brake_temp` bei anderen Autos als dem MX-5.
+Die blaue, gelbe, schwarze und weiße Flagge, welche Zone welche ist bei den Schadenswerten,
+Reifentemperaturfenster je Mischung und `brake_temp` bei Autos ohne den Sensor.

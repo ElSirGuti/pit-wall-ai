@@ -80,7 +80,7 @@ engineer:               # phase 3: rule alerts spoken by the race engineer
   policies:             # what may speak per session; priorities low < medium < high < critical
     practice: {min_priority: low, allow_rules: []}
     qualify: {min_priority: medium, allow_rules: []}
-    race: {min_priority: critical, allow_rules: [lap_summary, fuel_low, penalty]}
+    race: {min_priority: critical, allow_rules: [lap_summary, fuel_low, penalty, damage]}
     other: {min_priority: medium, allow_rules: []}
   # Thresholds start CONSERVATIVE on purpose: a chatty engineer gets switched off.
   # Every alert is logged with its rule and the values that fired it ("alert fired"):
@@ -142,7 +142,7 @@ engineer:               # phase 3: rule alerts spoken by the race engineer
       enabled: false      # UNVERIFIED: no flag seen in a real capture
       cooldown_s: 10
     damage:
-      enabled: false      # UNVERIFIED: no damage seen in a real capture
+      enabled: true       # seen in real contacts (2026-10-17): zones in km/h of the hit, 7 to 40
       min_increase: 5
       cooldown_s: 10
     rival_close:          # needs the CSP bridge (tools/csp_bridge): a car right behind / ahead and closing

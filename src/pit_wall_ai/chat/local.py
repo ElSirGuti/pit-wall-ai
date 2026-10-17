@@ -42,6 +42,7 @@ class Intent(StrEnum):
     STRAIGHT = "straight"  # what a named straight is and between which corners
     CORNER_NAMES = "corner_names"  # the list of the circuit's named corners
     RIVALS = "rivals"  # who is ahead and behind, the gaps, their times (CSP bridge)
+    WEATHER = "weather"  # air and track temperature
 
 
 # keyword tables: every entry is a normalised phrase searched as whole words
@@ -167,8 +168,6 @@ _KEYS: dict[Intent, tuple[str, ...]] = {
         "oponentes",
         "adversario",
         "adversarios",
-        "el de adelante",
-        "el de atras",
         "quien va",
         "opponent",
         "opponents",
@@ -245,6 +244,17 @@ _PIT_DECISION = (
 )
 _KEYS[Intent.NOT_YET] = (*_KEYS[Intent.NOT_YET], *_PIT_DECISION)
 _RIVAL_AHEAD = (
+    "el de adelante",
+    "quien tengo adelante",
+    "quien va adelante",
+    "quien esta adelante",
+    "rival de adelante",
+    "coche de adelante",
+    "piloto de adelante",
+    "piloto de delante",
+    "piloto delante",
+    "piloto adelante",
+    "el piloto de adelante",
     "el de delante",
     "quien tengo delante",
     "quien va delante",
@@ -260,6 +270,12 @@ _RIVAL_AHEAD = (
 )
 _RIVAL_BEHIND = (
     "el de atras",
+    "piloto de atras",
+    "piloto detras",
+    "piloto atras",
+    "el piloto de atras",
+    "el que va detras",
+    "el que va atras",
     "el de detras",
     "quien tengo detras",
     "quien tengo atras",
@@ -274,9 +290,54 @@ _RIVAL_BEHIND = (
     "wer ist hinter mir",
     "der hinter mir",
 )
+_RIVAL_LEADER = (
+    "el lider",
+    "quien es el lider",
+    "quien lidera",
+    "quien va primero",
+    "quien va de primero",
+    "quien va en primer lugar",
+    "quien va ganando",
+    "the leader",
+    "who leads",
+    "who is leading",
+    "who is winning",
+    "wer fuhrt",
+    "der fuhrende",
+)
+_SECTOR_WORDS = (
+    "sector",
+    "sectores",
+    "sectors",
+    "sektor",
+    "sektoren",
+    "mas lento",
+    "mas rapido",
+    "donde pierde",
+    "donde gana",
+    "donde es mas",
+)
+_KEYS[Intent.WEATHER] = (
+    "temperatura de pista",
+    "temperatura de la pista",
+    "temperatura del asfalto",
+    "temperatura del aire",
+    "temperatura ambiente",
+    "temperatura exterior",
+    "que temperatura hace",
+    "air temperature",
+    "track temperature",
+    "road temperature",
+    "ambient temperature",
+    "strecken temperatur",
+    "streckentemperatur",
+    "lufttemperatur",
+    "asphalttemperatur",
+)
 _KEYS[Intent.RIVALS] = (
     *_RIVAL_AHEAD,
     *_RIVAL_BEHIND,
+    *_RIVAL_LEADER,
     "mis rivales",
     "mi rival",
     "my rivals",
@@ -360,6 +421,7 @@ _ORDER = (
     Intent.LAPS,
     Intent.SESSION,
     Intent.TIME_LEFT,
+    Intent.WEATHER,
     Intent.RIVALS,
     Intent.CORNER_NAMES,
     Intent.NOT_YET,
@@ -521,6 +583,7 @@ def route(question: str, track: TrackInfo | None = None, lang: str = "es") -> Ro
     # a corner or an alert explanation is a question on its own
     for solo in (
         Intent.RIVALS,
+        Intent.WEATHER,
         Intent.CORNER_NAMES,
         Intent.CORNER,
         Intent.TYRE_CORNERS,
@@ -533,7 +596,8 @@ def route(question: str, track: TrackInfo | None = None, lang: str = "es") -> Ro
                     for f, words in (
                         ("ahead", _RIVAL_AHEAD),
                         ("behind", _RIVAL_BEHIND),
-                        ("sectors", ("sector", "sectores", "sectors", "sektor", "sektoren")),
+                        ("leader", _RIVAL_LEADER),
+                        ("sectors", _SECTOR_WORDS),
                     )
                     if _has(q, words)
                 )
@@ -551,7 +615,8 @@ def route(question: str, track: TrackInfo | None = None, lang: str = "es") -> Ro
             ("pit_decision", _PIT_DECISION),
             ("ahead", _RIVAL_AHEAD),
             ("behind", _RIVAL_BEHIND),
-            ("sectors", ("sector", "sectores", "sectors", "sektor", "sektoren")),
+            ("leader", _RIVAL_LEADER),
+            ("sectors", _SECTOR_WORDS),
         )
         if _has(q, words)
     )
@@ -836,14 +901,10 @@ def _penalty(sheet, lang, track, routed, th):
     if t is None:
         return ("No tengo penalizaciones activas." if lang == "es" else "No active penalties."), []
     if lang == "es":
-        return (
-            f"Tienes {_num(t, 1, lang)} s de penalización según el juego "
-            "(la unidad de ese campo aún no está verificada)."
-        ), ["penalties.time_s"]
-    return (
-        f"The game reports {_num(t, 1, lang)} s of penalty "
-        "(the unit of that field is not verified yet)."
-    ), ["penalties.time_s"]
+        return (f"Tienes una penalización: te quedan {_num(t, 1, lang)} s por cumplir."), [
+            "penalties.time_s"
+        ]
+    return (f"You have a penalty: {_num(t, 1, lang)} s left to serve."), ["penalties.time_s"]
 
 
 _WHY_ES = (
@@ -1208,6 +1269,13 @@ def _rival_line(sheet, lang, side: str, sectors: bool = False) -> tuple[str, lis
             "de": "in den letzten 30 s",
         }[lang if lang in ("es", "de") else "en"]
         text += f" {verb.capitalize()}: {_num(closing, 1, lang)} s {unit}."
+    last = sheet.value(f"{k}.last_lap_ms")
+    if last is not None:
+        keys.append(f"{k}.last_lap_ms")
+        text += {
+            "es": f" Su última vuelta: {_clock(last / 1000.0, lang)}.",
+            "de": f" Seine letzte Runde: {_clock(last / 1000.0, lang)}.",
+        }.get(lang, f" Last lap: {_clock(last / 1000.0, lang)}.")
     best = sheet.value(f"{k}.best_lap_ms")
     if best is not None:
         keys.append(f"{k}.best_lap_ms")
@@ -1247,7 +1315,75 @@ def _rival_line(sheet, lang, side: str, sectors: bool = False) -> tuple[str, lis
     return text, keys
 
 
+def _leader_line(sheet, lang) -> tuple[str, list[str]] | None:
+    if sheet.value("rivals.i_lead"):
+        return {"es": "Vas primero.", "de": "Du führst.", "en": "You are leading."}.get(
+            lang, "You are leading."
+        ), ["rivals.i_lead"]
+    name = sheet.value("rivals.leader.name")
+    if name is None:
+        return None
+    keys = ["rivals.leader.name"]
+    gap = sheet.value("rivals.leader.gap_s")
+    laps = sheet.value("rivals.leader.laps_diff")
+    best = sheet.value("rivals.leader.best_lap_ms")
+    if laps:
+        n = int(laps)
+        keys.append("rivals.leader.laps_diff")
+        text = {
+            "es": f"El líder es {name}, a {n} vuelta{'s' if n != 1 else ''}.",
+            "de": f"Der Führende ist {name}, {n} Runde{'n' if n != 1 else ''} voraus.",
+        }.get(lang, f"The leader is {name}, {n} lap{'s' if n != 1 else ''} ahead.")
+    elif gap is not None:
+        keys.append("rivals.leader.gap_s")
+        text = {
+            "es": f"El líder es {name}, a {_num(gap, 1, lang)} s.",
+            "de": f"Der Führende ist {name}, {_num(gap, 1, lang)} s vor dir.",
+        }.get(lang, f"The leader is {name}, {_num(gap, 1, lang)} s ahead.")
+    else:
+        text = {"es": f"El líder es {name}.", "de": f"Der Führende ist {name}."}.get(
+            lang, f"The leader is {name}."
+        )
+    if best is not None:
+        keys.append("rivals.leader.best_lap_ms")
+        text += {
+            "es": f" Su mejor vuelta: {_clock(best / 1000.0, lang)}.",
+            "de": f" Seine schnellste Runde: {_clock(best / 1000.0, lang)}.",
+        }.get(lang, f" Best lap: {_clock(best / 1000.0, lang)}.")
+    return text, keys
+
+
+def _weather(sheet, lang, track, routed, th):
+    air = sheet.value("weather.air_c")
+    road = sheet.value("weather.road_c")
+    parts, keys = [], []
+    if air is not None:
+        parts.append(
+            {
+                "es": f"el aire a {_num(air, 0, lang)} °C",
+                "de": f"die Luft {_num(air, 0, lang)} °C",
+            }.get(lang, f"the air at {_num(air, 0, lang)} °C")
+        )
+        keys.append("weather.air_c")
+    if road is not None:
+        parts.append(
+            {
+                "es": f"el asfalto a {_num(road, 0, lang)} °C",
+                "de": f"der Asphalt {_num(road, 0, lang)} °C",
+            }.get(lang, f"the track at {_num(road, 0, lang)} °C")
+        )
+        keys.append("weather.road_c")
+    if not parts:
+        return NO_DATA[lang], []
+    head = {"es": "Tenemos ", "de": "Wir haben ", "en": "We have "}.get(lang, "We have ")
+    return head + {"es": " y ", "de": " und "}.get(lang, " and ").join(parts) + ".", keys
+
+
 def _rivals(sheet, lang, track, routed, th):
+    if "leader" in routed.flags:
+        got = _leader_line(sheet, lang)
+        if got is not None:
+            return got
     sides = [s for s in ("ahead", "behind") if s in routed.flags] or ["ahead", "behind"]
     out: list[str] = []
     keys: list[str] = []
@@ -1381,5 +1517,6 @@ _BUILDERS = {
     Intent.TYRE_CORNERS: _tyre_corners,
     Intent.CORNER_NAMES: _corner_names,
     Intent.RIVALS: _rivals,
+    Intent.WEATHER: _weather,
     Intent.STRAIGHT: _straight,
 }

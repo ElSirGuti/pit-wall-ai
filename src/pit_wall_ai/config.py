@@ -235,7 +235,7 @@ class FlagsRule(_Model):
 
 
 class DamageRule(_Model):
-    enabled: bool = False  # UNVERIFIED: no damage has been seen in a real capture
+    enabled: bool = True  # seen in real contacts (2026-10-17): zones in km/h of the hit, 7 to 40
     min_increase: float = Field(5.0, gt=0)
     cooldown_s: float = Field(10.0, ge=0)
 
@@ -302,7 +302,7 @@ class PoliciesConfig(_Model):
     practice: PolicyConfig = PolicyConfig(min_priority="low")
     qualify: PolicyConfig = PolicyConfig(min_priority="medium")
     race: PolicyConfig = PolicyConfig(
-        min_priority="critical", allow_rules=["lap_summary", "fuel_low", "penalty"]
+        min_priority="critical", allow_rules=["lap_summary", "fuel_low", "penalty", "damage"]
     )
     other: PolicyConfig = PolicyConfig(min_priority="medium")
 

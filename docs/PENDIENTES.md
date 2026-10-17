@@ -19,7 +19,11 @@ El orden es por lo que más desbloquea. Lo que ya está hecho está al final, en
   | 3 | `pit-wall voice --stt-device cuda --stt-model medium` | ? | ? |
   | 4 | `pit-wall voice --stt-device cuda --stt-model turbo` | ? | ? |
 
-* **Eventos del juego**: el puente CSP (5l) ya envía banderas, penalización y daño; falta **provocarlos y
+* **Eventos del juego (parcial, 2026-10-17)**: de tu fin de semana con el Maserati ya salieron en las grabaciones la
+  bandera a cuadros (código 5, fin de qualy y de carrera), la bandera de penalización (código 6) con una penalización
+  de 10 s que baja en tiempo real (unidad verificada: segundos por cumplir), y daños reales (zonas en km/h del golpe,
+  de 2 a 40): la regla de daño queda **encendida**. Faltan las banderas azul, amarilla, negra y blanca, y safety car.
+  Sigue valiendo lo de abajo para esas: el puente CSP (5l) ya envía banderas, penalización y daño; falta **provocarlos y
   grabar con `pit-wall record`** (apunta la hora): bandera amarilla, azul, blanca y negra, límites de pista y
   salida en falso, un contacto con daño y safety car. Con eso se encienden las reglas con datos reales (hoy
   apagadas porque nunca se ha capturado un evento). Si usas Real Penalty, su log de la sesión.

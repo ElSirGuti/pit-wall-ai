@@ -416,6 +416,8 @@ class FlagsRule(Rule):
         2: ("flag_yellow", Priority.HIGH),
         3: ("flag_black", Priority.CRITICAL),
         4: ("flag_white", Priority.MEDIUM),
+        5: ("flag_finish", Priority.MEDIUM),  # seen at the end of a qualifying and of a race
+        # 6 is the penalty flag: seen together with a 10 s penalty, which the penalty rule already says
     }
 
     def __init__(self, cfg) -> None:

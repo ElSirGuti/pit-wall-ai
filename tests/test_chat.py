@@ -204,9 +204,12 @@ def test_recent_alerts_carry_their_rule_text_and_outcome():
     assert a["rule"] == "lockup" and a["outcome"] == "said" and a["age_s"] == 10
 
 
-def test_an_unverified_penalty_unit_is_flagged_in_the_context():
+def test_the_penalty_is_in_seconds_left_to_serve():
     ctx = build_facts(synthetic_inputs(snap=make_snap(t=1.0, fuel=5.0, penalty_time=5.0))).context()
-    assert ctx["penalties"] == {"time_s": 5.0, "unit_verified": False}
+    assert ctx["penalties"] == {
+        "time_s": 5.0,
+        "unit_verified": True,
+    }  # seen counting down in seconds
 
 
 # -- router -----------------------------------------------------------------------------------------------
@@ -877,3 +880,18 @@ def test_decimal_commas_are_said_not_read_as_a_clock_time():
     )
     assert pronounce("1:24.889 and 14.0", "en") == "1:24.889 and 14.0"
     assert pronounce("14,0 Meter", "de") == "14 Komma 0 Meter"
+
+
+def test_the_leader_and_the_temperatures_are_answered():
+    inp = _rival_inputs()
+    _, a, _ = ask("¿quién es el líder?", inp)
+    assert "Piloto1" in a.text and "5,0 s" in a.text
+    _, a, _ = ask(
+        "¿cómo está la temperatura de pista?",
+        synthetic_inputs(snap=make_snap(t=1.0, fuel=5.0, air_temp=21.0, road_temp=34.0)),
+    )
+    assert "34 °C" in a.text and "asfalto" in a.text
+    _, a, _ = ask("¿cuál fue la última vuelta del rival de adelante?", inp)
+    assert "Piloto1" in a.text and "Su última vuelta" in a.text
+    _, a, _ = ask("¿dónde es más lento el piloto delante?", inp)
+    assert "sector 1" in a.text
