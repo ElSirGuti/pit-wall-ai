@@ -152,6 +152,27 @@ class ChatStats:
     claims_removed: int = 0
 
 
+_DEBRIEF_ASKS = (
+    "resumen de la sesion",
+    "resumen de la carrera",
+    "resumen de la clasificacion",
+    "dame el resumen",
+    "como fue la sesion",
+    "como estuvo la sesion",
+    "debrief",
+    "session summary",
+    "summary of the session",
+    "sum up the session",
+    "zusammenfassung der sitzung",
+    "fasse die sitzung zusammen",
+)
+
+
+def _asks_for_debrief(question: str) -> bool:
+    q = " ".join(L.norm(question).split())
+    return any(a in q for a in _DEBRIEF_ASKS)
+
+
 def make_client(cfg: AppConfig) -> tuple[LLMClient | None, str]:
     """(client, "") or (None, why there is none). Never raises."""
     try:
@@ -210,6 +231,9 @@ class ChatSession:
             if mem is not None:
                 self.stats.local += 1
                 return ChatReply(mem.text, "local", ("recall",))
+        if not force_model and inp.debrief is not None and _asks_for_debrief(question):
+            self.stats.local += 1
+            return ChatReply(inp.debrief(), "local", ("debrief",))
         routed = None if force_model else L.route(question, inp.track, self.lang)
         b = self.cfg.analysis.braking
         if routed is not None:

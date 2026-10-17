@@ -438,7 +438,14 @@ class MilestoneAnnouncer:
 
 
 def attach(
-    engine, speaker, cfg, *, client=None, quiet: Callable[[], bool] = lambda: False, threaded=True
+    engine,
+    speaker,
+    cfg,
+    *,
+    client=None,
+    quiet: Callable[[], bool] = lambda: False,
+    threaded=True,
+    on_milestone=None,
 ):
     """Hook the detector and the announcer on a :class:`SessionEngine`; returns the announcer (or ``None``)."""
     mc = cfg.engineer.milestones
@@ -461,6 +468,8 @@ def attach(
 
         for m in det.update(snap, state, events, current_board()):
             ann.announce(m)
+            if on_milestone is not None:  # the debrief follows the result message
+                on_milestone(m, snap, state, tracker)
 
     engine.add_sample_hook(hook)
     return ann

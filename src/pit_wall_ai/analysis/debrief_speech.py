@@ -101,6 +101,10 @@ def facts_sheet(d: Debrief, lang: str = "es") -> FactSheet:
                     add(Fact(f"tyres.corner_index.{axle}.{i}.corner", c["corner"]))
                 if c.get("name"):
                     add(Fact(f"tyres.corner_index.{axle}.{i}.name", c["name"]))
+    vs = f.get("vs_last")
+    if vs:
+        add(Fact("vs_last.best_delta_s", round(abs(vs["best_delta_ms"]) / 1000.0, 3), "s"))
+        add(Fact("vs_last.is_faster", vs["best_delta_ms"] < 0))
     inc = f.get("incidents")
     if inc:
         add(Fact("incidents.laps", len(inc["laps_with_incidents"]), "laps"))
@@ -205,6 +209,18 @@ def local_summary(d: Debrief, lang: str = "es") -> str:
                     "es": f"Tu mejor vuelta fue {best}.",
                     "en": f"Your best lap was {best}.",
                     "de": f"Deine schnellste Runde war {best}.",
+                }[lang]
+            )
+        vs = f.get("vs_last")
+        if vs and vs.get("same_compound"):
+            d_s = abs(vs["best_delta_ms"]) / 1000.0
+            faster = vs["best_delta_ms"] < 0
+            sentences[-1] = (
+                sentences[-1].rstrip(".")
+                + {
+                    "es": f", {_c(d_s, 1, lang)} segundos {'más rápida' if faster else 'más lenta'} que la última vez.",
+                    "en": f", {_c(d_s, 1, lang)} seconds {'faster' if faster else 'slower'} than last time.",
+                    "de": f", {_c(d_s, 1, lang)} Sekunden {'schneller' if faster else 'langsamer'} als beim letzten Mal.",
                 }[lang]
             )
     tl = f.get("time_loss", {}).get("corners", [])

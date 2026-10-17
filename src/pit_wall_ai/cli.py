@@ -209,6 +209,14 @@ def _parser() -> argparse.ArgumentParser:
     )
     db.add_argument("--out", help="write the Markdown report (and the facts next to it) here")
     db.add_argument("--json", action="store_true", help="print the facts instead of the report")
+    db.add_argument(
+        "--save",
+        action="store_true",
+        help="keep this session in sessions.jsonl and compare with the last",
+    )
+    db.add_argument(
+        "--history", help="sessions file to compare against (default ~/.pit-wall-ai/sessions.jsonl)"
+    )
     db.add_argument("--summary", action="store_true", help="the spoken summary (3-4 sentences)")
     db.add_argument(
         "--speak", action="store_true", help="say the summary with the engineer's voice"
@@ -462,7 +470,25 @@ def _start_engineer(
         )
 
     client, _why = make_client(cfg)
-    attach_milestones(engine, speech, cfg, client=client, quiet=lambda: eng.quiet)
+    from .analysis.debrief_live import LiveDebrief
+    from .analysis.trackctx import TrackAnalysis
+
+    live_debrief = LiveDebrief(
+        cfg,
+        speech,
+        track_analysis=TrackAnalysis(cfg.analysis),
+        client=client if cfg.engineer.debrief.use_model else None,
+        quiet=lambda: eng.quiet,
+    )
+    engine.add_sample_hook(live_debrief.on_sample)
+    attach_milestones(
+        engine,
+        speech,
+        cfg,
+        client=client,
+        quiet=lambda: eng.quiet,
+        on_milestone=live_debrief.on_milestone,
+    )
     return speech
 
 

@@ -67,6 +67,17 @@ class ChatRuntime:
             )
         )
         self.engine.add_sample_hook(lambda snap, state, tracker, events: self.brakes.update(snap))
+        # the debrief after a race / qualifying and on request; the client is set like the milestones' one
+        from ..analysis.debrief_live import LiveDebrief
+
+        self.live_debrief = LiveDebrief(
+            cfg,
+            speaker or _SilentSpeaker(),
+            track_analysis=self.track,
+            quiet=lambda: self.engineer.quiet,
+            threaded=live,
+        )
+        self.engine.add_sample_hook(self.live_debrief.on_sample)
         # pole / grid / result messages; the client is set by whoever builds the chat (it may be absent)
         self.milestones = attach_milestones(
             self.engine,
@@ -74,6 +85,7 @@ class ChatRuntime:
             cfg,
             quiet=lambda: self.engineer.quiet,
             threaded=live,
+            on_milestone=self.live_debrief.on_milestone,
         )
         self.engine.add_sample_hook(lambda snap, state, tracker, events: self._tyre_load(snap))
 
@@ -119,5 +131,6 @@ class ChatRuntime:
             tyre_watch=self.tyre_watch,
             memory=self.memory,
             now=now,
+            debrief=self.live_debrief.request,
             rivals=self._rivals(),
         )

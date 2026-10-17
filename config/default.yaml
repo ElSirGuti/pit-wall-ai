@@ -58,6 +58,13 @@ engineer:               # phase 3: rule alerts spoken by the race engineer
   milestones:           # pole, grid and result messages at the end of a qualifying / race
     enabled: true
     use_model: true     # the wording is written by the model (needs llm.allow_cloud); false = fixed variants
+  debrief:              # phase 7: the summary after a race / qualifying, and when you ask for it
+    enabled: true
+    speak: true         # say the short version (the written report is always kept)
+    use_model: true     # the model phrases the facts and every number is checked; false = a plain template
+    history: true       # one line per session in sessions.jsonl, for "against last time"
+    dir: null           # null = ~/.pit-wall-ai/debriefs
+    sessions_path: null # null = ~/.pit-wall-ai/sessions.jsonl
   persona:              # phase 6b: who the engineer is and how they speak (the wording, never the data)
     name: null          # how the engineer introduces themselves; null = the name of the voice (Sabina...)
     driver_name: null   # how the engineer calls you

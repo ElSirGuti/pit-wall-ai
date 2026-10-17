@@ -316,6 +316,19 @@ class PersonaConfig(_Model):
     custom: str | None = Field(None, max_length=400)  # the driver's own style notes
 
 
+class DebriefConfig(_Model):
+    """The debrief when a race finishes or a qualifying ends, and on request (``docs/PHASE7_PLAN.md``)."""
+
+    enabled: bool = True
+    speak: bool = (
+        True  # say the short version after a race / qualifying (the report is always written)
+    )
+    use_model: bool = True  # the model phrases the facts (checked); False = the template only
+    history: bool = True  # keep one line per session (sessions.jsonl) for "against last time"
+    dir: str | None = None  # where the reports go; None = ~/.pit-wall-ai/debriefs
+    sessions_path: str | None = None  # None = ~/.pit-wall-ai/sessions.jsonl
+
+
 class MilestonesConfig(_Model):
     """Pole, grid and result messages: "tenemos pole provisional", "felicidades por esa remontada"."""
 
@@ -339,6 +352,7 @@ class EngineerConfig(_Model):
     voice: VoiceConfig = VoiceConfig()
     persona: PersonaConfig = PersonaConfig()
     milestones: MilestonesConfig = MilestonesConfig()
+    debrief: DebriefConfig = DebriefConfig()
     memory: MemoryConfig = MemoryConfig()
     calm: CalmConfig = CalmConfig()
     policies: PoliciesConfig = PoliciesConfig()

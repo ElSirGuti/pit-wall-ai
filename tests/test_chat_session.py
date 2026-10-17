@@ -270,3 +270,13 @@ def test_lap_times_written_in_seconds_are_read_as_minutes_and_seconds():
     )  # one decimal: a gap, not a lap
     assert c("vuelta de 125.500 segundos", "es") == "vuelta de 2:05,500"
     assert c("ya dicho 1:24,913", "es") == "ya dicho 1:24,913"
+
+
+def test_the_session_summary_is_asked_for_in_the_chat():
+    inp = synthetic_inputs()
+    inp.debrief = lambda: "Tu mejor vuelta fue 1:17,737."
+    s, p = session("no deberia llamarse", inputs=lambda: inp)
+    for q in ("dame el resumen de la sesión", "¿cómo fue la sesión?", "debrief por favor"):
+        r = s.ask(q)
+        assert r.source == "local" and "1:17,737" in r.text
+    assert p.requests == []

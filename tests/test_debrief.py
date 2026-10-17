@@ -132,3 +132,17 @@ def test_the_report_is_in_spanish_with_decimal_commas_and_says_what_it_could_not
     assert "de penalización (blanquinegra)" in md and "1 contacto;" in md
     assert "neumáticos: faltan datos" in md
     assert "Best lap 1:17.737" in to_markdown(d, "en") or "1:17.737" in to_markdown(d, "en")
+
+
+def test_a_real_recording_gives_a_debrief_without_a_model():
+    from pathlib import Path
+
+    from pit_wall_ai.analysis.debrief import build_debrief
+    from pit_wall_ai.config import AppConfig
+
+    fx = Path(__file__).parent / "fixtures" / "live_lfm_magione_race_window.pwrec.gz"
+    d = build_debrief(fx, AppConfig(), session="race")
+    r = d.facts["result"]
+    assert r["laps"] == 3 and r["position_start"] == 14 and r["position_end"] == 9
+    assert d.facts["pace"]["best_ms"] == 84913 and d.facts["pace"]["valid_laps"] == 3
+    assert "tyres" in d.facts and "Resumen de la sesión" in to_markdown(d, "es")

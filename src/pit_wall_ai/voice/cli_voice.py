@@ -112,6 +112,7 @@ def cmd_voice(
     client, why = make_client(cfg)
     if runtime.milestones is not None:
         runtime.milestones.client = client if cfg.engineer.milestones.use_model else None
+    runtime.live_debrief.client = client if cfg.engineer.debrief.use_model else None
     chat = ChatSession(cfg, runtime.inputs, client, unavailable_reason=why)
     if client is None:
         out(f"[cloud model off: {why}; local answers only]")

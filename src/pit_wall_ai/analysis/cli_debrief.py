@@ -56,6 +56,21 @@ def cmd_debrief(
     except (OSError, ValueError) as exc:
         print(f"cannot read {a.file}: {exc}", file=sys.stderr)
         return 2
+    if getattr(a, "save", False) or getattr(a, "history", None):
+        from .sessions_log import SessionStore, attach_history
+
+        from datetime import datetime
+
+        try:  # the date of the session is the date of the recording, not of this command
+            when = datetime.fromtimestamp(Path(a.file).stat().st_mtime)
+        except OSError:
+            when = None
+        attach_history(
+            d,
+            SessionStore(getattr(a, "history", None) or None),
+            save=bool(getattr(a, "save", False)),
+            when=when,
+        )
     lang = a.lang or (cfg.engineer.language if cfg.engineer.language in ("es", "en") else "en")
     if a.json:
         out(json.dumps(d.facts, ensure_ascii=False, indent=1))
