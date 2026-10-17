@@ -39,10 +39,37 @@ _PRIMARY_LANG = {"es": 0x0A, "en": 0x09, "de": 0x07}
 _PRONOUNCE = {"es": "pe ese i", "en": "P S I", "de": "pe es i"}
 
 
+_COMMA = {"es": "coma", "de": "Komma"}
+_UNIT = {"es": {"s": "segundos"}, "de": {"s": "Sekunden"}}
+
+
 def pronounce(text: str, language: str | None) -> str:
-    """What the synthesiser should read: SAPI voices say "psi" as a word ("sai"), so spell it out."""
-    spelled = _PRONOUNCE.get((language or "es")[:2].lower(), "P S I")
-    return re.sub(r"(?<![A-Za-z])psi(?![A-Za-z])", spelled, text, flags=re.IGNORECASE)
+    """What the synthesiser should read.
+
+    SAPI voices say "psi" as a word ("sai"), so it is spelled out, and a decimal comma is read as a clock time
+    ("14,0 metros" came out as "14 horas 0 minutos"), so the comma is said: "14 coma 0 metros". A lap time
+    "1:24,889" becomes "1 minuto, 24 coma 889".
+    """
+    lang = (language or "es")[:2].lower()
+    spelled = _PRONOUNCE.get(lang, "P S I")
+    text = re.sub(r"(?<![A-Za-z])psi(?![A-Za-z])", spelled, text, flags=re.IGNORECASE)
+    comma = _COMMA.get(lang)
+    if comma is None:
+        return text
+    text = re.sub(
+        r"(\d+):(\d{2}),(\d+)",
+        lambda m: (
+            f"{m.group(1)} {'minuto' if m.group(1) == '1' else 'minutos'}, "
+            f"{int(m.group(2))} {comma} {m.group(3)}"
+            if lang == "es"
+            else f"{m.group(1)} Minuten, {int(m.group(2))} {comma} {m.group(3)}"
+        ),
+        text,
+    )
+    text = re.sub(r"(\d+),(\d+)", lambda m: f"{m.group(1)} {comma} {m.group(2)}", text)
+    # "4 coma 6 s" would be read "ese": a lone "s" after a number is seconds
+    unit = _UNIT[lang]
+    return re.sub(r"(?<=\d)\s+s(?![A-Za-z])", f" {unit['s']}", text)
 
 
 class TtsBackend(Protocol):

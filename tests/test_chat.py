@@ -774,7 +774,7 @@ def test_corner_numbers_spoken_as_words_are_understood():
 def test_psi_is_spelled_for_the_synthesiser():
     from pit_wall_ai.voice.tts import pronounce
 
-    assert pronounce("27,1 psi en el trasero", "es") == "27,1 pe ese i en el trasero"
+    assert pronounce("27,1 psi en el trasero", "es") == "27 coma 1 pe ese i en el trasero"
     assert pronounce("psi", "en") == "P S I"
     assert pronounce("psicología", "es") == "psicología"
 
@@ -859,3 +859,21 @@ def test_sectors_against_the_rival_ahead():
 def test_without_the_bridge_the_engineer_says_why():
     _, a, _ = ask("¿quién tengo delante?")
     assert "puente" in a.text
+
+
+def test_decimal_commas_are_said_not_read_as_a_clock_time():
+    from pit_wall_ai.voice.tts import pronounce
+
+    assert pronounce("frenaste 14,0 metros antes", "es") == "frenaste 14 coma 0 metros antes"
+    assert pronounce("a 4,6 s", "es") == "a 4 coma 6 segundos"
+    assert (
+        pronounce("Quedan 23,7 litros, 1,38 por vuelta", "es")
+        == "Quedan 23 coma 7 litros, 1 coma 38 por vuelta"
+    )
+    assert pronounce("mejor 1:24,889", "es") == "mejor 1 minuto, 24 coma 889"
+    assert (
+        pronounce("perdiste 0,34 segundos y 27,1 psi", "es")
+        == "perdiste 0 coma 34 segundos y 27 coma 1 pe ese i"
+    )
+    assert pronounce("1:24.889 and 14.0", "en") == "1:24.889 and 14.0"
+    assert pronounce("14,0 Meter", "de") == "14 Komma 0 Meter"
