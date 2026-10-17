@@ -895,3 +895,25 @@ def test_the_leader_and_the_temperatures_are_answered():
     assert "Piloto1" in a.text and "Su última vuelta" in a.text
     _, a, _ = ask("¿dónde es más lento el piloto delante?", inp)
     assert "sector 1" in a.text
+
+
+def test_the_fuel_planner_answers_for_laps_and_for_minutes():
+    _, a, r = ask("¿cuánta gasolina para 8 vueltas?")
+    assert r.flags == ("laps:8",) and "Para 8 vueltas carga unos 8,3 litros" in a.text
+    _, a, _ = ask("Si la clasificación son 10 minutos, ¿cuánta gasolina debería poner?")
+    assert "10 minutos son 9 vueltas" in a.text and "9,3 litros" in a.text
+    _, a, _ = ask("¿llego al final?")
+    assert "dime cuántas vueltas o minutos" in a.text  # no length known: it asks for it
+
+
+def test_the_fuel_planner_says_when_the_consumption_is_not_known_yet():
+    inp = synthetic_inputs(snap=make_snap(t=1.0, fuel=12.3))
+    inp.laps = []
+    _, a, _ = ask("¿cuánta gasolina para 8 vueltas?", inp)
+    assert "hacen falta al menos dos vueltas" in a.text
+
+
+def test_fuel_to_the_end_of_a_race_by_laps_says_how_much_to_save():
+    inp = synthetic_inputs(snap=make_snap(t=1.0, fuel=6.0, number_of_laps=10))
+    _, a, _ = ask("¿llego al final?", inp)  # 10 laps, 2 done, 1.00 L per lap: 8 L needed, 6 L in the tank
+    assert "Quedan 8 vueltas" in a.text and "ahorra 0,25 litros por vuelta" in a.text

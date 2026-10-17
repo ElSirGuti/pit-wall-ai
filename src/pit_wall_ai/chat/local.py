@@ -43,6 +43,7 @@ class Intent(StrEnum):
     CORNER_NAMES = "corner_names"  # the list of the circuit's named corners
     RIVALS = "rivals"  # who is ahead and behind, the gaps, their times (CSP bridge)
     WEATHER = "weather"  # air and track temperature
+    FUEL_PLAN = "fuel_plan"  # how much fuel for a race length, can I finish, how much to save (the 8a planner)
 
 
 # keyword tables: every entry is a normalised phrase searched as whole words
@@ -317,6 +318,41 @@ _SECTOR_WORDS = (
     "donde gana",
     "donde es mas",
 )
+_KEYS[Intent.FUEL_PLAN] = (
+    "cuanta gasolina debo poner",
+    "cuanta gasolina tengo que poner",
+    "cuanta gasolina pongo",
+    "cuanta gasolina cargo",
+    "cuanta gasolina cargar",
+    "cuanta gasolina deberia",
+    "cuanta gasolina debo llevar",
+    "cuanta gasolina llevo que",
+    "cuanto combustible deberia",
+    "cuanta gasolina para",
+    "cuanto combustible debo",
+    "cuanto combustible pongo",
+    "cuanto combustible para",
+    "gasolina para la carrera",
+    "gasolina para la clasificacion",
+    "gasolina para llegar",
+    "llego al final",
+    "llegare al final",
+    "voy a llegar al final",
+    "me alcanza la gasolina",
+    "me alcanza el combustible",
+    "cuanto tengo que ahorrar",
+    "tengo que ahorrar",
+    "cuanto debo ahorrar",
+    "how much fuel should",
+    "how much fuel do i need",
+    "how much fuel to put",
+    "fuel for the race",
+    "can i make it to the end",
+    "will i make it to the end",
+    "how much do i need to save",
+    "wie viel sprit brauche",
+    "reicht der sprit",
+)
 _KEYS[Intent.WEATHER] = (
     "temperatura de pista",
     "temperatura de la pista",
@@ -421,6 +457,7 @@ _ORDER = (
     Intent.LAPS,
     Intent.SESSION,
     Intent.TIME_LEFT,
+    Intent.FUEL_PLAN,
     Intent.WEATHER,
     Intent.RIVALS,
     Intent.CORNER_NAMES,
@@ -515,6 +552,19 @@ def tyre_filter(routed) -> tuple[tuple[str, ...], str | None]:
     return wheels, metric
 
 
+_LAPS_RE = re.compile(r"(\d+)\s*(?:vueltas?|laps?|runden?)\b")
+_MIN_RE = re.compile(r"(\d+)\s*(?:minutos?|mins?|minutes?|minuten)\b")
+
+
+def _length_flags(q: str) -> tuple[str, ...]:
+    """The race length named in a question: ``laps:8`` or ``minutes:10``."""
+    m = _LAPS_RE.search(q)
+    if m:
+        return (f"laps:{m.group(1)}",)
+    m = _MIN_RE.search(q)
+    return (f"minutes:{m.group(1)}",) if m else ()
+
+
 def _has(text: str, phrases: tuple[str, ...]) -> bool:
     padded = f" {text} "
     return any(f" {p} " in padded for p in phrases)
@@ -584,12 +634,15 @@ def route(question: str, track: TrackInfo | None = None, lang: str = "es") -> Ro
     for solo in (
         Intent.RIVALS,
         Intent.WEATHER,
+        Intent.FUEL_PLAN,
         Intent.CORNER_NAMES,
         Intent.CORNER,
         Intent.TYRE_CORNERS,
         Intent.LAST_ALERT,
     ):
         if solo in found:
+            if solo is Intent.FUEL_PLAN:
+                return Routed((solo,), corners, _length_flags(q))
             if solo is Intent.RIVALS:
                 rival_flags = tuple(
                     f
@@ -607,6 +660,8 @@ def route(question: str, track: TrackInfo | None = None, lang: str = "es") -> Ro
     if Intent.LOSS in found and Intent.BRAKES in found:
         found.remove(Intent.BRAKES)
     hot, cold = (DE.HOTTEST, DE.COLDEST) if de else (_HOTTEST, _COLDEST)
+    if Intent.FUEL_PLAN in found:
+        return Routed((Intent.FUEL_PLAN,), corners, _length_flags(q))
     flags = tuple(
         f
         for f, words in (
@@ -1353,6 +1408,97 @@ def _leader_line(sheet, lang) -> tuple[str, list[str]] | None:
     return text, keys
 
 
+def _fuel_plan(sheet, lang, track, routed, th):
+    """The fuel planner (analysis/plan.py) in words: what to load for a length, or whether the fuel reaches the end."""
+    from ..analysis.plan import FuelProfile, fuel_to_finish, race_laps, saving_per_lap
+
+    per = sheet.value("fuel.per_lap_l")
+    if per is None:
+        return {
+            "es": "Todavía no tengo el consumo por vuelta: hacen falta al menos dos vueltas cronometradas completas.",
+            "de": "Ich kenne den Verbrauch pro Runde noch nicht: es braucht mindestens zwei gezeitete Runden.",
+        }.get(
+            lang, "I do not know the consumption per lap yet: at least two timed laps are needed."
+        ), []
+    prof = FuelProfile(
+        float(per),
+        float(sheet.value("fuel.spread_l", 0.0)),
+        int(sheet.value("fuel.profile_laps", 0)),
+    )
+    keys = ["fuel.per_lap_l"]
+    flags = {f.split(":")[0]: f.split(":")[1] for f in routed.flags if ":" in f}
+    extra = sheet.extra_numbers
+    lap_s = sheet.value("laps.best.time_s") or sheet.value("laps.last.time_s")
+    laps = None
+    said = ""
+    if "laps" in flags:
+        laps = int(flags["laps"])
+    elif "minutes" in flags:
+        laps = race_laps(minutes=float(flags["minutes"]), lap_time_s=lap_s, extra_lap=True)
+        if laps is None:
+            return {
+                "es": "Para convertir minutos en vueltas necesito una vuelta cronometrada.",
+                "de": "Um Minuten in Runden umzurechnen, brauche ich eine gezeitete Runde.",
+            }.get(lang, "To turn minutes into laps I need a timed lap."), keys
+        extra.append(float(laps))
+        said = {
+            "es": f"{flags['minutes']} minutos son {laps} vueltas con tu ritmo, contando la de más. ",
+            "de": f"{flags['minutes']} Minuten sind {laps} Runden mit deinem Tempo, die Extrarunde eingerechnet. ",
+        }.get(
+            lang,
+            f"{flags['minutes']} minutes are {laps} laps at your pace, counting the extra one. ",
+        )
+    if laps is not None:
+        plan = fuel_to_finish(prof, laps)
+        extra += [plan.litres, plan.margin_l, prof.per_lap_l, prof.spread_l, float(prof.laps)]
+        text = said + {
+            "es": f"Para {laps} vueltas carga unos {_num(plan.litres, 1, lang)} litros: "
+            f"{_num(prof.per_lap_l, 2, lang)} por vuelta y {_num(plan.margin_l, 1, lang)} de margen "
+            f"(con {prof.laps} vueltas de datos).",
+            "de": f"Für {laps} Runden lade etwa {_num(plan.litres, 1, lang)} Liter: "
+            f"{_num(prof.per_lap_l, 2, lang)} pro Runde und {_num(plan.margin_l, 1, lang)} Reserve "
+            f"(aus {prof.laps} Runden).",
+        }.get(
+            lang,
+            f"For {laps} laps load about {_num(plan.litres, 1, lang)} litres: {_num(prof.per_lap_l, 2, lang)} per lap "
+            f"and {_num(plan.margin_l, 1, lang)} margin (from {prof.laps} laps).",
+        )
+        return text, keys
+    # no length named: does the fuel reach the end of this session?
+    fuel_now = sheet.value("fuel.litres")
+    total = sheet.value("session.laps_total")
+    done = sheet.value("session.laps_completed", 0)
+    if fuel_now is None or not total or total - done <= 0:
+        return {
+            "es": f"Con {_num(per, 2, lang)} litros por vuelta; dime cuántas vueltas o minutos y te digo cuánto cargar.",
+            "de": f"Bei {_num(per, 2, lang)} Litern pro Runde; nenne Runden oder Minuten und ich sage dir, wie viel du laden sollst.",
+        }.get(
+            lang,
+            f"At {_num(per, 2, lang)} litres per lap; give me laps or minutes and I will say how much to load.",
+        ), keys
+    left = int(total - done)
+    save = saving_per_lap(float(fuel_now), left, prof)
+    extra += [float(left), abs(save), float(fuel_now)]
+    keys += ["fuel.litres", "session.laps_total"]
+    if save > 0.02:
+        text = {
+            "es": f"Quedan {left} vueltas y {_num(fuel_now, 1, lang)} litros: ahorra {_num(save, 2, lang)} litros por vuelta para llegar.",
+            "de": f"Es sind noch {left} Runden und {_num(fuel_now, 1, lang)} Liter: spare {_num(save, 2, lang)} Liter pro Runde.",
+        }.get(
+            lang,
+            f"{left} laps to go and {_num(fuel_now, 1, lang)} litres: save {_num(save, 2, lang)} litres per lap to make it.",
+        )
+    else:
+        text = {
+            "es": f"Quedan {left} vueltas y {_num(fuel_now, 1, lang)} litros: llegas con margen, puedes gastar {_num(-save, 2, lang)} litros más por vuelta.",
+            "de": f"Es sind noch {left} Runden und {_num(fuel_now, 1, lang)} Liter: du kommst mit Reserve an, {_num(-save, 2, lang)} Liter mehr pro Runde sind möglich.",
+        }.get(
+            lang,
+            f"{left} laps to go and {_num(fuel_now, 1, lang)} litres: you make it with room, {_num(-save, 2, lang)} litres more per lap is possible.",
+        )
+    return text, keys
+
+
 def _weather(sheet, lang, track, routed, th):
     air = sheet.value("weather.air_c")
     road = sheet.value("weather.road_c")
@@ -1518,5 +1664,6 @@ _BUILDERS = {
     Intent.CORNER_NAMES: _corner_names,
     Intent.RIVALS: _rivals,
     Intent.WEATHER: _weather,
+    Intent.FUEL_PLAN: _fuel_plan,
     Intent.STRAIGHT: _straight,
 }

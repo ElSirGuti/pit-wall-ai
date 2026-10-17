@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 
 from ..analysis import braking as B
 from ..analysis.circuit_names import official_of
+from ..analysis.plan import fuel_profile
 from ..analysis.laps import CurrentLap, LapRecord
 from ..analysis.trackctx import TrackInfo
 from ..config import AppConfig
@@ -140,6 +141,10 @@ def build_facts(inp: ChatInputs) -> FactSheet:
     add(Fact("session.laps_completed", st.completed_laps))
     if snap is not None:
         add(Fact("session.timed", bool(snap.static.is_timed_race)))
+        if snap.number_of_laps > 0:
+            add(Fact("session.laps_total", int(snap.number_of_laps), "laps"))
+        if snap.static.has_extra_lap:
+            add(Fact("session.extra_lap", True))
     if snap is not None and snap.tyre_compound:
         add(Fact("session.compound", snap.tyre_compound))
     if snap is not None and inp.now is not None:
@@ -236,6 +241,12 @@ def build_facts(inp: ChatInputs) -> FactSheet:
             )
             left = snap.fuel / per_lap
             add(Fact("fuel.laps_left", _r(left, 1), "laps"))
+            prof = fuel_profile(inp.laps)
+            if prof is not None:
+                add(Fact("fuel.spread_l", _r(prof.spread_l, 2), "L"))
+                add(Fact("fuel.profile_laps", prof.laps, "laps"))
+        if snap.static.max_fuel > 0:
+            add(Fact("fuel.tank_l", _r(snap.static.max_fuel, 0), "L"))
 
     # -- tyres and brakes ---------------------------------------------------------------------------------
     if snap is not None:
