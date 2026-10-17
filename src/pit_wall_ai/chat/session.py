@@ -270,7 +270,7 @@ class ChatSession:
         suffix = self.persona.system_suffix(self.lang)
         request = LLMRequest(
             system=SYSTEM[self.lang] + (" " + suffix if suffix else ""),
-            user=self._compose(question),
+            user=self._anonymous(self._compose(question), sheet),
             context=sheet.context(),
         )
         resp = self.client.ask(request, urgent=True)
@@ -309,6 +309,15 @@ class ChatSession:
             latency_ms=resp.latency_s * 1000.0,
             raw=resp.text,
         )
+
+    def _anonymous(self, text: str, sheet: FactSheet) -> str:
+        """The text with the names of the other drivers replaced: the history holds earlier local answers."""
+        for name in sorted(sheet.private_values(), key=len, reverse=True):
+            other = {"es": "otro piloto", "de": "ein anderer Fahrer"}.get(
+                self.lang, "another driver"
+            )
+            text = re.sub(re.escape(name), other, text, flags=re.IGNORECASE)
+        return text
 
     def _compose(self, question: str) -> str:
         if not self.history:

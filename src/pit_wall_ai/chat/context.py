@@ -314,7 +314,7 @@ def _add_rivals(inp: ChatInputs, sheet: FactSheet) -> None:
         c = gap.car
         k = f"rivals.{side}"
         if c.name:
-            add(Fact(f"{k}.name", c.name))
+            add(Fact(f"{k}.name", c.name, private=not inp.cfg.chat.rival_names_to_model))
         if c.position:
             add(Fact(f"{k}.position", c.position))
         if gap.gap_s is not None:
@@ -356,7 +356,13 @@ def _add_rivals(inp: ChatInputs, sheet: FactSheet) -> None:
         add(Fact("rivals.i_lead", True))
     elif leader is not None:
         g = board.gaps.get(leader.index)
-        add(Fact("rivals.leader.name", leader.name or f"#{leader.index}"))
+        add(
+            Fact(
+                "rivals.leader.name",
+                leader.name or f"#{leader.index}",
+                private=not inp.cfg.chat.rival_names_to_model,
+            )
+        )
         if g is not None and g.gap_s is not None:
             add(Fact("rivals.leader.gap_s", _r(abs(g.gap_s), 1), "s"))
         if g is not None and g.laps_diff:

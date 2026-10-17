@@ -280,3 +280,23 @@ def test_the_session_summary_is_asked_for_in_the_chat():
         r = s.ask(q)
         assert r.source == "local" and "1:17,737" in r.text
     assert p.requests == []
+
+
+def test_the_names_of_other_drivers_never_reach_the_model_but_the_local_answers_use_them():
+    from .test_chat import _rival_inputs
+
+    inp = _rival_inputs()
+    s, p = session("Vas bien.", inputs=lambda: inp)
+    local = s.ask("¿quién tengo delante?")
+    assert "Piloto1" in local.text  # the local answer names the driver
+    s.ask("¿qué opinas de mi ritmo?")  # open question: the model, with the history
+    req = p.requests[0]
+    assert "Piloto1" not in str(req.context) and "Piloto1" not in req.user
+    assert "otro piloto" in req.user  # the earlier answer is in the history, anonymised
+    # the owner can opt in
+    cfg = AppConfig.model_validate({"chat": {"rival_names_to_model": True}})
+    inp2 = _rival_inputs()
+    inp2.cfg = cfg
+    s2, p2 = session("ok", cfg=cfg, inputs=lambda: inp2)
+    s2.ask("¿qué opinas de mi ritmo?")
+    assert "Piloto1" in str(p2.requests[0].context)

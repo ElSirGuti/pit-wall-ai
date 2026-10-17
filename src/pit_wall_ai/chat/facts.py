@@ -37,6 +37,8 @@ class Fact:
     # every numeric rendering a correct answer may use (seconds and milliseconds of the same lap time...)
     numbers: tuple[float, ...] = ()
     label: str = ""
+    # known to the local answers and the grounding check, never sent to the model (the names of other drivers)
+    private: bool = False
 
     def accepts(self) -> tuple[float, ...]:
         if self.numbers:
@@ -66,10 +68,19 @@ class FactSheet:
         merged += [norm(n) for n in names if norm(n)]
         self.aliases[subject] = tuple(dict.fromkeys(merged))
 
+    def private_values(self) -> list[str]:
+        """The private strings (rival names): to be kept out of anything that is sent to a model."""
+        return [str(f.value) for f in self.facts if f.private and f.value]
+
     def context(self) -> dict[str, Any]:
-        """The nested JSON of the facts, with units in the key names; order of insertion."""
+        """The nested JSON of the facts, with units in the key names; order of insertion.
+
+        Private facts (other drivers' names) are left out: the model says "the car ahead", the local answers name it.
+        """
         root: dict[str, Any] = {}
         for f in self.facts:
+            if f.private:
+                continue
             node = root
             *path, leaf = f.key.split(".")
             for p in path:

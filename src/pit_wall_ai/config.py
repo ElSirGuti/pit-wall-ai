@@ -425,6 +425,8 @@ class ChatConfig(_Model):
         6, ge=0, le=30
     )  # previous question/answer pairs sent with a question
     stale_after_s: float = Field(5.0, gt=0)  # older data is announced as such in a model answer
+    # other drivers are people: their names stay on this machine unless this is on (docs/PHASE8_PLAN.md 0.5)
+    rival_names_to_model: bool = False
 
 
 class InputConfig(_Model):
