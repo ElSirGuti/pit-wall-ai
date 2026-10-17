@@ -1,6 +1,13 @@
 # Voices plan: neural voices, voice profiles and the radio effect
 
-Status: **proposal, waiting for the author's approval. No code yet.** Origin: a conversation the author
+Status: **approved on 2026-10-17; steps 1 to 4 implemented, checked by tests and by rendering with the author's SAPI voice;
+not yet listened to in the game.** Defaults taken for the questions of section 8: CPU Piper is the sensible default for
+heavy simulators and the GPU engines are optional (through `http`); the radio effect has two strengths, `light` and
+`strong` (plus `off`); the fixed phrases are rendered the first time they are spoken and can be rendered ahead with
+`pit-wall voices --prerender`. Built: `engineer.voice.radio_effect`, `pit-wall say --radio ... --out file.wav`, the
+`piper` backend and `pit-wall voices --piper-download <id>`, the phrase cache, profiles (`voice_profiles/<id>.yaml`,
+`engineer.voice.profile`) and the `http` engine for a local server (loopback only). Step 5 (docs) is this note and the
+README. Origin: a conversation the author
 shared on 2026-10-15 about voice cloning for the engineer.
 
 ## 0. What is wanted

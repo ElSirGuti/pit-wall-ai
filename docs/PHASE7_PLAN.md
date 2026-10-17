@@ -1,6 +1,15 @@
 # Phase 7: the post-session debrief
 
-Status: **proposal, waiting for the author's approval. No code yet.**
+Status: **approved on 2026-10-17 and implemented (steps 1 to 3).** The author approved the plans without answering the
+four questions of section 7; the defaults taken are: 1) the short version is **spoken after a race and after a
+qualifying** (a setting: `engineer.debrief.speak`), the written one always; 2) practice sessions: on demand
+("dame el resumen de la sesión"), the program stopped or the game session ended is not detected live; 3) the report is
+in the engineer's language (es or en); 4) the chart is not built yet. Built: `pit-wall debrief FILE` (`--summary`,
+`--speak`, `--save`, `--json`, `--out`), the live trigger at the end of a race or qualifying, the sessions file
+(`~/.pit-wall-ai/sessions.jsonl`), the comparison with last time (same track, layout, car and kind of session; a
+different compound is said) and the spoken version, grounded and with a template fallback. Checked on the author's
+Maserati GT4 weekend at Magione (`sesiones/maserati_*.pwrec.gz`, laps and fuel against the engineer's own answers) and on
+the committed fixture; the live end-to-end run in the game is pending.
 
 ## 0. Goal
 

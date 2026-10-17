@@ -1,7 +1,7 @@
 # Pendientes del autor
 
 Lista viva de lo que **tiene que hacer una persona** (no el código). Se actualiza cuando algo se cierra.
-Última actualización: 2026-10-17.
+Última actualización: 2026-10-17 (planes aprobados).
 
 El orden es por lo que más desbloquea. Lo que ya está hecho está al final, en "Ya cerrado".
 
@@ -58,7 +58,6 @@ dichos (el 2026-10-17 arreglé "14,0 metros" que se leía como una hora). Falta:
   gratuitas. El timeout bajó a 3,5 s (`llm.timeout_s`); si se pierden respuestas buenas, súbelo a 4,5.
 * **Disco C: lleno** (quedan unos 800 MB): Windows y el juego escriben ahí. Los modelos de reconocimiento ya van
   a `E:\Documents\pit-wall-models` (`stt.model_dir`); libera algo más en C:.
-* **Aprobar el plan de carrera (fase 8a)** y el resto de la fase 8 antes de empezar: `docs/PHASE8_PLAN.md`.
 
 ## 5. Mensajes de pole y de resultado
 
@@ -77,19 +76,29 @@ meta en la posición 10"). Falta:
   gasolina?" y dime si la respuesta tiene sentido; el archivo es `.pit-wall-ai/memory.jsonl` en tu carpeta de
   usuario (borrarlo olvida todo; `engineer.memory.enabled: false` lo apaga).
 
-## 5c. Planes nuevos que esperan tu respuesta (2026-10-15)
+## 5c. Planes aprobados el 2026-10-17: lo que hay que probar tú
 
-* **Debrief post-sesión** (`docs/PHASE7_PLAN.md`): aprobar el plan y contestar sus 4 preguntas (sección 7).
-* **Voces neuronales, perfiles y efecto de radio** (`docs/VOICES_PLAN.md`): aprobar el plan, y decidir si
-  Piper en CPU por defecto te sirve y si quieres el efecto de radio con intensidad ajustable. Recuerda la
-  línea del plan: el proyecto no incluye ni nombra voces de personas reales; los perfiles zero-shot usan un
-  clip que tú aportas y tienes derecho a usar.
-* **Motor de estrategia** (`docs/PHASE8_PLAN.md`, sección 4b): combustible, ventana de parada con tráfico y
-  clima; sin dependencia del safety car. Pide que midamos la pérdida en pit lane con tus paradas reales.
-* **Visor remoto de muro abierto** (`docs/MULTI_SIM_PLAN.md`, sección 9): idea; decide si merece una fase.
-* ~~**README en alemán**~~ (2026-10-15): `README.de.md` y `docs/VOICE.de.md` hechos, con el estado del
-  proyecto actualizado en los tres README. Léelos tú: una revisión de un hablante nativo (o tuya) antes de
-  usarlos en una candidatura es lo que da la última pulida. Si quieres más documentos en alemán, dime cuáles.
+Hecho y probado con pruebas y con tus grabaciones, falta verlo en el juego:
+
+* **Debrief** (`docs/PHASE7_PLAN.md`): `pit-wall debrief sesiones\maserati_carrera.pwrec.gz` (añade `--summary`,
+  `--speak`, `--save`). En vivo se dice solo al terminar una carrera o una clasificación (unos 12 s después del mensaje del
+  resultado; no si "no molestes") y a petición: "dame el resumen de la sesión". Los informes quedan en
+  `~/.pit-wall-ai/debriefs`. Para "contra la última vez" hace falta guardar sesiones del mismo coche y pista
+  (`--save` o en vivo). Si no quieres que hable: `engineer.debrief.speak: false`.
+* **Voces** (`docs/VOICES_PLAN.md`): oír el efecto de radio: `pit-wall say "Bloqueo delantero izquierdo" --radio light`
+  (o `strong`); para dejarlo fijo `engineer.voice.radio_effect: light` en `config/local.yaml`. Piper (CPU, neuronal):
+  `pip install piper-tts`, `pit-wall voices --piper-download es_ES-davefx-medium`, y lo que imprime en `config/local.yaml`.
+  `pit-wall voices --prerender` deja las frases fijas en caché. Perfiles: `voice_profiles/<id>.yaml` y
+  `engineer.voice.profile: <id>`; para clonar una voz con un servidor local (XTTS, GPT-SoVITS) usa el backend `http` con
+  un clip **tuyo o con permiso**; el proyecto no trae ninguna voz de una persona real.
+* **Plan de carrera** (`docs/PHASE8_PLAN.md` 8a): pregunta "¿cuánta gasolina para 10 minutos?", "¿llego al final?",
+  "plan de carrera" (te pide la longitud y si hay parada obligatoria; dile las reglas: "hay una parada obligatoria, ventana
+  de la 8 a la 12"). La checklist: `pit-wall checklist add --kind stint --compound Medium --laps 5 --fuel 20`, `show`,
+  `remove --id C1`, `undo`; o por voz "quita lo de mojado de la lista" (usa el modelo y siempre pasa por operaciones
+  validadas, con deshacer). Se marca sola al completar las vueltas.
+* **Privacidad de rivales** (principio 5 de la fase 8): los nombres de otros pilotos ya **no** se mandan al modelo (el
+  ingeniero los dice en local); si quieres que el modelo los vea: `chat.rival_names_to_model: true`.
+* Todavía **por decidir**: nada de las preguntas de los planes; los valores por defecto están en cada plan.
 
 ## 5h. Imola verificado (2026-10-15)
 
@@ -190,25 +199,20 @@ con la tabla: Zandvoort, Vallelunga; con dudas sobre el orden: Red Bull Ring, Ba
 
 ## 5m. Lo que falta del lado del código (sin ti, o con una prueba tuya al final)
 
-Hecho el 2026-10-17: líder, temperatura del aire y de la pista, última vuelta y sectores del rival, "adelante" y
-"atrás" como sinónimos, regla de daño encendida (también en carrera) y bandera a cuadros mapeada. Falta:
-
-* **Pregunta de combustible para una sesión** ("si la clasificación son 10 minutos, ¿cuánta gasolina debería
-  poner?"): hoy contesta cuánto queda; necesita el planificador de la fase 8.
+* **Fase 8a, lo que espera datos**: el ranking de variantes "¿y si paro una vuelta antes?", la degradación por compuesto
+  y la pérdida en boxes medida de tus paradas reales (haz una parada en una práctica larga con `pit-wall record`).
+* **Fase 8c** (sugerencias de reglaje y de estilo con registro de lo que se probó) y los motores de estrategia de
+  4b (ventana de parada con tráfico, lluvia): siguen siendo planes.
+* **Debrief**: el gráfico opcional (pregunta 4 del plan) y el aviso en prácticas al cerrar el juego.
 * **Índice de desgaste por curva en vivo** con el porcentaje real del puente: el análisis ya existe y está
-  validado (`tyre-corners`); falta usarlo en la conversación en vivo.
+  validado (`tyre-corners`, también dentro del debrief como estimación); falta usarlo en la conversación en vivo.
 * **Estimación del desgaste cuando el simulador no lo da** (iRacing, solo al parar): el cálculo ya existe
   (`analysis/wear_estimate.py`); falta una fuente de iRacing (fase multi-simulador).
-* **Rivales sin CSP**: `telemetry/crewchief.py` lee la página `acpmf_crewchief` si activas la app **CrewChiefEx**
-  (apps de Python); solo se usa cuando la app Lua no envía.
-* **Motor de estrategia / decisión de parada** (fase 8): hoy "¿debería entrar a pits?" contesta solo el desgaste
-  medido; el plan espera tu aprobación (sección 4).
-* **Debrief** (fase 7) y **voces con efecto de radio**: esperan tu aprobación de los planes (sección 5c).
+* **Rivales sin CSP**: `telemetry/crewchief.py` lee la página `acpmf_crewchief` si activas la app **CrewChiefEx**.
 * **Más traducciones al alemán**: hecho `docs/ENGINEER.de.md` y `tools/csp_bridge/README.de.md` (además de README y
   VOICE); si quieres otros, dime cuáles.
-* Qué datos tienen las apps de tu instalación y cuáles usamos: `docs/AC_APPS_NOTES.md` (incluye `tyres_app_ext`).
-  Los logs de Real Penalty (`apps/python/RealPenalty/logs`) tienen nombres de otros pilotos: se leen en local y no
-  se suben.
+* Qué datos tienen las apps de tu instalación y cuáles usamos: `docs/AC_APPS_NOTES.md`. Los logs de Real Penalty
+  tienen nombres de otros pilotos: se leen en local y no se suben.
 
 ## 6. Opcional, sin prisa
 
@@ -223,6 +227,8 @@ Hecho el 2026-10-17: líder, temperatura del aire y de la pista, última vuelta 
 
 ## Ya cerrado
 
+* ~~Planes de debrief (fase 7), voces y plan de carrera (fase 8a)~~ (aprobados y construidos el 2026-10-17): ver 5c para lo que
+  falta probar en el juego.
 * ~~Clave de Gemini rotada~~ (2026-10-17) y ~~intervalos de rivales verificados contra CMRT~~ (coinciden).
 * ~~Fin de semana completo con el Maserati GT4~~ (2026-10-17): práctica, qualy y carrera de 8 vueltas con la voz, el
   puente 0.3 y las grabaciones; verificados el desgaste real, las temperaturas de frenos, los rivales con intervalos,

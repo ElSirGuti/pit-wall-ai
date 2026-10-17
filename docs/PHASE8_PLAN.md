@@ -1,6 +1,9 @@
 # Phase 8 plan: race preparation (strategy, editable checklist, rivals, setup and style)
 
-Status: **plan only, nothing implemented.** It records decisions taken with the author on 2026-10-13 and the
+Status: **approved on 2026-10-17; 8a implemented in part** (the fuel planner, the stop plan with the stated rules, the editable
+checkable practice checklist with undo, in `analysis/plan.py`, `analysis/checklist.py`, `analysis/checklist_edit.py`; the "what if" ranking, the
+degradation per compound and the measured pit loss still wait for data). 8b is served by the CSP bridge (the spike's questions are
+answered in `docs/AC_APPS_NOTES.md`). 8c and the strategy engines of 4b (pit window with traffic, weather) are still plans. It records decisions taken with the author on 2026-10-13 and the
 open questions, so the work can start without re-deriving them. Nothing in this file is "verified" until it is
 marked with the evidence that verified it.
 
