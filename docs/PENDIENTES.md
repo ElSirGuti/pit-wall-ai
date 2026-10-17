@@ -1,16 +1,19 @@
 # Pendientes del autor
 
 Lista viva de lo que **tiene que hacer una persona** (no el código). Se actualiza cuando algo se cierra.
-Última actualización: 2026-10-16.
+Última actualización: 2026-10-17.
 
 El orden es por lo que más desbloquea. Lo que ya está hecho está al final, en "Ya cerrado".
 
 ## 1. Una sentada de mediciones  ·  guion en `docs/SESION_MEDICION.md`
 
-* **FPS con el reconocedor de voz**: la voz ya funciona en pista con la GPU y el juego limitado a unos 60 FPS
-  (reconocimiento de 0,6 a 2 s con `small`, 0,8 a 1 s con `medium` en el menú). Falta la tabla de FPS: tres
-  bloques de 3 vueltas, misma pista y coche, anotando FPS medio y mínimo. Con ella se decide `stt.model`
-  (`small`, `medium`, `turbo`) y si conviene limitar los FPS del juego.
+Hecho el 2026-10-17: un fin de semana completo con el Maserati GT4 en Magione (práctica, qualy, carrera de 8
+vueltas) grabado en `sesiones/maserati_*.pwrec.gz`. De ahí salió: la bandera a cuadros (código 5), la bandera de
+penalización (código 6) con una penalización de 10 s que baja en tiempo real (unidad verificada: segundos por
+cumplir), daños reales (de 2 a 40 km/h de golpe) y el desgaste por curva validado (correlación 0,98). Falta:
+
+* **FPS con el reconocedor de voz**: la tabla, con un juego abierto y 3 vueltas por bloque (FPS medio y mínimo).
+  Con ella se decide `stt.model` y si conviene limitar los FPS.
 
   | Bloque | En paralelo | FPS medio | FPS mínimo |
   |---|---|---|---|
@@ -19,29 +22,24 @@ El orden es por lo que más desbloquea. Lo que ya está hecho está al final, en
   | 3 | `pit-wall voice --stt-device cuda --stt-model medium` | ? | ? |
   | 4 | `pit-wall voice --stt-device cuda --stt-model turbo` | ? | ? |
 
-* **Eventos del juego (parcial, 2026-10-17)**: de tu fin de semana con el Maserati ya salieron en las grabaciones la
-  bandera a cuadros (código 5, fin de qualy y de carrera), la bandera de penalización (código 6) con una penalización
-  de 10 s que baja en tiempo real (unidad verificada: segundos por cumplir), y daños reales (zonas en km/h del golpe,
-  de 2 a 40): la regla de daño queda **encendida**. Faltan las banderas azul, amarilla, negra y blanca, y safety car.
-  Sigue valiendo lo de abajo para esas: el puente CSP (5l) ya envía banderas, penalización y daño; falta **provocarlos y
-  grabar con `pit-wall record`** (apunta la hora): bandera amarilla, azul, blanca y negra, límites de pista y
-  salida en falso, un contacto con daño y safety car. Con eso se encienden las reglas con datos reales (hoy
-  apagadas porque nunca se ha capturado un evento). Si usas Real Penalty, su log de la sesión.
+* **Eventos que no han salido todavía**: banderas azul, amarilla, negra y blanca; safety car; salida en falso. Y
+  saber qué zona de daño es cada una (hoy son 5 números, el 4.º parece el máximo de los demás): un golpe de lado
+  conocido (por ejemplo, solo contra el muro derecho) lo aclara. Graba con `pit-wall record` y apunta la hora.
+  Con el puente (5l) el ingeniero ya los recibe por la API de CSP; falta verlos pasar.
 
 ## 2. Voz: lo que falta de probar  ·  `docs/VOICE.md`
 
-Hecho el 2026-10-16: micrófono (Razer Seiren Mini), voz (Sabina), botón del volante (el 10, como joystick; el 9
-quedó descartado), conversación en vivo con el juego, y la pronunciación de "psi". Falta:
+Hecho: micrófono (Razer Seiren Mini), voz Sabina, botón 10 del G29, conversación en vivo durante una práctica, una
+qualy y una carrera de 8 vueltas con el reconocimiento en la GPU (0,6 a 1,2 s), "psi" y los números con coma bien
+dichos (el 2026-10-17 arreglé "14,0 metros" que se leía como una hora). Falta:
 
-* **Frases habladas** (`docs/FRASES_VOZ.md`): las 40 en español, en silencio y con el coche sonando. Ahora es
-  guiado: `pit-wall phrases record --set A` te muestra cada frase y graba (Enter para empezar, Enter para parar;
-  `--set B` con el motor, `--only 3,6-8` para algunas) y `pit-wall phrases test --set A --device cuda` las mide
-  (palabras mal, tiempo; `--model medium` o `turbo` para comparar; `--dir frases/telefono` para las del móvil).
-  También con `--lang de` y `--lang en`. Con ellas se cierra el paso 5 de la voz y se decide el modelo
-  con datos. Mientras tanto se van corrigiendo los fallos que salgan hablando (hoy: "desgaste", "pits",
-  "Magione"); pásame lo que oiga mal.
-* **Conducir con la voz**: una carrera completa con `pit-wall voice` (ahora solo se ha probado en boxes y en
-  vueltas de calentamiento): ¿se oye bien con el motor?, ¿molestan las alertas mientras hablas?, "no molestes".
+* **Frases habladas** (`docs/FRASES_VOZ.md`): las 40 en español, en silencio y con el coche sonando. Es guiado:
+  `pit-wall phrases record --set A` (Enter para empezar, Enter para parar; `--set B` con el motor, `--only 3,6-8`) y
+  `pit-wall phrases test --set A --device cuda` las mide (`--model medium` o `turbo` para comparar,
+  `--dir frases/telefono` para las del móvil; también `--lang de` y `--lang en`). Con ellas se cierra el paso 5 de
+  la voz y se decide el modelo con datos.
+* **Fallos de reconocimiento que vimos** (pásame los que vayas notando): "desgaste", "pits", "Magione" ya corregidos;
+  sin arreglo por tabla: "me limaliaron", "Que tal les va a estarte adelante".
 
 ## 3. Idiomas (alemán e inglés)
 
@@ -63,12 +61,14 @@ quedó descartado), conversación en vivo con el juego, y la pronunciación de "
   a `E:\Documents\pit-wall-models` (`stt.model_dir`); libera algo más en C:.
 * **Aprobar el plan de carrera (fase 8a)** y el resto de la fase 8 antes de empezar: `docs/PHASE8_PLAN.md`.
 
-## 5. Mensajes de pole y de resultado (nuevo)
+## 5. Mensajes de pole y de resultado
 
-* una **qualy en la que salgas primero** y una **carrera por vueltas** que termines (idealmente subiendo
-  puestos): grábalas con `pit-wall record` y anota qué dijo el ingeniero; así se comprueban la pole
-  provisional, la victoria y el final de carrera;
-* una **carrera por tiempo** (sin número de vueltas): hoy el final no se detecta; con una grabación se añade.
+Visto el 2026-10-17: el fin de qualy y el resultado de una carrera por vueltas salieron en vivo ("hemos cruzado la
+meta en la posición 10"). Falta:
+
+* una **qualy en la que salgas primero** para oír el mensaje de pole provisional y de pole;
+* una **carrera por tiempo** (sin número de vueltas): el final ya se detecta con el dato del puente (tu coche
+  terminó), falta verlo en una carrera real.
 
 ## 5b. Memoria del ingeniero
 
@@ -125,19 +125,18 @@ nombre) y **Silverstone** con tus mapas: GP con 18 curvas (Maggotts 10-11, Becke
 Vale 16-17, Club 18; dos curvas ligeras sin número), International (8) y National (7). Pendiente: confirmar en
 el juego que en el National el 3 y el 4 son la misma horquilla, y el mapa de los inversos de cada circuito.
 
-## 5l. Puente CSP: banderas, penalización y daño (el desgaste ya está)
+## 5l. Puente CSP: lo probado y lo que falta
 
-El desgaste real ya llega y coincide con tu app CMRT (99/98/69/62 % contra 99,7/98,8/69,9/62,3 %). El mismo
-mensaje trae bandera, penalización, daño por zona y lluvia, que nadie usa todavía: ver "Eventos del juego" en la
-sección 1. Sin el puente (app no activada o juego cerrado) el ingeniero no dice el desgaste, no lo inventa.
+Probado en vivo el 2026-10-17 (Maserati GT4, 16 coches): el desgaste real, las temperaturas de frenos por rueda,
+los nombres de los rivales, la posición, los intervalos en segundos ("a 0,4 segundos", "se está acercando a 0,2") y
+la comparación de la última vuelta; sin errores. Falta:
 
-**Rivales (versión 0.2 del puente, 2026-10-16, sin probar en el juego)**: la app envía también todos los coches
-(posición, vueltas, distancia en la vuelta, tiempos, sectores, boxes, compuesto) y los datos de la sesión; pit-wall
-calcula los intervalos en segundos y contesta "¿quién tengo delante / detrás y a cuánto?", "mis rivales", "¿cómo va
-el de delante en sectores?". Para probarlo: volver a copiar la app (`pit-wall bridge-install`; ya está copiada),
-reiniciar AC, y con una carrera contra IA abierta `pit-wall bridge-test`: debe imprimir una línea `rivals:` con
-los coches, tu posición y los de delante y detrás. Si no sale o los intervalos no cuadran con la app CMRT (a ±0,2 s),
-pásame la línea. Los campos de CSP se leyeron de su documentación, sin ver el juego: es lo más probable que falle.
+* **Comparar los intervalos con tu leaderboard de CMRT** en una carrera: deben coincidir a ±0,2 s. Lo que dijo el
+  ingeniero tuvo sentido, pero no se ha comparado número a número.
+* **Encender las alertas** que quieras (`engineer.rules.rival_close`, `rival_pit`, `csp_flags`) en
+  `config/local.yaml`; están apagadas hasta ver que los datos son buenos.
+* El puente envía también grano, ampollas, puntos planos y kilómetros virtuales de los neumáticos (0.3): aún no los
+  usa el ingeniero (el punto plano daría "bloqueaste el trasero izquierdo"; falta saber su escala).
 
 ## 5e. Verificar la numeración de los circuitos
 
@@ -192,27 +191,25 @@ con la tabla: Zandvoort, Vallelunga; con dudas sobre el orden: Red Bull Ring, Ba
 
 ## 5m. Lo que falta del lado del código (sin ti, o con una prueba tuya al final)
 
-Hecho el 2026-10-16, apagado hasta que lo veas en una carrera real (`config/local.yaml` > `engineer.rules`):
-`rival_close` (el de atrás se acerca / el de delante a tiro), `rival_pit` (el de delante entra a boxes) y
-`csp_flags` (amarilla, azul con el nombre de a quién cedes, negra, penalización, blanca, cuadros), con textos en
-es/en/de. El **final de una carrera por tiempo** ya se detecta con el puente (el coche terminó). Falta:
+Hecho el 2026-10-17: líder, temperatura del aire y de la pista, última vuelta y sectores del rival, "adelante" y
+"atrás" como sinónimos, regla de daño encendida (también en carrera) y bandera a cuadros mapeada. Falta:
 
-* **Encender y afinar esas reglas** con una carrera real: umbrales (`gap_s`, `min_closing_s`), si dicen el nombre
-  (`use_names`), y si molestan. Para encender una: `engineer.rules.rival_close.enabled: true`.
-* **Índice de desgaste por curva en vivo** con el porcentaje real del puente: el análisis ya existe (`tyre-corners`);
-  falta usarlo en la conversación en vivo y compararlo con tu app.
+* **Pregunta de combustible para una sesión** ("si la clasificación son 10 minutos, ¿cuánta gasolina debería
+  poner?"): hoy contesta cuánto queda; necesita el planificador de la fase 8.
+* **Índice de desgaste por curva en vivo** con el porcentaje real del puente: el análisis ya existe y está
+  validado (`tyre-corners`); falta usarlo en la conversación en vivo.
 * **Estimación del desgaste cuando el simulador no lo da** (iRacing, solo al parar): el cálculo ya existe
-  (`analysis/wear_estimate.py`, con pruebas); falta conectarlo a una fuente de iRacing (fase multi-simulador).
+  (`analysis/wear_estimate.py`); falta una fuente de iRacing (fase multi-simulador).
 * **Rivales sin CSP**: `telemetry/crewchief.py` lee la página `acpmf_crewchief` si activas la app **CrewChiefEx**
-  (apps de Python); solo se usa cuando la app Lua no envía. Pruébalo activando CrewChiefEx y sin la Pit Wall Bridge.
+  (apps de Python); solo se usa cuando la app Lua no envía.
 * **Motor de estrategia / decisión de parada** (fase 8): hoy "¿debería entrar a pits?" contesta solo el desgaste
   medido; el plan espera tu aprobación (sección 4).
 * **Debrief** (fase 7) y **voces con efecto de radio**: esperan tu aprobación de los planes (sección 5c).
 * **Más traducciones al alemán**: hecho `docs/ENGINEER.de.md` y `tools/csp_bridge/README.de.md` (además de README y
-  VOICE); si quieres otros, dime cuáles. Y más correcciones del reconocimiento a medida que salgan fallos hablando.
-* Qué datos tienen las apps de tu instalación y cuáles usamos: `docs/AC_APPS_NOTES.md`. Los logs de Real Penalty
-  (`apps/python/RealPenalty/logs`) listan cortes, entradas y salidas de boxes de tus carreras online; tienen nombres
-  de otros pilotos, así que se leen en local y no se suben.
+  VOICE); si quieres otros, dime cuáles.
+* Qué datos tienen las apps de tu instalación y cuáles usamos: `docs/AC_APPS_NOTES.md` (incluye `tyres_app_ext`).
+  Los logs de Real Penalty (`apps/python/RealPenalty/logs`) tienen nombres de otros pilotos: se leen en local y no
+  se suben.
 
 ## 6. Opcional, sin prisa
 
@@ -227,6 +224,10 @@ es/en/de. El **final de una carrera por tiempo** ya se detecta con el puente (el
 
 ## Ya cerrado
 
+* ~~Fin de semana completo con el Maserati GT4~~ (2026-10-17): práctica, qualy y carrera de 8 vueltas con la voz, el
+  puente 0.3 y las grabaciones; verificados el desgaste real, las temperaturas de frenos, los rivales con intervalos,
+  la bandera a cuadros, la de penalización (10 s, segundos por cumplir) y el daño; regla de daño encendida.
+* ~~Líder, temperaturas, preguntas por el rival~~ (2026-10-17) y ~~números con coma dichos como hora~~.
 * ~~Voz en vivo con tu equipo~~ (2026-10-16): micrófono Razer Seiren Mini, voz Sabina, botón 10 del G29 como
   joystick, reconocimiento en la GPU (`stt.device: cuda`; `small`, `medium` y `turbo` configurables con
   `stt.model` o `--stt-model`), "psi" dicho letra a letra, y las preguntas sobre un neumático, un eje o una sola
