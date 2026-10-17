@@ -211,7 +211,18 @@ def overlay(snap: Snapshot, data: dict | None) -> Snapshot:
         quad = tuple(float(x) for x in wear)
     except (TypeError, ValueError):
         return snap
-    return replace(snap, tyre_wear=quad, wear_source="csp")  # type: ignore[arg-type]
+    changes: dict = {"tyre_wear": quad, "wear_source": "csp"}
+    brake = data.get("brake")
+    if isinstance(brake, list) and len(brake) == 4:
+        try:
+            temps = tuple(float(x) for x in brake)
+        except (TypeError, ValueError):
+            temps = ()
+        if temps and any(
+            t > 0 for t in temps
+        ):  # CSP knows the temperature of the discs of this car
+            changes["brake_temp"] = temps
+    return replace(snap, **changes)  # type: ignore[arg-type]
 
 
 __all__ = ["BridgeReceiver", "BridgedSource", "SourceUnavailable", "overlay", "DEFAULT_PORT"]

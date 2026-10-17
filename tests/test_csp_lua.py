@@ -48,7 +48,7 @@ script = {}
 web = { post = function(url, headers, data, cb) posted[#posted + 1] = data; cb(nil, {}) end }
 ui = { text = function() end, textWrapped = function() end }
 
-local function wheel(wear) return { tyreWear = wear, isBlown = false } end
+local function wheel(wear) return { tyreWear = wear, isBlown = false, brakeTemperature = 412.6, discTemperature = 430, tyreGrain = 0.25, tyreBlister = 0, tyreFlatSpot = 0.05, tyreVirtualKM = 12.345 } end
 local function car(i, pos, spline)
   return {
     isConnected = true, racePosition = pos, lapCount = 3, splinePosition = spline, speedKmh = 181.4,
@@ -90,6 +90,11 @@ def test_the_message_the_app_builds_is_the_one_python_reads():
 
     msg = json.loads(_run_once())
     assert msg["wear"] == [90.0, 88.0, 70.0, 65.0] and msg["tyre"] == "S" and msg["me"] == 0
+    assert (
+        msg["brake"] == [413, 413, 413, 413]
+        and msg["flat"] == [0.05] * 4
+        and msg["vkm"][0] == 12.35
+    )
     assert len(msg["cars"]) == 3 and msg["cars"][0]["ls"] == [30500, 29000, 31500]
     assert msg["session"]["type"] == 3 and msg["session"]["leader_laps"] == 3
     tr = RivalTracker(track_length_m=5000)

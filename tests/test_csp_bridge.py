@@ -117,3 +117,15 @@ def test_a_second_pit_wall_follows_the_first_one():
     finally:
         second.stop()
         first.stop()
+
+
+def test_brake_temperatures_come_from_the_bridge_when_the_car_has_them():
+    s = _snap(brake_temp=(0.0, 0.0, 0.0, 0.0))
+    o = overlay(s, {"wear": [90, 90, 90, 90], "brake": [412, 420, 380, 385]})
+    assert o.brake_temp == (412.0, 420.0, 380.0, 385.0)
+    # a car without them sends zeros: whatever the shared memory had stays
+    keep = _snap(brake_temp=(300.0, 310.0, 250.0, 260.0))
+    assert (
+        overlay(keep, {"wear": [90, 90, 90, 90], "brake": [0, 0, 0, 0]}).brake_temp
+        == keep.brake_temp
+    )

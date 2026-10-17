@@ -85,17 +85,30 @@ local function build()
   if idx < 0 then idx = 0 end
   local car = ac.getCar(idx)
   if car == nil then return nil end
-  local wear, blown = {}, {}
+  local wear, blown, brake, disc, grain, blister, flat, vkm = {}, {}, {}, {}, {}, {}, {}, {}
   for w = 0, 3 do
     local wheel = car.wheels[w]
     wear[#wear + 1] = math.floor((1 - wheel.tyreWear) * 1000 + 0.5) / 10
     blown[#blown + 1] = try(function() return wheel.isBlown and 1 or 0 end, 0)
+    -- brake temperature in °C (0 on the cars that do not have it), and the tyre condition extras
+    brake[#brake + 1] = rounded(try(function() return wheel.brakeTemperature end, 0), 0)
+    disc[#disc + 1] = rounded(try(function() return wheel.discTemperature end, 0), 0)
+    grain[#grain + 1] = rounded(try(function() return wheel.tyreGrain end, 0), 3)
+    blister[#blister + 1] = rounded(try(function() return wheel.tyreBlister end, 0), 3)
+    flat[#flat + 1] = rounded(try(function() return wheel.tyreFlatSpot end, 0), 3)
+    vkm[#vkm + 1] = rounded(try(function() return wheel.tyreVirtualKM end, 0), 2)
   end
   return {
     v = 1,
     car = idx,
     wear = wear,
     blown = blown,
+    brake = brake,
+    disc = disc,
+    grain = grain,
+    blister = blister,
+    flat = flat,
+    vkm = vkm,
     tyre = try(function() return ac.getTyresName(idx) end, ''),
     flag = try(function() return sim.raceFlagType end, 0),
     flag_cause = try(function() return sim.raceFlagCause end, -1),

@@ -24,6 +24,7 @@ come from the public CSP Lua SDK (`extension/internal/lua-sdk/ac_apps/lib.lua`) 
 | SimHub | the same page layout (based on the CrewChief work) | same reader works |
 | F12020Leaderboard | `getCarTyreCompound` (the tyre of any car), `getCarRealTimeLeaderboardPosition` | possible source of the rivals' compound without CSP |
 | Real Penalty | online penalties plugin (cuts, pit lane, safety car, DRS); writes `logs/session_*.log` | the logs list events (cutting warnings, pit entries and exits, laps counted); they contain **other drivers' names**: read locally, never committed |
+| tyres_app_ext (installed 2026-10-17) | tyre app for CSP custom physics: wear, grain, blister, flat spots, carcass and core temperatures, slip and Mz, ride height, **brake temperatures** (an option in Content Manager > Settings > Apps) and a list of the cars that have them | CSP Python extension (`ac.ext_getTyreWear`, `ext_getTyreGrain`, `ext_getTyreBlister`, `ext_getTyreFlatSpot`, `ext_getTyreVirtualKM`, `ext_getBrakeTemp`, `ext_getBrakeCoreTemp`, `ext_getTyreCarcassTemp`); the same values exist in the Lua `ac.StateWheel` | the bridge sends them (0.3): the brake temperatures replace the shared-memory ones when the car has them; grain, blister, flat spot and virtual km are sent and not used yet |
 | acti | telemetry logger (`.ld`): what `pit-wall` already reads as recordings | existing loaders |
 
 ## Limits to keep in mind

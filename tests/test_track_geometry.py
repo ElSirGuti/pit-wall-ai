@@ -447,7 +447,9 @@ def test_monza_and_mugello_tables_cover_their_corners_in_order():
     monza = circuit_names.circuit_for("monza")["corners"]
     # the F1-style map: 11 turns; the Curva Grande is one turn with two apexes on the line
     assert [c.get("order") for c in monza] == [1, 2, 3, None, 4, 5, 6, 7, 8, 9, 10, 11]
-    assert monza[0]["name"].startswith("Variante del Rettifilo") and monza[-1]["name"] == "Parabolica"
+    assert (
+        monza[0]["name"].startswith("Variante del Rettifilo") and monza[-1]["name"] == "Parabolica"
+    )
     mugello = circuit_names.circuit_for("mugello")["corners"]
     assert [c["order"] for c in mugello] == list(range(1, 16))
     assert [c["name"] for c in mugello][-1] == "Bucine"
@@ -455,7 +457,9 @@ def test_monza_and_mugello_tables_cover_their_corners_in_order():
         fr = [c["apex_fraction"] for c in table]
         assert fr == sorted(fr) and 0 < fr[0] and fr[-1] < 1
     # Monza was verified with the author's map; Mugello has not been
-    assert circuit_names.numbering_verified("monza") and not circuit_names.numbering_verified("mugello")
+    assert circuit_names.numbering_verified("monza") and not circuit_names.numbering_verified(
+        "mugello"
+    )
     assert circuit_names.table_names("monza")[11] == "Parabolica"
     assert circuit_names.table_names("mugello") is None
 
@@ -672,7 +676,11 @@ def test_layout_aware_table():
     assert gp and gp["corners"]
     # the national layout is 2.3 km: the GP fractions do not apply, so no names rather than wrong ones
     nat = CN.circuit_for_layout("ks_red_bull_ring", "layout_national", 2317)
-    assert nat and [e["name"] for e in nat["corners"]][0] == "Niki Lauda Kurve" and nat["straights"] == []
+    assert (
+        nat
+        and [e["name"] for e in nat["corners"]][0] == "Niki Lauda Kurve"
+        and nat["straights"] == []
+    )
     # an unknown layout of the same circuit with a different length gets nothing
     assert CN.circuit_for_layout("ks_red_bull_ring", "layout_xyz", 2336) is None
     assert CN.numbering_verified("ks_red_bull_ring", "layout_national", 2317) is True
