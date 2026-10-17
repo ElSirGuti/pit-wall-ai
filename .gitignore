@@ -59,3 +59,6 @@ config/bindings.yaml
 
 # generated locally from the game racing lines (not redistributed)
 /circuit_maps/
+
+# Voice profiles (reference clips and settings of the author's own voices)
+/voice_profiles/

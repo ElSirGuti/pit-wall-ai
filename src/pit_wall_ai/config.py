@@ -136,7 +136,7 @@ class CalmConfig(_Model):
 
 
 class VoiceConfig(_Model):
-    backend: Literal["sapi", "piper", "command", "console", "none"] = (
+    backend: Literal["sapi", "piper", "http", "command", "console", "none"] = (
         "sapi"  # sapi = Windows voices; piper = local neural; command = your own synthesiser; console = print only
     )
     # the sound of a team radio over any voice (rendered to a WAV first; adds a few tens of ms)
@@ -147,6 +147,14 @@ class VoiceConfig(_Model):
     piper_exe: str = (
         "piper"  # the Piper program (pip install piper-tts, or a folder with piper.exe)
     )
+    # a local synthesis server (XTTS, GPT-SoVITS...) on this machine; the body is JSON with {text} {language} {reference}
+    http_url: str | None = None
+    http_body: str | None = None
+    reference_audio: str | None = (
+        None  # a clip the user supplies and has the right to use (zero-shot engines)
+    )
+    profile: str | None = None  # a file voice_profiles/<id>.yaml that sets the engine and the voice
+    profiles_dir: str = "voice_profiles"
     cache: bool = True  # keep the rendered fixed phrases (only when the voice is rendered to a WAV)
     cache_dir: str | None = None  # None = ~/.pit-wall-ai/voice-cache
     # Part of the name of the audio output the voice speaks through (a headset, speakers...); None = default.

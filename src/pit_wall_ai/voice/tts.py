@@ -450,9 +450,12 @@ def create_backend(
     piper_exe: str = "piper",
     cache: bool = False,
     cache_dir: str | None = None,
+    http_url: str | None = None,
+    http_body: str | None = None,
+    reference_audio: str | None = None,
 ) -> TtsBackend:
-    # the voices that are rendered to a WAV first: Piper, anything with the radio effect on
-    if kind == "piper" or (radio_effect != "off" and kind in ("sapi", "command")):
+    # the voices that are rendered to a WAV first: Piper, a local server, anything with the radio effect on
+    if kind in ("piper", "http") or (radio_effect != "off" and kind in ("sapi", "command")):
         from .wav_voice import PhraseCache, WavVoice, piper_command, render_command
 
         if kind == "piper":
@@ -464,6 +467,17 @@ def create_backend(
                 render_command(cmd, text, path)
 
             who = f"piper|{piper_model}"
+        elif kind == "http":
+            if not http_url:
+                raise TtsUnavailable("voice.backend is 'http' but voice.http_url is empty")
+            from .profiles import render_http
+
+            def render(text: str, path: str) -> None:
+                render_http(
+                    http_url, http_body, text, path, language=language, reference=reference_audio
+                )
+
+            who = f"http|{http_url}|{reference_audio}"
         elif kind == "command":
             if not command:
                 raise TtsUnavailable("voice.backend is 'command' but voice.command is empty")

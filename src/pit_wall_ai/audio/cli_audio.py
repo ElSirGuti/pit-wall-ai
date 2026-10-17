@@ -161,6 +161,9 @@ def _voices_extra(cfg: AppConfig, a: argparse.Namespace, out) -> int | None:
         )
         return 0
     if getattr(a, "prerender", False):
+        from ..cli import _with_profile
+
+        cfg = _with_profile(cfg)
         v = cfg.engineer.voice
         try:
             backend = T.create_backend(
@@ -176,6 +179,9 @@ def _voices_extra(cfg: AppConfig, a: argparse.Namespace, out) -> int | None:
                 piper_exe=v.piper_exe,
                 cache=True,
                 cache_dir=v.cache_dir,
+                http_url=v.http_url,
+                http_body=v.http_body,
+                reference_audio=v.reference_audio,
             )
         except T.TtsUnavailable as exc:
             out(f"cannot prepare the voice: {exc}")

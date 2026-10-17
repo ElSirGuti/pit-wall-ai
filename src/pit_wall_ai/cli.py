@@ -432,10 +432,21 @@ def _plain_line(poller, engine) -> str:
     )
 
 
-def _make_speech(cfg: AppConfig, *, mute: bool = False) -> SpeechOutput:
+def _with_profile(cfg: AppConfig) -> AppConfig:
+    """The config with the voice profile applied (``engineer.voice.profile``), or as it is."""
     v = cfg.engineer.voice
+    if not v.profile:
+        return cfg
+    from .voice.profiles import apply_profile, load_profile
+
+    return apply_profile(cfg, load_profile(v.profile, v.profiles_dir))
+
+
+def _make_speech(cfg: AppConfig, *, mute: bool = False) -> SpeechOutput:
     if mute:
         return SpeechOutput(lambda: ConsoleTts())
+    cfg = _with_profile(cfg)
+    v = cfg.engineer.voice
     return SpeechOutput(
         lambda: create_backend(
             v.backend,
@@ -450,6 +461,9 @@ def _make_speech(cfg: AppConfig, *, mute: bool = False) -> SpeechOutput:
             piper_exe=v.piper_exe,
             cache=v.cache,
             cache_dir=v.cache_dir,
+            http_url=v.http_url,
+            http_body=v.http_body,
+            reference_audio=v.reference_audio,
         )
     )
 
@@ -517,6 +531,7 @@ def _cmd_say(cfg: AppConfig, a: argparse.Namespace) -> int:
             update={k: val for k, val in (("name", a.voice), ("output_device", a.device)) if val}
         )
         cfg = cfg.model_copy(update={"engineer": cfg.engineer.model_copy(update={"voice": v})})
+    cfg = _with_profile(cfg)
     if getattr(a, "radio", None):
         v = cfg.engineer.voice.model_copy(update={"radio_effect": a.radio})
         cfg = cfg.model_copy(update={"engineer": cfg.engineer.model_copy(update={"voice": v})})
@@ -555,6 +570,12 @@ def _say_to_file(cfg: AppConfig, text: str, out: str) -> int:
 
         def render(t: str, p: str) -> None:
             render_command(cmd, t, p)
+
+    elif v.backend == "http" and v.http_url:
+        from .voice.profiles import render_http
+
+        def render(t: str, p: str) -> None:
+            render_http(v.http_url, v.http_body, t, p, language=lang, reference=v.reference_audio)
 
     elif v.backend == "command" and v.command:
 
