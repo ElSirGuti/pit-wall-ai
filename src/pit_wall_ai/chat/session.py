@@ -179,9 +179,31 @@ _EDIT_VERBS = (
 )
 
 
+_RULE_TALK = (
+    "parada obligatoria",
+    "paradas obligatorias",
+    "no hay parada",
+    "sin parada",
+    "ventana de parada",
+    "ventana de paradas",
+    "solo gasolina",
+    "solo de gasolina",
+    "dos compuestos",
+    "compuestos distintos",
+    "mandatory stop",
+    "pit window",
+)
+
+
 def _is_checklist_talk(question: str) -> bool:
     q = " ".join(L.norm(question).split())
-    return any(w in q for w in _CHECKLIST_WORDS) or ("deshaz" in q and "lista" in q)
+    if "?" in question and not any(w in q for w in _CHECKLIST_WORDS):
+        return False  # a question about the rules is a question, not a statement of them
+    return (
+        any(w in q for w in _CHECKLIST_WORDS)
+        or any(w in q for w in _RULE_TALK)
+        or ("deshaz" in q and "lista" in q)
+    )
 
 
 def _spoken_checklist(cl) -> str:
@@ -312,7 +334,8 @@ class ChatSession:
             return ChatReply(
                 "Deshecho." if res.ok else "No hay nada que deshacer.", "local", ("checklist",)
             )
-        if not any(v in q.split() for v in _EDIT_VERBS):
+        states_a_rule = any(w in q for w in _RULE_TALK)
+        if not states_a_rule and not any(v in q.split() for v in _EDIT_VERBS):
             return ChatReply(_spoken_checklist(cl), "local", ("checklist",))
         ok, text = edit_with_model(self.client, cl, question, lang=self.lang)
         if ok:

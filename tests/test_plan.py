@@ -27,7 +27,9 @@ def test_the_profile_weights_the_recent_laps_and_skips_out_laps():
 
 def test_race_length_by_laps_or_by_time_with_the_extra_lap():
     assert race_laps(laps=8) == 8
-    assert race_laps(minutes=10, lap_time_s=78.0) == 9  # 600 / 78 = 7.7 -> 8 laps, plus the extra lap
+    assert (
+        race_laps(minutes=10, lap_time_s=78.0) == 9
+    )  # 600 / 78 = 7.7 -> 8 laps, plus the extra lap
     assert race_laps(minutes=10, lap_time_s=78.0, extra_lap=False) == 8
     assert race_laps(minutes=10) is None
 

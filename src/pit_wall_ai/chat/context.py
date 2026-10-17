@@ -282,6 +282,14 @@ def build_facts(inp: ChatInputs) -> FactSheet:
             add(Fact("penalties.unit_verified", True))
 
     _add_rivals(inp, sheet)
+    cl = inp.checklist
+    if cl is not None and cl.rules:  # what the driver told about the race: it feeds the plan
+        for rule, value in cl.rules.items():
+            if rule == "window" and value:
+                add(Fact("plan.window_from", int(value[0]), "laps"))
+                add(Fact("plan.window_to", int(value[1]), "laps"))
+            elif value is not None:
+                add(Fact(f"plan.{rule}", value))
 
     # -- the last lap against the best, corner by corner ------------------------------------------------
     _add_analysis(inp, sheet)

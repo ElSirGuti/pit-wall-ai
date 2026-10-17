@@ -349,3 +349,24 @@ def test_a_recorded_practice_ticks_the_checklist_by_itself():
     assert rt.checklist.get("C1").status == "done" and rt.checklist.get("C1").evidence.startswith(
         "laps"
     )
+
+
+def test_the_race_plan_is_built_from_the_rules_the_driver_stated():
+    from pit_wall_ai.analysis.checklist import Checklist
+    from pit_wall_ai.telemetry.snapshot import StaticInfo
+
+    from .test_chat import make_snap
+
+    cl = Checklist()
+    cl.apply({"op": "set_rule", "rule": "mandatory_stop", "value": "one"})
+    cl.apply({"op": "set_rule", "rule": "window", "value": [8, 12]})
+    snap = make_snap(t=1.0, fuel=30.0, number_of_laps=20, static=StaticInfo(max_fuel=25.0))
+    inp = synthetic_inputs(snap=snap)  # 1.00 L per lap
+    inp.checklist = cl
+    s, _ = session("no deberia llamarse", inputs=lambda: inp)
+    r = s.ask("¿cuándo debo parar?")
+    assert (
+        r.source == "local"
+        and "1 parada, en la vuelta 10" in r.text
+        and "tandas de 10 y 10 vueltas" in r.text
+    )

@@ -562,10 +562,7 @@ def test_the_threshold_answer_in_english_passes_too():
     "question",
     [
         "¿qué setup me recomiendas?",
-        "¿cuándo debo parar a boxes?",
-        "dame una estrategia de carrera",
         "what setup do you recommend",
-        "when should I pit",
     ],
 )
 def test_setup_and_strategy_questions_get_a_clear_not_yet_without_the_model(question):
@@ -915,5 +912,17 @@ def test_the_fuel_planner_says_when_the_consumption_is_not_known_yet():
 
 def test_fuel_to_the_end_of_a_race_by_laps_says_how_much_to_save():
     inp = synthetic_inputs(snap=make_snap(t=1.0, fuel=6.0, number_of_laps=10))
-    _, a, _ = ask("¿llego al final?", inp)  # 10 laps, 2 done, 1.00 L per lap: 8 L needed, 6 L in the tank
+    _, a, _ = ask(
+        "¿llego al final?", inp
+    )  # 10 laps, 2 done, 1.00 L per lap: 8 L needed, 6 L in the tank
     assert "Quedan 8 vueltas" in a.text and "ahorra 0,25 litros por vuelta" in a.text
+
+
+def test_a_stop_question_goes_to_the_race_planner_which_asks_for_what_is_missing():
+    r = L.route("¿cuándo debo parar a boxes?")
+    assert r.intents == (L.Intent.RACE_PLAN,)
+    assert L.route("when should I pit").intents == (L.Intent.RACE_PLAN,)
+    _, a, _ = ask("dame una estrategia de carrera")  # consumption known, no length, no rules
+    assert "¿De cuántas vueltas o minutos es la carrera?" in a.text
+    _, a, _ = ask("plan de carrera de 20 vueltas")
+    assert "¿Hay parada obligatoria?" in a.text
