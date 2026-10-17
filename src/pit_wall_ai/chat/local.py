@@ -1269,20 +1269,20 @@ def _rival_line(sheet, lang, side: str, sectors: bool = False) -> tuple[str, lis
             "de": "in den letzten 30 s",
         }[lang if lang in ("es", "de") else "en"]
         text += f" {verb.capitalize()}: {_num(closing, 1, lang)} s {unit}."
-    last = sheet.value(f"{k}.last_lap_ms")
+    last = sheet.value(f"{k}.last_lap_s")
     if last is not None:
-        keys.append(f"{k}.last_lap_ms")
+        keys.append(f"{k}.last_lap_s")
         text += {
-            "es": f" Su última vuelta: {_clock(last / 1000.0, lang)}.",
-            "de": f" Seine letzte Runde: {_clock(last / 1000.0, lang)}.",
-        }.get(lang, f" Last lap: {_clock(last / 1000.0, lang)}.")
-    best = sheet.value(f"{k}.best_lap_ms")
+            "es": f" Su última vuelta: {_clock(last, lang)}.",
+            "de": f" Seine letzte Runde: {_clock(last, lang)}.",
+        }.get(lang, f" Last lap: {_clock(last, lang)}.")
+    best = sheet.value(f"{k}.best_lap_s")
     if best is not None:
-        keys.append(f"{k}.best_lap_ms")
+        keys.append(f"{k}.best_lap_s")
         text += {
-            "es": f" Su mejor vuelta: {_clock(best / 1000.0, lang)}.",
-            "de": f" Seine schnellste Runde: {_clock(best / 1000.0, lang)}.",
-        }.get(lang, f" Best lap: {_clock(best / 1000.0, lang)}.")
+            "es": f" Su mejor vuelta: {_clock(best, lang)}.",
+            "de": f" Seine schnellste Runde: {_clock(best, lang)}.",
+        }.get(lang, f" Best lap: {_clock(best, lang)}.")
     if sectors:
         deltas = [(n, sheet.value(f"{k}.sector{n}_delta_s")) for n in (1, 2, 3, 4, 5)]
         deltas = [(n, d) for n, d in deltas if d is not None]
@@ -1326,7 +1326,7 @@ def _leader_line(sheet, lang) -> tuple[str, list[str]] | None:
     keys = ["rivals.leader.name"]
     gap = sheet.value("rivals.leader.gap_s")
     laps = sheet.value("rivals.leader.laps_diff")
-    best = sheet.value("rivals.leader.best_lap_ms")
+    best = sheet.value("rivals.leader.best_lap_s")
     if laps:
         n = int(laps)
         keys.append("rivals.leader.laps_diff")
@@ -1345,11 +1345,11 @@ def _leader_line(sheet, lang) -> tuple[str, list[str]] | None:
             lang, f"The leader is {name}."
         )
     if best is not None:
-        keys.append("rivals.leader.best_lap_ms")
+        keys.append("rivals.leader.best_lap_s")
         text += {
-            "es": f" Su mejor vuelta: {_clock(best / 1000.0, lang)}.",
-            "de": f" Seine schnellste Runde: {_clock(best / 1000.0, lang)}.",
-        }.get(lang, f" Best lap: {_clock(best / 1000.0, lang)}.")
+            "es": f" Su mejor vuelta: {_clock(best, lang)}.",
+            "de": f" Seine schnellste Runde: {_clock(best, lang)}.",
+        }.get(lang, f" Best lap: {_clock(best, lang)}.")
     return text, keys
 
 

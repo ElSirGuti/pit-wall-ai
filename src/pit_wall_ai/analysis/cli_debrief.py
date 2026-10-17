@@ -12,6 +12,42 @@ from ..config import AppConfig
 from .debrief import build_debrief, to_markdown
 
 
+def _summary(cfg, a, d, lang, out) -> int:
+    from ..chat.session import make_client
+    from ..engineer.persona import from_config
+    from .debrief_speech import spoken_summary
+
+    client = None
+    if not getattr(a, "no_model", False):
+        client, why = make_client(cfg)
+        if client is None:
+            out(f"[no model: {why}; the template is used]")
+    text, source = spoken_summary(
+        d,
+        cfg,
+        client,
+        lang=lang,
+        persona_suffix=from_config(cfg.engineer.persona).system_suffix(lang),
+    )
+    out(f"[{source}] {text}")
+    if getattr(a, "speak", False):
+        from ..cli import _make_speech
+        from ..voice.speech import SpeechOutput  # noqa: F401
+
+        speech = _make_speech(cfg)
+        if not speech.start():
+            out(f"voice unavailable: {speech.error}")
+            return 1
+        import time
+
+        speech.say(text)
+        while speech.busy:
+            time.sleep(0.2)
+        time.sleep(0.5)
+        speech.stop()
+    return 0
+
+
 def cmd_debrief(
     cfg: AppConfig, a: argparse.Namespace, *, out: Callable[[str], None] = print
 ) -> int:
@@ -24,6 +60,8 @@ def cmd_debrief(
     if a.json:
         out(json.dumps(d.facts, ensure_ascii=False, indent=1))
         return 0
+    if getattr(a, "summary", False) or getattr(a, "speak", False):
+        return _summary(cfg, a, d, lang, out)
     text = to_markdown(d, lang)
     if a.out:
         p = Path(a.out)

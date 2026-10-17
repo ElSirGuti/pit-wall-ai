@@ -223,6 +223,13 @@ def penalties_block(snaps: list[Snapshot]) -> dict | None:
     pen = max((s.penalty_time for s in snaps), default=0.0)
     if pen > 0:
         out["max_penalty_s"] = round(pen, 1)
+        # one penalty is a rise of the counter; it then counts down while it is served
+        events, last = 0, 0.0
+        for s in snaps:
+            if s.penalty_time - last >= 0.5:
+                events += 1
+            last = s.penalty_time
+        out["penalties"] = events
     flags = Counter(s.flags for s in snaps if s.flags)
     seen = sorted({FLAGS[f] for f in flags if f in FLAGS and f != 5})
     if seen:

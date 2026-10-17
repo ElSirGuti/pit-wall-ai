@@ -126,7 +126,9 @@ def test_the_report_is_in_spanish_with_decimal_commas_and_says_what_it_could_not
     )
     md = to_markdown(d, "es")
     assert "1:17,737" in md and "0,56 s" in md and "Salida 11.º, llegada 10.º" in md
-    assert "* curva 7: 0,56 s" in md and "Curva 7 (curva 7)" not in md  # the placeholder is not a name
+    assert (
+        "* curva 7: 0,56 s" in md and "Curva 7 (curva 7)" not in md
+    )  # the placeholder is not a name
     assert "de penalización (blanquinegra)" in md and "1 contacto;" in md
     assert "neumáticos: faltan datos" in md
     assert "Best lap 1:17.737" in to_markdown(d, "en") or "1:17.737" in to_markdown(d, "en")

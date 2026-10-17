@@ -209,6 +209,11 @@ def _parser() -> argparse.ArgumentParser:
     )
     db.add_argument("--out", help="write the Markdown report (and the facts next to it) here")
     db.add_argument("--json", action="store_true", help="print the facts instead of the report")
+    db.add_argument("--summary", action="store_true", help="the spoken summary (3-4 sentences)")
+    db.add_argument(
+        "--speak", action="store_true", help="say the summary with the engineer's voice"
+    )
+    db.add_argument("--no-model", action="store_true", help="the template, even if a model is on")
     db.add_argument("--ac-dir", action="append", help="AC folder (repeatable)")
 
     ph = sub.add_parser(

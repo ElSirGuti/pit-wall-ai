@@ -322,9 +322,23 @@ def _add_rivals(inp: ChatInputs, sheet: FactSheet) -> None:
             add(Fact(f"{k}.closing_s", _r(abs(gap.closing_s), 1), "s"))
             add(Fact(f"{k}.is_closing", gap.closing_s > 0))
         if c.best_ms > 0:
-            add(Fact(f"{k}.best_lap_ms", c.best_ms, "ms", numbers=_time_numbers(c.best_ms)))
+            add(
+                Fact(
+                    f"{k}.best_lap_s",
+                    _r(c.best_ms / 1000, 3),
+                    "s",
+                    numbers=_time_numbers(c.best_ms),
+                )
+            )
         if c.last_ms > 0:
-            add(Fact(f"{k}.last_lap_ms", c.last_ms, "ms", numbers=_time_numbers(c.last_ms)))
+            add(
+                Fact(
+                    f"{k}.last_lap_s",
+                    _r(c.last_ms / 1000, 3),
+                    "s",
+                    numbers=_time_numbers(c.last_ms),
+                )
+            )
         if c.compound:
             add(Fact(f"{k}.compound", c.compound))
         if c.in_pit:
@@ -347,9 +361,9 @@ def _add_rivals(inp: ChatInputs, sheet: FactSheet) -> None:
         if leader.best_ms > 0:
             add(
                 Fact(
-                    "rivals.leader.best_lap_ms",
-                    leader.best_ms,
-                    "ms",
+                    "rivals.leader.best_lap_s",
+                    _r(leader.best_ms / 1000, 3),
+                    "s",
                     numbers=_time_numbers(leader.best_ms),
                 )
             )
