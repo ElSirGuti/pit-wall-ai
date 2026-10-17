@@ -136,9 +136,19 @@ class CalmConfig(_Model):
 
 
 class VoiceConfig(_Model):
-    backend: Literal["sapi", "command", "console", "none"] = (
-        "sapi"  # sapi = Windows voices; command = your own synthesiser; console = print only
+    backend: Literal["sapi", "piper", "command", "console", "none"] = (
+        "sapi"  # sapi = Windows voices; piper = local neural; command = your own synthesiser; console = print only
     )
+    # the sound of a team radio over any voice (rendered to a WAV first; adds a few tens of ms)
+    radio_effect: Literal["off", "light", "strong"] = "off"
+    piper_model: str | None = (
+        None  # path of a Piper .onnx voice (`pit-wall voices --piper-download <id>`)
+    )
+    piper_exe: str = (
+        "piper"  # the Piper program (pip install piper-tts, or a folder with piper.exe)
+    )
+    cache: bool = True  # keep the rendered fixed phrases (only when the voice is rendered to a WAV)
+    cache_dir: str | None = None  # None = ~/.pit-wall-ai/voice-cache
     # Part of the name of the audio output the voice speaks through (a headset, speakers...); None = default.
     # `pit-wall devices` lists them. For backend: command, `command` is the template (see default.yaml).
     output_device: str | None = None

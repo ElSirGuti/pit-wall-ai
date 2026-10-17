@@ -100,6 +100,8 @@ def _parser() -> argparse.ArgumentParser:
     say.add_argument(
         "--device", help="part of the name of the audio output (see `pit-wall devices`)"
     )
+    say.add_argument("--radio", choices=["off", "light", "strong"], help="the team-radio sound")
+    say.add_argument("--out", help="write the sentence to this WAV instead of playing it")
 
     sub.add_parser(
         "rules", help="list the alert rules, their thresholds and the session policies"
@@ -183,6 +185,12 @@ def _parser() -> argparse.ArgumentParser:
     vc.add_argument("--test", action="store_true", help="play a sample with each voice")
     vc.add_argument("--voice", help="only the voices whose name contains this")
     vc.add_argument("--device", help="part of the name of the audio output to play on")
+    vc.add_argument(
+        "--prerender", action="store_true", help="render the fixed phrases into the cache"
+    )
+    vc.add_argument(
+        "--piper-download", metavar="ID", help="download a Piper voice, e.g. es_ES-davefx-medium"
+    )
 
     bd = sub.add_parser("bind", help="assign a button (any device) to an action by pressing it")
     bd.add_argument("--config", help="YAML config")
@@ -437,6 +445,11 @@ def _make_speech(cfg: AppConfig, *, mute: bool = False) -> SpeechOutput:
             volume=v.volume,
             output_device=v.output_device,
             command=v.command,
+            radio_effect=v.radio_effect,
+            piper_model=v.piper_model,
+            piper_exe=v.piper_exe,
+            cache=v.cache,
+            cache_dir=v.cache_dir,
         )
     )
 
@@ -504,8 +517,13 @@ def _cmd_say(cfg: AppConfig, a: argparse.Namespace) -> int:
             update={k: val for k, val in (("name", a.voice), ("output_device", a.device)) if val}
         )
         cfg = cfg.model_copy(update={"engineer": cfg.engineer.model_copy(update={"voice": v})})
+    if getattr(a, "radio", None):
+        v = cfg.engineer.voice.model_copy(update={"radio_effect": a.radio})
+        cfg = cfg.model_copy(update={"engineer": cfg.engineer.model_copy(update={"voice": v})})
     lang = cfg.engineer.language
     text = a.text or M.say(lang, "test")
+    if getattr(a, "out", None):
+        return _say_to_file(cfg, text, a.out)
     speech = _make_speech(cfg)
     if not speech.start():
         print(f"voice unavailable: {speech.error}", file=sys.stderr)
@@ -520,6 +538,49 @@ def _cmd_say(cfg: AppConfig, a: argparse.Namespace) -> int:
     print(
         f"voice: {cfg.engineer.voice.backend}  call: {rec.queue_ms:.1f} ms after the request  "
         f"first audio: {start} after the request"
+    )
+    return 0
+
+
+def _say_to_file(cfg: AppConfig, text: str, out: str) -> int:
+    """Render a sentence with the configured voice (and radio effect) into a WAV, to listen to it or compare."""
+    import shutil
+
+    from .voice.wav_voice import WavVoice, read_pcm, render_command, piper_command
+
+    v = cfg.engineer.voice
+    lang = cfg.engineer.language
+    if v.backend == "piper" and v.piper_model:
+        cmd = piper_command(v.piper_model, v.piper_exe)
+
+        def render(t: str, p: str) -> None:
+            render_command(cmd, t, p)
+
+    elif v.backend == "command" and v.command:
+
+        def render(t: str, p: str) -> None:
+            render_command(v.command, t, p)
+
+    else:
+
+        def render(t: str, p: str) -> None:
+            from .voice.tts import synth_to_wav
+
+            synth_to_wav(t, p, voice_name=v.name, language=lang, rate=v.rate)
+
+    wv = WavVoice(render, effect=v.radio_effect)
+    t0 = time.perf_counter()
+    try:
+        path = wv.wav_for(text)
+    except Exception as exc:  # noqa: BLE001 - any engine failure is reported, not a traceback
+        print(f"could not render: {exc}", file=sys.stderr)
+        return 1
+    ms = (time.perf_counter() - t0) * 1000
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy(path, out)
+    pcm, rate = read_pcm(out)
+    print(
+        f"saved {out}: {len(pcm) / rate:.2f} s at {rate} Hz, radio effect {v.radio_effect}; rendered in {ms:.0f} ms"
     )
     return 0
 

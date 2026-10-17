@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import sys
 import time
+from pathlib import Path
 from collections.abc import Callable
 
 from ..config import AppConfig
@@ -130,7 +131,73 @@ def cmd_mic_test(
     return 0
 
 
+def _fixed_phrases(lang: str) -> list[str]:
+    """The sentences that never change: the fixed alert texts, the radio phrases, the milestone variants."""
+    from ..engineer import messages as M
+    from ..engineer.milestones import VARIANTS
+    from ..voice.radio import PHRASES
+
+    out = [t for t in M.TEXTS.get(lang, {}).values() if "{" not in t]
+    out += [t for t in PHRASES.get(lang, {}).values() if t]
+    for situations in VARIANTS.get(lang, {}).values():
+        for variants in situations.values():
+            out += list(variants)
+    return list(dict.fromkeys(out))
+
+
+def _voices_extra(cfg: AppConfig, a: argparse.Namespace, out) -> int | None:
+    """``--piper-download`` and ``--prerender``; None when neither was asked for."""
+    if getattr(a, "piper_download", None):
+        from ..voice.wav_voice import download_piper_voice
+
+        dest = Path.home() / ".pit-wall-ai" / "voices"
+        try:
+            model = download_piper_voice(a.piper_download, dest)
+        except (OSError, ValueError) as exc:
+            out(f"could not download {a.piper_download}: {exc}")
+            return 1
+        out(
+            f'downloaded to {model}\nin config/local.yaml:\n  engineer:\n    voice:\n      backend: piper\n      piper_model: "{model}"'
+        )
+        return 0
+    if getattr(a, "prerender", False):
+        v = cfg.engineer.voice
+        try:
+            backend = T.create_backend(
+                v.backend,
+                language=cfg.engineer.language,
+                voice_name=v.name,
+                rate=v.rate,
+                volume=v.volume,
+                output_device=v.output_device,
+                command=v.command,
+                radio_effect=v.radio_effect,
+                piper_model=v.piper_model,
+                piper_exe=v.piper_exe,
+                cache=True,
+                cache_dir=v.cache_dir,
+            )
+        except T.TtsUnavailable as exc:
+            out(f"cannot prepare the voice: {exc}")
+            return 1
+        if not hasattr(backend, "prerender"):
+            out(
+                "this voice speaks straight to the output (SAPI without the radio effect): there is nothing to cache. "
+                "Set engineer.voice.radio_effect or use the piper backend."
+            )
+            return 0
+        texts = _fixed_phrases(cfg.engineer.language)
+        out(f"rendering {len(texts)} fixed phrases...")
+        done, had = backend.prerender(texts)
+        out(f"{done} rendered, {had} already in the cache ({backend.cache.folder})")
+        return 0
+    return None
+
+
 def cmd_voices(cfg: AppConfig, a: argparse.Namespace, *, out: Callable[[str], None] = print) -> int:
+    extra = _voices_extra(cfg, a, out)
+    if extra is not None:
+        return extra
     try:
         voices = T.list_sapi_voices()
     except T.TtsUnavailable as exc:

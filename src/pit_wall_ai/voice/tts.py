@@ -445,7 +445,47 @@ def create_backend(
     volume: int,
     output_device: str | None = None,
     command: str | None = None,
+    radio_effect: str = "off",
+    piper_model: str | None = None,
+    piper_exe: str = "piper",
+    cache: bool = False,
+    cache_dir: str | None = None,
 ) -> TtsBackend:
+    # the voices that are rendered to a WAV first: Piper, anything with the radio effect on
+    if kind == "piper" or (radio_effect != "off" and kind in ("sapi", "command")):
+        from .wav_voice import PhraseCache, WavVoice, piper_command, render_command
+
+        if kind == "piper":
+            if not piper_model:
+                raise TtsUnavailable("voice.backend is 'piper' but voice.piper_model is empty")
+            cmd = piper_command(piper_model, piper_exe)
+
+            def render(text: str, path: str) -> None:
+                render_command(cmd, text, path)
+
+            who = f"piper|{piper_model}"
+        elif kind == "command":
+            if not command:
+                raise TtsUnavailable("voice.backend is 'command' but voice.command is empty")
+
+            def render(text: str, path: str) -> None:
+                render_command(command, text, path)
+
+            who = f"command|{command}"
+        else:
+
+            def render(text: str, path: str) -> None:
+                synth_to_wav(text, path, voice_name=voice_name, language=language, rate=rate)
+
+            who = f"sapi|{voice_name or language}|{rate}"
+        return WavVoice(
+            render,
+            effect=radio_effect,
+            cache=PhraseCache(cache_dir) if cache else None,
+            key_prefix=who,
+            device=output_device,
+            volume=volume,
+        )
     if kind == "sapi":
         return SapiTts(
             language=language,
