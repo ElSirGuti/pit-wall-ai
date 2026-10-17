@@ -40,7 +40,7 @@ Every fired alert is logged (`alert fired`) with its rule and the values that ma
 | `tyre_pressure` | > 40 psi, or a drop > 4 psi in 3 s (puncture) | on | |
 | `brake_hot` | brake temperature > 800 °C | on | auto-ignored when the sensor does not move (Supra GT4) |
 | `penalty` | `penalty_time` rises | on | seconds left to serve: seen as 10.0 at a 10 s penalty and then counting down in real time (2026-10-17) |
-| `flags` | the flag changes | **off** | seen live: 5 = chequered (end of a qualifying and of a race), 6 = penalty flag (together with a penalty; not announced, the penalty rule does it); blue, yellow, black and white not yet seen |
+| `flags` | the flag changes | **off** | seen live: 5 = chequered (end of a qualifying and of a race), 6 = the black-and-white penalty flag (it appeared when a 10 s penalty was given; not announced, the penalty rule does it); blue and yellow not yet seen, and the safety car only exists online with Real Penalty |
 | `damage` | the sum of the damage zones rises by `min_increase` | on | seen in real contacts: zones in km/h of the hit (7 to 40); allowed in a race |
 | `rival_close` | in a race, the car behind (or ahead) is within `gap_s` and the gap shrank by `min_closing_s` in 30 s | **off** | needs the CSP bridge (`tools/csp_bridge`); gaps measured from position history |
 | `rival_pit` | the car ahead in the standings enters the pit lane | **off** | needs the bridge |

@@ -22,10 +22,12 @@ cumplir), daños reales (de 2 a 40 km/h de golpe) y el desgaste por curva valida
   | 3 | `pit-wall voice --stt-device cuda --stt-model medium` | ? | ? |
   | 4 | `pit-wall voice --stt-device cuda --stt-model turbo` | ? | ? |
 
-* **Eventos que no han salido todavía**: banderas azul, amarilla, negra y blanca; safety car; salida en falso. Y
-  saber qué zona de daño es cada una (hoy son 5 números, el 4.º parece el máximo de los demás): un golpe de lado
-  conocido (por ejemplo, solo contra el muro derecho) lo aclara. Graba con `pit-wall record` y apunta la hora.
-  Con el puente (5l) el ingeniero ya los recibe por la API de CSP; falta verlos pasar.
+* **Eventos que no han salido todavía**: banderas azul y amarilla (la negra y la blanca son la bandera de
+  penalización, código 6, que salió al sancionarte 10 s: dato del autor), el safety car (solo existe con Real
+  Penalty en línea) y la salida en falso. Y saber qué zona de daño es cada una (hoy son 5 números, el 4.º parece el
+  máximo de los demás): un golpe de lado conocido (por ejemplo, solo contra el muro derecho) lo aclara. Todo esto
+  sale mejor **en línea (LFM)**: banderas con tráfico real, safety car y carreras por tiempo. Graba con
+  `pit-wall record` y apunta la hora; el ingeniero ya los recibe por la API de CSP.
 
 ## 2. Voz: lo que falta de probar  ·  `docs/VOICE.md`
 
@@ -50,9 +52,6 @@ dichos (el 2026-10-17 arreglé "14,0 metros" que se leía como una hora). Falta:
 
 ## 4. Seguridad y decisiones
 
-* **Rotar la clave de Gemini.** Las dos claves que has usado quedaron escritas en la conversación. Entra a
-  Google AI Studio > API keys, borra las usadas y crea una nueva solo para el proyecto; ponla en `.env` como
-  `GEMINI_API_KEY=...` (`.env` está ignorado por git).
 * **Claves de reserva**: Gemini devuelve a menudo 503 ("high demand") y timeouts (2026-10-16) y el ingeniero cae al
   texto de respaldo. Una segunda clave (`GEMINI_API_KEY_2` o `GEMINI_API_KEY_LIST=a,b,c`) o un proveedor de
   reserva (`docs/PROVIDERS_PLAN.md`) lo reduce. Revisa los términos de Google antes de usar muchas cuentas
@@ -67,8 +66,10 @@ Visto el 2026-10-17: el fin de qualy y el resultado de una carrera por vueltas s
 meta en la posición 10"). Falta:
 
 * una **qualy en la que salgas primero** para oír el mensaje de pole provisional y de pole;
-* una **carrera por tiempo** (sin número de vueltas): el final ya se detecta con el dato del puente (tu coche
-  terminó), falta verlo en una carrera real.
+* una **carrera por tiempo** (sin número de vueltas): solo existe **en línea** (en el servidor LFM, por ejemplo). El
+  final ya se detecta con el dato del puente (tu coche terminó); falta verlo en una carrera real. Para probar en línea
+  recuerda que `pit-wall record` y `voice` funcionan igual, y que el ingeniero dirá nombres de otros pilotos (ver
+  `use_names` de las alertas).
 
 ## 5b. Memoria del ingeniero
 
@@ -131,8 +132,6 @@ Probado en vivo el 2026-10-17 (Maserati GT4, 16 coches): el desgaste real, las t
 los nombres de los rivales, la posición, los intervalos en segundos ("a 0,4 segundos", "se está acercando a 0,2") y
 la comparación de la última vuelta; sin errores. Falta:
 
-* **Comparar los intervalos con tu leaderboard de CMRT** en una carrera: deben coincidir a ±0,2 s. Lo que dijo el
-  ingeniero tuvo sentido, pero no se ha comparado número a número.
 * **Encender las alertas** que quieras (`engineer.rules.rival_close`, `rival_pit`, `csp_flags`) en
   `config/local.yaml`; están apagadas hasta ver que los datos son buenos.
 * El puente envía también grano, ampollas, puntos planos y kilómetros virtuales de los neumáticos (0.3): aún no los
@@ -224,6 +223,7 @@ Hecho el 2026-10-17: líder, temperatura del aire y de la pista, última vuelta 
 
 ## Ya cerrado
 
+* ~~Clave de Gemini rotada~~ (2026-10-17) y ~~intervalos de rivales verificados contra CMRT~~ (coinciden).
 * ~~Fin de semana completo con el Maserati GT4~~ (2026-10-17): práctica, qualy y carrera de 8 vueltas con la voz, el
   puente 0.3 y las grabaciones; verificados el desgaste real, las temperaturas de frenos, los rivales con intervalos,
   la bandera a cuadros, la de penalización (10 s, segundos por cumplir) y el daño; regla de daño encendida.
