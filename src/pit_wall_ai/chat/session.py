@@ -152,6 +152,52 @@ class ChatStats:
     claims_removed: int = 0
 
 
+_CHECKLIST_WORDS = (
+    "checklist",
+    "lista de practica",
+    "plan de practica",
+    "mi lista",
+    "la lista",
+    "que me falta",
+    "que falta de la",
+)
+_EDIT_VERBS = (
+    "quita",
+    "quitar",
+    "elimina",
+    "borra",
+    "anade",
+    "agrega",
+    "pon",
+    "salta",
+    "cambia",
+    "mueve",
+    "sube",
+    "baja",
+    "simula",
+    "anadir",
+)
+
+
+def _is_checklist_talk(question: str) -> bool:
+    q = " ".join(L.norm(question).split())
+    return any(w in q for w in _CHECKLIST_WORDS) or ("deshaz" in q and "lista" in q)
+
+
+def _spoken_checklist(cl) -> str:
+    items = cl.visible()
+    if not items:
+        return "La lista está vacía."
+    done = sum(1 for i in items if i.status == "done")
+    nxt = next((i for i in items if i.status in ("pending", "active")), None)
+    text = f"Llevas {done} de {len(items)} hechos."
+    if nxt is not None:
+        text += f" Sigue: {nxt.title()}."
+        if nxt.note:
+            text += f" Ojo: {nxt.note}."
+    return text
+
+
 _DEBRIEF_ASKS = (
     "resumen de la sesion",
     "resumen de la carrera",
@@ -231,6 +277,8 @@ class ChatSession:
             if mem is not None:
                 self.stats.local += 1
                 return ChatReply(mem.text, "local", ("recall",))
+        if not force_model and inp.checklist is not None and _is_checklist_talk(question):
+            return self._checklist_reply(question, inp)
         if not force_model and inp.debrief is not None and _asks_for_debrief(question):
             self.stats.local += 1
             return ChatReply(inp.debrief(), "local", ("debrief",))
@@ -251,6 +299,28 @@ class ChatSession:
             self.stats.unavailable += 1
             return ChatReply(self._unavailable_text(), "unavailable", note="no model")
         return self._ask_model(question, inp, sheet)
+
+    def _checklist_reply(self, question: str, inp: ChatInputs) -> ChatReply:
+        from ..analysis.checklist_edit import edit_with_model
+
+        cl = inp.checklist
+        q = " ".join(L.norm(question).split())
+        self.stats.local += 1
+        if any(w in q for w in ("deshaz", "deshacer", "undo")):
+            res = cl.undo()
+            self._save_checklist(inp)
+            return ChatReply(
+                "Deshecho." if res.ok else "No hay nada que deshacer.", "local", ("checklist",)
+            )
+        if not any(v in q.split() for v in _EDIT_VERBS):
+            return ChatReply(_spoken_checklist(cl), "local", ("checklist",))
+        ok, text = edit_with_model(self.client, cl, question, lang=self.lang)
+        if ok:
+            self._save_checklist(inp)
+        return ChatReply(text, "model" if self.client is not None else "local", ("checklist",))
+
+    def _save_checklist(self, inp: ChatInputs) -> None:
+        inp.checklist.save()  # to the file it was loaded from
 
     @staticmethod
     def _previous(inp: ChatInputs):

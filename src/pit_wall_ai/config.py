@@ -347,6 +347,13 @@ class DebriefConfig(_Model):
     sessions_path: str | None = None  # None = ~/.pit-wall-ai/sessions.jsonl
 
 
+class ChecklistConfig(_Model):
+    """The editable practice checklist that ticks itself (``docs/PHASE8_PLAN.md`` 1.3)."""
+
+    enabled: bool = True
+    path: str | None = None  # None = ~/.pit-wall-ai/checklist.json
+
+
 class MilestonesConfig(_Model):
     """Pole, grid and result messages: "tenemos pole provisional", "felicidades por esa remontada"."""
 
@@ -371,6 +378,7 @@ class EngineerConfig(_Model):
     persona: PersonaConfig = PersonaConfig()
     milestones: MilestonesConfig = MilestonesConfig()
     debrief: DebriefConfig = DebriefConfig()
+    checklist: ChecklistConfig = ChecklistConfig()
     memory: MemoryConfig = MemoryConfig()
     calm: CalmConfig = CalmConfig()
     policies: PoliciesConfig = PoliciesConfig()

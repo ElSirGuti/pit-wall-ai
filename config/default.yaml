@@ -65,6 +65,9 @@ engineer:               # phase 3: rule alerts spoken by the race engineer
     history: true       # one line per session in sessions.jsonl, for "against last time"
     dir: null           # null = ~/.pit-wall-ai/debriefs
     sessions_path: null # null = ~/.pit-wall-ai/sessions.jsonl
+  checklist:            # phase 8a: the practice plan that ticks itself; edit it by voice or `pit-wall checklist`
+    enabled: true
+    path: null          # null = ~/.pit-wall-ai/checklist.json
   persona:              # phase 6b: who the engineer is and how they speak (the wording, never the data)
     name: null          # how the engineer introduces themselves; null = the name of the voice (Sabina...)
     driver_name: null   # how the engineer calls you

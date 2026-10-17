@@ -78,6 +78,19 @@ class ChatRuntime:
             threaded=live,
         )
         self.engine.add_sample_hook(self.live_debrief.on_sample)
+        # the practice checklist: it ticks itself when a lap is completed
+        from ..analysis.checklist import Checklist
+
+        self.checklist_path = (
+            Path(cfg.engineer.checklist.path)
+            if cfg.engineer.checklist.path
+            else Path.home() / ".pit-wall-ai" / "checklist.json"
+        )
+        self.checklist = (
+            Checklist.load(self.checklist_path) if cfg.engineer.checklist.enabled else None
+        )
+        if self.checklist is not None:
+            self.engine.add_sample_hook(self._tick_checklist)
         # pole / grid / result messages; the client is set by whoever builds the chat (it may be absent)
         self.milestones = attach_milestones(
             self.engine,
@@ -104,6 +117,14 @@ class ChatRuntime:
             n += 1
         self.engine.flush()
         return n
+
+    def _tick_checklist(self, snap, state, tracker, events) -> None:
+        from ..events import LapCompleted
+
+        if self.checklist is None or not any(isinstance(e, LapCompleted) for e in events):
+            return
+        if self.checklist.autotick(list(tracker.laps)) and self.live:
+            self.checklist.save()
 
     def _rivals(self):
         if not self.live:
@@ -132,5 +153,6 @@ class ChatRuntime:
             memory=self.memory,
             now=now,
             debrief=self.live_debrief.request,
+            checklist=self.checklist,
             rivals=self._rivals(),
         )

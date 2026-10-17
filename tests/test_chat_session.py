@@ -300,3 +300,52 @@ def test_the_names_of_other_drivers_never_reach_the_model_but_the_local_answers_
     s2, p2 = session("ok", cfg=cfg, inputs=lambda: inp2)
     s2.ask("¿qué opinas de mi ritmo?")
     assert "Piloto1" in str(p2.requests[0].context)
+
+
+def _checklist_session(replies):
+    from pit_wall_ai.analysis.checklist import Checklist
+
+    cl = Checklist()
+    cl.apply({"op": "add", "kind": "stint", "params": {"compound": "Wet", "laps": 3}})
+    cl.apply({"op": "add", "kind": "quali_sim", "params": {"fuel_l": 15}})
+    inp = synthetic_inputs()
+    inp.checklist = cl
+    s, p = session(*replies, inputs=lambda: inp)
+    return s, p, cl
+
+
+def test_the_chat_reads_the_checklist_back_without_the_model():
+    s, p, cl = _checklist_session(["no deberia llamarse"])
+    r = s.ask("¿qué me falta de la lista?")
+    assert (
+        r.source == "local" and "0 de 2" in r.text and "Sigue: stint" in r.text and p.requests == []
+    )
+
+
+def test_the_chat_edits_the_checklist_through_operations_and_undoes_them():
+    s, p, cl = _checklist_session(['[{"op":"remove","id":"C1","reason":"está seco"}]'])
+    r = s.ask("quita lo de mojado de la lista, está seco")
+    assert "- C1" in r.text and cl.get("C1") is None and p.requests
+    assert (
+        s.ask("deshaz el último cambio de la lista").text == "Deshecho."
+        and cl.get("C1") is not None
+    )
+
+
+def test_a_bad_edit_from_the_model_changes_nothing_and_says_why():
+    s, _, cl = _checklist_session(['[{"op":"remove","id":"C9"}]'])
+    r = s.ask("quita el stint de la lista")
+    assert "No lo cambié" in r.text and cl.get("C1") is not None
+
+
+def test_a_recorded_practice_ticks_the_checklist_by_itself():
+    from pit_wall_ai.chat.runtime import ChatRuntime
+
+    cfg = AppConfig()
+    rt = ChatRuntime(cfg, live=False)
+    rt.checklist.items.clear()
+    rt.checklist.apply({"op": "add", "kind": "stint", "params": {"laps": 2}})
+    rt.feed_file(FIXTURE, session="race")
+    assert rt.checklist.get("C1").status == "done" and rt.checklist.get("C1").evidence.startswith(
+        "laps"
+    )

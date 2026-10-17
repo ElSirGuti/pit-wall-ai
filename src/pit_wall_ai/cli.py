@@ -232,6 +232,31 @@ def _parser() -> argparse.ArgumentParser:
     db.add_argument("--no-model", action="store_true", help="the template, even if a model is on")
     db.add_argument("--ac-dir", action="append", help="AC folder (repeatable)")
 
+    ck = sub.add_parser("checklist", help="the practice checklist: show it and edit it")
+    ck.add_argument(
+        "action",
+        choices=["show", "add", "remove", "skip", "replace", "reorder", "rule", "undo", "clear"],
+    )
+    ck.add_argument("--config", help="YAML config")
+    ck.add_argument("--path", help="the checklist file (default ~/.pit-wall-ai/checklist.json)")
+    ck.add_argument(
+        "--kind", default="stint", help="stint | quali_sim | race_sim | setup_test | info"
+    )
+    ck.add_argument("--id", help="the item (C1, C2...)")
+    ck.add_argument("--compound")
+    ck.add_argument("--laps", type=int)
+    ck.add_argument("--fuel", type=float, help="litres at the start of the stint")
+    ck.add_argument("--text")
+    ck.add_argument("--position", type=int)
+    ck.add_argument("--reason")
+    ck.add_argument(
+        "--rule", help="mandatory_stop | stop_requires_tyres | compounds_distinct_required | window"
+    )
+    ck.add_argument("--value", help="for rule: none|one|n, true|false, or 8-12")
+    ck.add_argument(
+        "--conditions", choices=["dry", "wet"], help="the track now, for the tyre guard"
+    )
+
     ph = sub.add_parser(
         "phrases",
         help="record the phrases of docs/FRASES_VOZ.md and measure the recogniser on them",
@@ -852,6 +877,12 @@ def _cmd_debrief(cfg: AppConfig, a: argparse.Namespace) -> int:
     return cmd_debrief(cfg, a)
 
 
+def _cmd_checklist(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .analysis.cli_checklist import cmd_checklist
+
+    return cmd_checklist(cfg, a)
+
+
 def _cmd_phrases(cfg: AppConfig, a: argparse.Namespace) -> int:
     from .stt.cli_phrases import cmd_phrases_record, cmd_phrases_test
 
@@ -1006,6 +1037,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "bindings": _cmd_bindings,
             "input-test": _cmd_input_test,
             "debrief": _cmd_debrief,
+            "checklist": _cmd_checklist,
             "phrases": _cmd_phrases,
             "bridge-install": _cmd_bridge_install,
             "bridge-test": _cmd_bridge_test,
