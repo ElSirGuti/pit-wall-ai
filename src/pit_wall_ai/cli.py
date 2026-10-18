@@ -639,6 +639,13 @@ def _say_to_file(cfg: AppConfig, text: str, out: str) -> int:
 
             synth_to_wav(t, p, voice_name=v.name, language=lang, rate=v.rate)
 
+    from .voice.tts import pronounce
+
+    say = render
+
+    def render(t: str, p: str) -> None:
+        say(pronounce(t, lang), p)
+
     wv = WavVoice(render, effect=v.radio_effect)
     t0 = time.perf_counter()
     try:

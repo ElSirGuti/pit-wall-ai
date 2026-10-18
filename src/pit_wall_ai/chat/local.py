@@ -1333,9 +1333,9 @@ def _rival_line(sheet, lang, side: str, sectors: bool = False) -> tuple[str, lis
             "de": ("kommt näher" if is_closing else "fährt weg"),
         }[lang if lang in ("es", "de") else "en"]
         unit = {
-            "es": "en los últimos 30 s",
-            "en": "over the last 30 s",
-            "de": "in den letzten 30 s",
+            "es": "en el último medio minuto",
+            "en": "over the last half minute",
+            "de": "in der letzten halben Minute",
         }[lang if lang in ("es", "de") else "en"]
         text += f" {verb.capitalize()}: {_num(closing, 1, lang)} s {unit}."
     last = sheet.value(f"{k}.last_lap_s")

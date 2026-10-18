@@ -131,3 +131,20 @@ def test_the_backend_factory_chooses_the_wav_voice_for_piper_and_for_the_radio_e
     with pytest.raises(TtsUnavailable):
         create_backend("piper", **kw)  # no model
     assert not isinstance(create_backend("console", **kw), WavVoice)
+
+
+def test_the_rendered_text_is_pronounced_like_the_direct_voice(monkeypatch, tmp_path):
+    from pit_wall_ai.voice import tts
+
+    seen = []
+
+    def fake_synth(text, path, **kw):
+        seen.append(text)
+        write_pcm(path, np.zeros(1600, dtype=np.int16), 16000)
+
+    monkeypatch.setattr(tts, "synth_to_wav", fake_synth)
+    v = create_backend(
+        "sapi", language="es", voice_name=None, rate=0, volume=100, radio_effect="strong"
+    )
+    v.wav_for("22,8 psi en los últimos 30 s.")
+    assert seen == ["22 coma 8 pe ese i en los últimos 30 segundos."]

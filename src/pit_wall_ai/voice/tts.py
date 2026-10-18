@@ -492,6 +492,13 @@ def create_backend(
                 synth_to_wav(text, path, voice_name=voice_name, language=language, rate=rate)
 
             who = f"sapi|{voice_name or language}|{rate}"
+        say = render
+
+        def render(
+            text: str, path: str
+        ) -> None:  # "psi", decimal commas and "30 s" as the voice must read them
+            say(pronounce(text, language), path)
+
         return WavVoice(
             render,
             effect=radio_effect,
