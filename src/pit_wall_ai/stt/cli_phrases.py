@@ -220,7 +220,9 @@ def run_test(
         u = read_audio(path)
         t = transcriber.transcribe(u.pcm, hotwords=hotwords)
         heard = fix_transcript(t.text)
-        w = word_error_rate(ref, heard)
+        w = word_error_rate(
+            ref, heard, numbers_equal=True
+        )  # the chat understands "seis" and "6" alike
         count = len(ref.split())
         errs += w * count
         words += count
@@ -269,10 +271,16 @@ def cmd_phrases_test(
     except SttUnavailable as exc:
         out(str(exc))
         return 1
-    names = [text for text, _ in phrases.values()]
-    res = run_test(
-        tr, files, phrases, hotwords=build_hotwords(extra=names[:0], lang=a.lang), out=out
-    )
+    corners: list[str] = []
+    if getattr(
+        a, "track", None
+    ):  # the names of the circuit's corners, as the live voice gives them to the recogniser
+        from ..analysis.circuit_names import circuit_for
+
+        circuit = circuit_for(a.track)
+        corners = [c["name"] for c in (circuit or {}).get("corners", []) if c.get("name")]
+        out(f"[hotwords: {len(corners)} corner names of {a.track}]")
+    res = run_test(tr, files, phrases, hotwords=build_hotwords(corners, lang=a.lang), out=out)
     out(
         f"\n{res['exact']} of {res['phrases']} phrases exact; word error rate {res['wer'] * 100:.1f} %; "
         f"mean latency {res['mean_latency_s']:.2f} s"

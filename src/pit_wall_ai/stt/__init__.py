@@ -245,15 +245,41 @@ def cuda_available() -> bool:
 
 
 # -- word error rate ----------------------------------------------------------------------------------
-def _norm(text: str) -> list[str]:
+_NUMBER_WORDS = {
+    **{
+        w: str(i)
+        for i, w in enumerate(
+            ["cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez", "once", "doce", "trece", "catorce", "quince"]
+        )
+    },
+    **{
+        w: str(i)
+        for i, w in enumerate(
+            ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen"]
+        )
+    },
+    **{
+        w: str(i)
+        for i, w in enumerate(
+            ["null", "eins", "zwei", "drei", "vier", "funf", "sechs", "sieben", "acht", "neun", "zehn", "elf", "zwolf", "dreizehn", "vierzehn", "funfzehn"]
+        )
+    },
+    "una": "1",
+    "um": "1",
+}
+
+
+def _norm(text: str, numbers: bool = False) -> list[str]:
+    """Lower case, no accents, no punctuation; with ``numbers`` the number words become digits ("seis" = "6")."""
     t = unicodedata.normalize("NFKD", text.lower())
     t = "".join(c for c in t if not unicodedata.combining(c))
-    return re.findall(r"[a-z0-9]+(?:[.,][0-9]+)?", t)
+    words = re.findall(r"[a-z0-9]+(?:[.,][0-9]+)?", t)
+    return [_NUMBER_WORDS.get(w, w) for w in words] if numbers else words
 
 
-def word_error_rate(reference: str, hypothesis: str) -> float:
+def word_error_rate(reference: str, hypothesis: str, *, numbers_equal: bool = False) -> float:
     """Levenshtein distance over words / words in the reference; case, accents and punctuation ignored."""
-    r, h = _norm(reference), _norm(hypothesis)
+    r, h = _norm(reference, numbers_equal), _norm(hypothesis, numbers_equal)
     if not r:
         return 0.0 if not h else 1.0
     prev = list(range(len(h) + 1))

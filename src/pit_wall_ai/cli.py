@@ -302,6 +302,10 @@ def _parser() -> argparse.ArgumentParser:
             pp.add_argument("--dir", help="another folder (e.g. frases/telefono)")
             pp.add_argument("--device", choices=["cpu", "cuda"], help="override stt.device")
             pp.add_argument("--model", help="tiny | base | small | medium | high | turbo")
+            pp.add_argument(
+                "--track",
+                help="a circuit (magione, monza...): its corner names help the recogniser",
+            )
 
     bi = sub.add_parser(
         "bridge-install", help="copy the CSP Lua bridge app into the game's apps/lua"
