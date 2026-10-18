@@ -249,19 +249,70 @@ _NUMBER_WORDS = {
     **{
         w: str(i)
         for i, w in enumerate(
-            ["cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez", "once", "doce", "trece", "catorce", "quince"]
+            [
+                "cero",
+                "uno",
+                "dos",
+                "tres",
+                "cuatro",
+                "cinco",
+                "seis",
+                "siete",
+                "ocho",
+                "nueve",
+                "diez",
+                "once",
+                "doce",
+                "trece",
+                "catorce",
+                "quince",
+            ]
         )
     },
     **{
         w: str(i)
         for i, w in enumerate(
-            ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen"]
+            [
+                "zero",
+                "one",
+                "two",
+                "three",
+                "four",
+                "five",
+                "six",
+                "seven",
+                "eight",
+                "nine",
+                "ten",
+                "eleven",
+                "twelve",
+                "thirteen",
+                "fourteen",
+                "fifteen",
+            ]
         )
     },
     **{
         w: str(i)
         for i, w in enumerate(
-            ["null", "eins", "zwei", "drei", "vier", "funf", "sechs", "sieben", "acht", "neun", "zehn", "elf", "zwolf", "dreizehn", "vierzehn", "funfzehn"]
+            [
+                "null",
+                "eins",
+                "zwei",
+                "drei",
+                "vier",
+                "funf",
+                "sechs",
+                "sieben",
+                "acht",
+                "neun",
+                "zehn",
+                "elf",
+                "zwolf",
+                "dreizehn",
+                "vierzehn",
+                "funfzehn",
+            ]
         )
     },
     "una": "1",

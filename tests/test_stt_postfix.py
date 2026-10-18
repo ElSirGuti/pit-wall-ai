@@ -40,3 +40,9 @@ def test_corner_names_and_number_words_are_not_errors():
     )  # the phrase test: the chat understands both
     assert word_error_rate("curva once", "curva 11", numbers_equal=True) == 0.0
     assert word_error_rate("curva once", "curva 12", numbers_equal=True) > 0
+
+
+def test_the_mishearings_of_the_phrase_test_are_corrected():
+    assert fix("y en la prima ese") == "y en la prima esse"
+    assert "cuanto se han desgastado" in fix("¿Cuántos se han desgastado los neumáticos?")
+    assert fix("no te entendí, di lo otra vez") == "no te entendí, dilo otra vez"

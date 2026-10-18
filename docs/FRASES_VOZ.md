@@ -90,7 +90,12 @@ casco. Dime cuáles has dejado y los mido: `pit-wall stt-test frases/telefono/*.
 
 ## Estado
 
-* [ ] tanda A (silencio)
+* [x] tanda A (silencio), 2026-10-18, voz del autor, micrófono Razer Seiren Mini, GPU, con los nombres de las curvas de Magione como pistas:
+  `small` 38 de 40 exactas, 1,4 % de palabras erróneas, 0,41 s por frase; `medium` 38 de 40, 0,9 %, 0,96 s; `turbo` 38 de 40, 0,9 %,
+  1,21 s (y 153 s en cargar). Sin pistas de curvas y contando "seis" distinto de "6", `small` daba 32 de 40 y 4,2 %: la
+  diferencia eran las cifras escritas con dígitos y los nombres propios. Fallos que quedaron: "cuántos se han
+  desgastado", "prima ese", "di lo otra vez" y la "y" de la 40 (ya hay correcciones). En silencio no hay motivo para
+  pasar de `small`.
 * [ ] tanda B (con motor)
 * [ ] cifras anotadas en `docs/PHASE6_PLAN.md`
 

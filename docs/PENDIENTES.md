@@ -35,7 +35,9 @@ Hecho: micrófono (Razer Seiren Mini), voz Sabina, botón 10 del G29, conversaci
 qualy y una carrera de 8 vueltas con el reconocimiento en la GPU (0,6 a 1,2 s), "psi" y los números con coma bien
 dichos (el 2026-10-17 arreglé "14,0 metros" que se leía como una hora). Falta:
 
-* **Frases habladas** (`docs/FRASES_VOZ.md`): las 40 en español, en silencio y con el coche sonando. Es guiado:
+* **Frases habladas** (`docs/FRASES_VOZ.md`): la **tanda A (silencio) está hecha** (2026-10-18: `small` 38 de 40, 1,4 %, 0,41 s;
+  `medium` y `turbo` igual de exactas y 2 a 3 veces más lentas; se queda `small`). Falta la **tanda B con el motor
+  sonando** (`--set B`), que es la que puede cambiar la decisión. Es guiado:
   `pit-wall phrases record --set A` (Enter para empezar, Enter para parar; `--set B` con el motor, `--only 3,6-8`) y
   `pit-wall phrases test --set A --device cuda` las mide (`--model medium` o `turbo` para comparar,
   `--dir frases/telefono` para las del móvil; también `--lang de` y `--lang en`). Con ellas se cierra el paso 5 de
