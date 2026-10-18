@@ -78,7 +78,25 @@ about 0.4 s after the button is released (the first audio adds the voice's start
 about 1 s). Where it should run is a per-game choice (`stt.device: auto | cpu | cuda`): measure it with
 `pit-wall stt-test --device both --repeat 30` while the game is open and compare the frame rate.
 
-## 8. When something does not work
+## 8. The radio sound, other voices and the phrase tests
+
+* **Team-radio sound** over any voice: `engineer.voice.radio_effect: light | strong | off`. Hear it first with
+  `pit-wall say "text" --radio strong` (or `--out radio.wav` to write the file). The sentence is rendered to a WAV, given
+  the narrow band, a soft compressor, a light bit-crush, low noise and a squelch click at both ends, and played through the
+  chosen output; it adds a few tens of milliseconds.
+* **Piper** (local neural voice, CPU only): `pip install piper-tts`, `pit-wall voices --piper-download es_ES-davefx-medium`
+  and put the lines it prints in `config/local.yaml` (`backend: piper`, `piper_model: ...`).
+* **Cache**: the fixed phrases (alert texts, "un momento", the milestone variants) are rendered once per voice; do it ahead of
+  time with `pit-wall voices --prerender`. `engineer.voice.cache: false` turns it off.
+* **Profiles**: `voice_profiles/<id>.yaml` (local, git-ignored) sets the engine, the voice, the radio effect and the
+  engineer's name; `engineer.voice.profile: <id>` selects it. A **local zero-shot server** (XTTS, GPT-SoVITS...) is used
+  through the `http` engine (loopback addresses only) with a reference clip that **you supply and have the right to use**;
+  nothing is uploaded and this project ships no voice of a real person.
+* **Your own phrases**: `pit-wall phrases record --set A` shows the 40 phrases of `docs/FRASES_VOZ.md` one by one and records
+  them (Enter to start, Enter to stop; `--set B` with the engine on, `--lang de|en` for the other languages);
+  `pit-wall phrases test --set A --device cuda --model medium` reports the word error rate and the latency per phrase.
+
+## 9. When something does not work
 
 | Symptom | Look at |
 |---|---|

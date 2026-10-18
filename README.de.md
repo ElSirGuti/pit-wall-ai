@@ -132,6 +132,33 @@ pit-wall llm-check --allow-cloud    # das Cloud-Modell testen
 Ein Chat, jeder Dienst: Der Plan für andere Anbieter und die endgültige `.exe` steht in
 [docs/PROVIDERS_PLAN.md](docs/PROVIDERS_PLAN.md).
 
+```powershell
+# Die CSP-Brücke: der echte Reifenverschleiß, Bremstemperaturen, Flaggen, Strafe, Schaden und die anderen Autos (Abstände in Sekunden)
+pit-wall bridge-install              # kopiert die Lua-App ins Spiel (Assetto Corsa mit Custom Shaders Patch)
+pit-wall bridge-test                 # zeigt, was während einer Sitzung ankommt (siehe tools/csp_bridge/README.de.md)
+
+# Phase 7: die Nachbesprechung einer Sitzung (Bericht, Zahlen, kurze gesprochene Zusammenfassung, eine Seite mit Diagrammen)
+pit-wall debrief rennen.pwrec.gz --summary
+pit-wall debrief rennen.pwrec.gz --out bericht.md --save   # auch bericht.html und bericht.json; merkt sich die Sitzung für „gegenüber dem letzten Mal“
+
+# Phase 8a: der Rennplaner und die Trainings-Checkliste
+pit-wall plan --laps 20 --fuel-per-lap 2.0 --tank 25 --window 8-12 --lap-time 80 --deg 0.05 --pit-loss 22
+pit-wall checklist add --kind stint --compound Medium --laps 5 --fuel 20
+pit-wall checklist show              # hakt sich selbst anhand der Runden ab; auch per Sprache editierbar
+
+# Stimmen: der Teamfunk-Klang, Piper, der Zwischenspeicher und die Spracherkennung mit deinen eigenen Sätzen getestet
+pit-wall say "Bloqueo delantero izquierdo" --radio strong --out funk.wav
+pit-wall voices --piper-download de_DE-thorsten-medium
+pit-wall voices --prerender
+pit-wall phrases record --set A --lang de
+pit-wall phrases test --set A --lang de --device cuda
+```
+
+Nachbesprechung, Rennplaner und Stimmen sind in [docs/PHASE7_PLAN.md](docs/PHASE7_PLAN.md),
+[docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md) und [docs/VOICES_PLAN.md](docs/VOICES_PLAN.md) beschrieben; was die Apps
+des Spiels liefern und was davon genutzt wird, steht in [docs/AC_APPS_NOTES.md](docs/AC_APPS_NOTES.md). Die Namen
+anderer Fahrer bleiben auf deinem Rechner: sie gehen nicht an das Modell, außer `chat.rival_names_to_model` ist an.
+
 `pit-wall --help` listet alle Optionen auf. Die Prüfungen laufen mit `pytest` und `ruff check src tests`.
 
 ## Konfiguration

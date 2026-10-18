@@ -128,6 +128,33 @@ pit-wall llm-check --allow-cloud    # probar el modelo en la nube
 Un chat, cualquier servicio: el plan para otros proveedores y el `.exe` final está en
 [docs/PROVIDERS_PLAN.md](docs/PROVIDERS_PLAN.md).
 
+```powershell
+# El puente de CSP: el desgaste real, temperaturas de frenos, banderas, penalización, daño y los demás coches (intervalos en segundos)
+pit-wall bridge-install              # copia la app Lua al juego (Assetto Corsa con Custom Shaders Patch)
+pit-wall bridge-test                 # muestra lo que llega mientras hay una sesión (ver tools/csp_bridge/README.md)
+
+# Fase 7: el resumen de una sesión (informe, cifras, un resumen hablado corto, una página con gráficos)
+pit-wall debrief carrera.pwrec.gz --summary
+pit-wall debrief carrera.pwrec.gz --out informe.md --save   # también informe.html e informe.json; guarda la sesión para "contra la última vez"
+
+# Fase 8a: el planificador de carrera y la checklist de práctica
+pit-wall plan --laps 20 --fuel-per-lap 2.0 --tank 25 --window 8-12 --lap-time 80 --deg 0.05 --pit-loss 22
+pit-wall checklist add --kind stint --compound Medium --laps 5 --fuel 20
+pit-wall checklist show              # se marca sola con las vueltas; también por voz ("quita lo de mojado")
+
+# Voces: el sonido de radio de equipo, Piper, la caché y el reconocimiento probado con tus frases
+pit-wall say "Bloqueo delantero izquierdo" --radio strong --out radio.wav
+pit-wall voices --piper-download es_ES-davefx-medium
+pit-wall voices --prerender
+pit-wall phrases record --set A      # las 40 frases de docs/FRASES_VOZ.md, una a una
+pit-wall phrases test --set A --device cuda
+```
+
+El resumen, el planificador de carrera y las voces se explican en [docs/PHASE7_PLAN.md](docs/PHASE7_PLAN.md),
+[docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md) y [docs/VOICES_PLAN.md](docs/VOICES_PLAN.md); lo que exponen las apps del
+juego y lo que se usa está en [docs/AC_APPS_NOTES.md](docs/AC_APPS_NOTES.md). Los nombres de otros pilotos se quedan
+en tu equipo: no se mandan al modelo salvo que `chat.rival_names_to_model` esté activo.
+
 `pit-wall --help` lista todas las opciones. Las comprobaciones: `pytest` y `ruff check src tests`.
 
 ## Configuración

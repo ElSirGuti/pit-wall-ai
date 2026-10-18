@@ -127,6 +127,33 @@ pit-wall llm-check --allow-cloud    # test the cloud model
 One chat, any service: the plan for other providers and the final `.exe` is in
 [docs/PROVIDERS_PLAN.md](docs/PROVIDERS_PLAN.md).
 
+```powershell
+# The CSP bridge: the real tyre wear, brake temperatures, flags, penalty, damage and the other cars (gaps in seconds)
+pit-wall bridge-install              # copies the Lua app into the game (Assetto Corsa with Custom Shaders Patch)
+pit-wall bridge-test                 # shows what arrives while a session runs (see tools/csp_bridge/README.md)
+
+# Phase 7: the debrief of a session (report, facts, a short spoken summary, a page with charts)
+pit-wall debrief race.pwrec.gz --summary
+pit-wall debrief race.pwrec.gz --out report.md --save   # also report.html and report.json; keeps the session for "against last time"
+
+# Phase 8a: the race planner and the practice checklist
+pit-wall plan --laps 20 --fuel-per-lap 2.0 --tank 25 --window 8-12 --lap-time 80 --deg 0.05 --pit-loss 22
+pit-wall checklist add --kind stint --compound Medium --laps 5 --fuel 20
+pit-wall checklist show              # it ticks itself from the laps; edit it by voice too ("quita lo de mojado")
+
+# Voices: the team-radio sound, Piper, the cache, and the recogniser tested on your own phrases
+pit-wall say "Bloqueo delantero izquierdo" --radio strong --out radio.wav
+pit-wall voices --piper-download es_ES-davefx-medium
+pit-wall voices --prerender
+pit-wall phrases record --set A      # the 40 phrases of docs/FRASES_VOZ.md, one by one
+pit-wall phrases test --set A --device cuda
+```
+
+The debrief, the race planner and the voices are explained in [docs/PHASE7_PLAN.md](docs/PHASE7_PLAN.md),
+[docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md) and [docs/VOICES_PLAN.md](docs/VOICES_PLAN.md); what the apps of the game
+expose and what is used is in [docs/AC_APPS_NOTES.md](docs/AC_APPS_NOTES.md). Other drivers' names stay on your
+machine: they are not sent to the model unless `chat.rival_names_to_model` is on.
+
 `pit-wall --help` lists every option. Run the checks with `pytest` and `ruff check src tests`.
 
 ## Configuration

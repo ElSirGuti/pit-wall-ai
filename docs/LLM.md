@@ -23,6 +23,18 @@ The question and a compact summary of the session. Never raw telemetry, never th
 call of `llm-check` sends only the line "Reply with the single word: ok". **The free tier may use what is
 sent to improve Google products**; that is why the cloud model is off by default.
 
+### What else goes to the model (2026-10-17)
+
+* **Other drivers' names never go**: the chat context leaves them out (the local answers say them, on your machine) and the
+  earlier answers kept as conversation history are anonymised before they are sent; `chat.rival_names_to_model: true` is the
+  only way to change that.
+* **The debrief** sends the computed facts of the session (lap times, the corners that cost time, tyre wear, penalties, contacts;
+  no names) and every number of the sentence it returns is checked against them; a sentence with a number outside the facts is
+  replaced by the local template. `engineer.debrief.use_model: false` keeps it local.
+* **Editing the checklist by voice** sends the items of the checklist and your sentence; the answer is only accepted as a list of
+  validated operations.
+* **The milestone messages** (pole, result) send the facts of the situation, as before.
+
 ## If the model name is wrong
 
 `llm-check` (and the chat) list the models your key can use and tell you to set `llm.model`. The model name

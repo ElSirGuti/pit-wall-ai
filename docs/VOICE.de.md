@@ -83,7 +83,25 @@ Cloud-Antwort etwa 1 s). Wo die Erkennung laufen soll, ist eine Entscheidung pro
 cpu | cuda`): Miss es mit `pit-wall stt-test --device both --repeat 30` bei geöffnetem Spiel und vergleiche
 die Bildrate.
 
-## 8. Wenn etwas nicht funktioniert
+## 8. Der Funkklang, andere Stimmen und die Satztests
+
+* **Teamfunk-Klang** über jeder Stimme: `engineer.voice.radio_effect: light | strong | off`. Zuerst anhören mit
+  `pit-wall say "Text" --radio strong` (oder `--out funk.wav`, um die Datei zu schreiben). Der Satz wird in eine WAV-Datei
+  gerendert, bekommt das schmale Band, einen weichen Kompressor, ein leichtes Bit-Crushing, leises Rauschen und ein
+  Squelch-Klicken an beiden Enden und läuft über den gewählten Ausgang; das kostet einige zehn Millisekunden.
+* **Piper** (lokale neuronale Stimme, nur CPU): `pip install piper-tts`, `pit-wall voices --piper-download de_DE-thorsten-medium`
+  und die ausgegebenen Zeilen in `config/local.yaml` eintragen (`backend: piper`, `piper_model: ...`).
+* **Zwischenspeicher**: die festen Sätze (Alarmtexte, „Einen Moment“, die Varianten der Meilensteine) werden je Stimme einmal
+  gerendert; vorab mit `pit-wall voices --prerender`. `engineer.voice.cache: false` schaltet ihn ab.
+* **Profile**: `voice_profiles/<id>.yaml` (lokal, nicht in Git) legt Engine, Stimme, Funkeffekt und den Namen des Ingenieurs
+  fest; `engineer.voice.profile: <id>` wählt es. Ein **lokaler Zero-Shot-Server** (XTTS, GPT-SoVITS...) wird über die
+  `http`-Engine angesprochen (nur Loopback-Adressen) mit einem Referenzclip, den **du lieferst und nutzen darfst**; nichts wird
+  hochgeladen, und dieses Projekt enthält keine Stimme einer realen Person.
+* **Deine eigenen Sätze**: `pit-wall phrases record --set A --lang de` zeigt die Sätze aus `docs/FRASES_VOZ.md` einzeln und
+  nimmt sie auf (Enter zum Starten, Enter zum Beenden; `--set B` bei laufendem Motor);
+  `pit-wall phrases test --set A --lang de --device cuda --model medium` meldet Wortfehlerrate und Latenz je Satz.
+
+## 9. Wenn etwas nicht funktioniert
 
 | Symptom | Wo nachsehen |
 |---|---|

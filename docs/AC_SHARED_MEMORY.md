@@ -19,6 +19,14 @@ no unit is declared "verified" on the strength of a document. Units are confirme
 
 **Physics and graphics, car on track (LFM practice, Supra GT4 at Hockenheim)**: 20 s in the pit box and 60 s driving. The structures decode correctly: values sit in the right fields and satisfy independent physical relationships (see the table). Two findings matter for later phases: `brake_temp` never heats on this car, and `static.max_power` / `max_torque` do not describe the real cars.
 
+**Flags, penalty and damage, a real weekend (2026-10-17, Maserati GT4 at Magione, graphics and physics pages)**:
+`flags` showed **5** at the end of a qualifying and of a race (chequered) and **6** while a penalty was running (the
+black-and-white penalty flag); blue, yellow and white are still not seen. `penalty_time` jumped to **10.0** when a 10 s
+penalty was given and then **counted down in real time**: seconds left to serve. `car_damage` (five numbers) rose with each
+contact, up to about 40, the speed of the hit in km/h (the fifth looks like the largest of the others; which zone is which is
+not known yet). The tyre wear of this page stayed at 100 % with Custom Shaders Patch: the real wear comes through the CSP
+bridge (`tools/csp_bridge`).
+
 ## How to confirm the units (5 minutes, game on track)
 
 1. Start Assetto Corsa, load a session and drive (or sit in the car in the pits with the engine on).
