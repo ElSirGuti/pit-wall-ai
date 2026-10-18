@@ -169,9 +169,12 @@ def cmd_phrases_record(
                 rec.press()
                 t0 = time.monotonic()
                 stop = threading.Event()
-                threading.Thread(
-                    target=lambda: (ask("  recording... Enter to stop > "), stop.set()), daemon=True
-                ).start()
+
+                def wait_for_enter(event=stop):
+                    ask("  recording... Enter to stop > ")
+                    event.set()
+
+                threading.Thread(target=wait_for_enter, daemon=True).start()
                 while not stop.wait(0.1) and time.monotonic() - t0 < a.seconds:
                     pass
                 rec.release()

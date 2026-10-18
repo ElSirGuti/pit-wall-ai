@@ -64,7 +64,7 @@ class WearEstimator:
         rs = self.rates(compound)
         total = sum(r.laps_on_set for r in stints)
         return tuple(
-            sum(rate[i] * r.laps_on_set for rate, r in zip(rs, stints)) / total
+            sum(rate[i] * r.laps_on_set for rate, r in zip(rs, stints, strict=True)) / total
             for i in range(WHEELS)
         )
 
@@ -98,9 +98,11 @@ class WearEstimator:
         if rate is None:
             return None
         spread = self.spread(compound)
-        life = tuple(max(0.0, b - r * since) for b, r in zip(base, rate))
-        low = tuple(max(0.0, b - (r + spread) * since) for b, r in zip(base, rate))
-        high = tuple(min(100.0, b - max(0.0, r - spread) * since) for b, r in zip(base, rate))
+        life = tuple(max(0.0, b - r * since) for b, r in zip(base, rate, strict=True))
+        low = tuple(max(0.0, b - (r + spread) * since) for b, r in zip(base, rate, strict=True))
+        high = tuple(
+            min(100.0, b - max(0.0, r - spread) * since) for b, r in zip(base, rate, strict=True)
+        )
         return Estimate(life, low, high, since, "estimate")  # type: ignore[arg-type]
 
     def to_dict(self) -> dict:

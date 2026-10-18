@@ -31,12 +31,6 @@ def test_a_missing_or_wrong_profile_is_reported_clearly(tmp_path):
         load_profile("bad", tmp_path)
 
 
-def _wav_bytes(path):
-    with wave.open(str(path), "rb") as w:
-        pass
-    return path.read_bytes()
-
-
 class Server:
     """A local synthesis server: it records the request and answers with a WAV."""
 

@@ -455,7 +455,7 @@ def test_monza_and_mugello_tables_cover_their_corners_in_order():
     assert [c["name"] for c in mugello][-1] == "Bucine"
     for table in (monza, mugello):
         fr = [c["apex_fraction"] for c in table]
-        assert fr == sorted(fr) and 0 < fr[0] and fr[-1] < 1
+        assert fr == sorted(fr) and fr[0] > 0 and fr[-1] < 1
     # Monza was verified with the author's map; Mugello has not been
     assert circuit_names.numbering_verified("monza") and not circuit_names.numbering_verified(
         "mugello"

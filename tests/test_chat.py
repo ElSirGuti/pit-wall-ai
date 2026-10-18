@@ -809,7 +809,7 @@ def _rival_inputs():
         t = k * 0.5
         base = t / 100.0
 
-        def c(i, off, pos, last, **kw):
+        def c(i, off, pos, last, base=base, **kw):
             d = {
                 "i": i,
                 "n": f"Piloto{i}",

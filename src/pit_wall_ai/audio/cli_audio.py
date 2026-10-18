@@ -5,8 +5,8 @@ from __future__ import annotations
 import argparse
 import sys
 import time
-from pathlib import Path
 from collections.abc import Callable
+from pathlib import Path
 
 from ..config import AppConfig
 from ..voice import tts as T

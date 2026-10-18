@@ -1,10 +1,10 @@
 from dataclasses import replace
 from types import SimpleNamespace
 
+from pit_wall_ai.analysis.debrief import Debrief
 from pit_wall_ai.analysis.debrief_live import LiveDebrief
 from pit_wall_ai.analysis.laps import LapRecord
 from pit_wall_ai.analysis.sessions_log import SessionStore, attach_history, summary_of
-from pit_wall_ai.analysis.debrief import Debrief
 from pit_wall_ai.config import AppConfig
 from pit_wall_ai.engineer.milestones import Milestone
 from pit_wall_ai.telemetry.shm_structs import GameStatus

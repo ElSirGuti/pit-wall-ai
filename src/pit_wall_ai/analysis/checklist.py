@@ -226,13 +226,16 @@ class Checklist:
             value, bool
         ):
             return OpResult(False, f"{rule} is true or false")
-        if rule == "window":
-            if value is not None and not (
+        if (
+            rule == "window"
+            and value is not None
+            and not (
                 isinstance(value, list | tuple)
                 and len(value) == 2
                 and all(isinstance(x, int) for x in value)
-            ):
-                return OpResult(False, "window is [lap_from, lap_to] or null")
+            )
+        ):
+            return OpResult(False, "window is [lap_from, lap_to] or null")
         self.rules[rule] = value
         return OpResult(True, f"{rule} = {value}", diff=[f"rule {rule} = {value}"])
 
@@ -265,10 +268,13 @@ class Checklist:
                     if run:
                         break
                     continue
-                if not run:
-                    if fuel is not None and abs(lap.fuel_start - float(fuel)) > FUEL_TOLERANCE_L:
-                        item.note = f"laps on {lap.compound or '?'} start with {lap.fuel_start:.1f} L, not {float(fuel):g} L"
-                        continue
+                if (
+                    not run
+                    and fuel is not None
+                    and abs(lap.fuel_start - float(fuel)) > FUEL_TOLERANCE_L
+                ):
+                    item.note = f"laps on {lap.compound or '?'} start with {lap.fuel_start:.1f} L, not {float(fuel):g} L"
+                    continue
                 if lap.eligible_for_best or item.kind != "stint":
                     run.append(lap)
                 elif run:

@@ -51,7 +51,7 @@ def _slope(xs: list[float], ys: list[float]) -> float:
     n = len(xs)
     mx, my = sum(xs) / n, sum(ys) / n
     den = sum((x - mx) ** 2 for x in xs)
-    return sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / den if den else 0.0
+    return sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=True)) / den if den else 0.0
 
 
 def _fmt_ms(ms: float) -> str:

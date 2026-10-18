@@ -20,7 +20,7 @@ def run(offsets, *, seconds=120, pace=None, me=0, session=None, cars_fn=None):
             car(i, off + t / (LAP_S / pace.get(i, 1.0)), pos=0, speed=180.0)
             for i, off in offsets.items()
         ]
-        for c, (i, _) in zip(cars, offsets.items()):
+        for c in cars:
             c["p"] = 0
         tr.update({"t": t, "me": me, "cars": cars, "session": session or {"type": 3, "laps": 10}})
     return tr

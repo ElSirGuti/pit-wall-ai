@@ -17,8 +17,8 @@ from dataclasses import dataclass, field
 
 from ..analysis import braking as B
 from ..analysis.circuit_names import official_of
-from ..analysis.plan import fuel_profile
 from ..analysis.laps import CurrentLap, LapRecord
+from ..analysis.plan import fuel_profile
 from ..analysis.trackctx import TrackInfo
 from ..config import AppConfig
 from ..engineer.engine import AlertRecord
@@ -369,7 +369,7 @@ def _add_rivals(inp: ChatInputs, sheet: FactSheet) -> None:
         # the last lap's sectors against mine: positive = I was slower there
         a, b = me.last_splits, c.last_splits
         if a and len(a) == len(b) and all(x > 0 for x in a) and all(x > 0 for x in b):
-            for n, (mine, theirs) in enumerate(zip(a, b), 1):
+            for n, (mine, theirs) in enumerate(zip(a, b, strict=True), 1):
                 add(Fact(f"{k}.sector{n}_delta_s", _r((mine - theirs) / 1000.0, 2), "s"))
     leader = next((c for c in board.cars if c.position == 1), None)
     if leader is not None and me.position == 1:

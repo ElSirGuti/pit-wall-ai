@@ -63,7 +63,7 @@ def fuel_profile(laps: Sequence[LapRecord], *, recent: int = 8) -> FuelProfile |
     if len(clean) < MIN_PROFILE_LAPS:
         return None
     weights = list(range(1, len(clean) + 1))
-    mean = sum(w * x for w, x in zip(weights, clean)) / sum(weights)
+    mean = sum(w * x for w, x in zip(weights, clean, strict=True)) / sum(weights)
     return FuelProfile(round(mean, 3), round(statistics.pstdev(clean), 3), len(clean))
 
 

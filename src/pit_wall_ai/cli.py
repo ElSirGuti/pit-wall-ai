@@ -586,7 +586,7 @@ def _say_to_file(cfg: AppConfig, text: str, out: str) -> int:
     """Render a sentence with the configured voice (and radio effect) into a WAV, to listen to it or compare."""
     import shutil
 
-    from .voice.wav_voice import WavVoice, read_pcm, render_command, piper_command
+    from .voice.wav_voice import WavVoice, piper_command, read_pcm, render_command
 
     v = cfg.engineer.voice
     lang = cfg.engineer.language

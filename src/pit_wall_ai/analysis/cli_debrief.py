@@ -57,9 +57,9 @@ def cmd_debrief(
         print(f"cannot read {a.file}: {exc}", file=sys.stderr)
         return 2
     if getattr(a, "save", False) or getattr(a, "history", None):
-        from .sessions_log import SessionStore, attach_history
-
         from datetime import datetime
+
+        from .sessions_log import SessionStore, attach_history
 
         try:  # the date of the session is the date of the recording, not of this command
             when = datetime.fromtimestamp(Path(a.file).stat().st_mtime)

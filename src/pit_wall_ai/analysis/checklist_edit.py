@@ -45,16 +45,14 @@ def apply_ops(
     checklist: Checklist, ops: list[dict], *, source: str = "llm", conditions: str | None = None
 ) -> tuple[bool, str]:
     """Apply a set of operations atomically; returns (ok, what to tell the driver)."""
-    applied = 0
     lines: list[str] = []
     warnings: list[str] = []
-    for op in ops:
+    for applied, op in enumerate(ops):
         res = checklist.apply(op, source=source, conditions=conditions)
         if not res.ok:
             for _ in range(applied):
                 checklist.undo()
             return False, f"No lo cambié: {res.message}."
-        applied += 1
         lines += res.diff
         warnings += res.warnings
     text = "; ".join(lines) if lines else "sin cambios"
