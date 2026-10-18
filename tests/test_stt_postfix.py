@@ -46,3 +46,8 @@ def test_the_mishearings_of_the_phrase_test_are_corrected():
     assert fix("y en la prima ese") == "y en la prima esse"
     assert "cuanto se han desgastado" in fix("¿Cuántos se han desgastado los neumáticos?")
     assert fix("no te entendí, di lo otra vez") == "no te entendí, dilo otra vez"
+
+
+def test_traceros_and_curva_se_estoy():
+    assert fix("los neumáticos traceros") == "los neumáticos traseros"
+    assert fix("en que curva se estoy gastando") == "en que curvas estoy gastando"

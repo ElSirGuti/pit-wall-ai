@@ -23,6 +23,8 @@ _HEARD: dict[str, str] = {
     "pi esi": "psi",
     "pizza": "pits",
     "curvon": "curvone",
+    "traceros": "traseros",
+    "en que curva se estoy": "en que curvas estoy",
     "prima ese": "prima esse",
     "seconda ese": "seconda esse",
     "cuantos se han desgastado": "cuanto se han desgastado",
