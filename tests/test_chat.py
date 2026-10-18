@@ -926,3 +926,10 @@ def test_a_stop_question_goes_to_the_race_planner_which_asks_for_what_is_missing
     assert "¿De cuántas vueltas o minutos es la carrera?" in a.text
     _, a, _ = ask("plan de carrera de 20 vueltas")
     assert "¿Hay parada obligatoria?" in a.text
+
+
+def test_how_long_is_the_race_is_a_time_question():
+    from pit_wall_ai.chat import local as L
+
+    r = L.route("¿Cuánto dura la carrera?", None, "es")
+    assert r is not None and r.intents == (L.Intent.TIME_LEFT,)

@@ -95,3 +95,11 @@ def test_session_info_and_sectors_are_parsed():
     b = tr.board()
     assert b.session.timed and b.session.over and b.session.duration_min == 20
     assert b.me.last_splits == (30500, 29000, 33000) and b.me.compound == "V"
+
+
+def test_the_car_number_is_not_part_of_the_name():
+    from pit_wall_ai.telemetry.rivals import clean_name
+
+    assert clean_name("#11 | Mike Michalios") == "Mike Michalios"
+    assert clean_name("#21 | black 00") == "black 00"
+    assert clean_name("Mario Palacios") == "Mario Palacios"

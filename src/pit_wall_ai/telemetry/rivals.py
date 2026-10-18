@@ -8,6 +8,7 @@ sent anywhere, and nothing here writes to the game.
 
 from __future__ import annotations
 
+import re
 import threading
 from bisect import bisect_left
 from collections import deque
@@ -81,11 +82,16 @@ def _to_int(v, default: int = 0) -> int:
         return default
 
 
+def clean_name(name: str) -> str:
+    """LFM names come as "#11 | Mike Michalios": the car number is not part of the name."""
+    return re.sub(r"^\s*#\d+\s*\|\s*", "", name).strip()
+
+
 def parse_car(d: dict) -> RivalCar | None:
     try:
         return RivalCar(
             index=int(d["i"]),
-            name=str(d.get("n", "") or ""),
+            name=clean_name(str(d.get("n", "") or "")),
             position=int(d.get("p", 0) or 0),
             laps=int(d.get("l", 0) or 0),
             spline=float(d.get("s", 0.0) or 0.0),

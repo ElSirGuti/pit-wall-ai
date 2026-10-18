@@ -222,6 +222,17 @@ con la tabla: Zandvoort, Vallelunga; con dudas sobre el orden: Red Bull Ring, Ba
 * Qué datos tienen las apps de tu instalación y cuáles usamos: `docs/AC_APPS_NOTES.md`. Los logs de Real Penalty
   tienen nombres de otros pilotos: se leen en local y no se suben.
 
+## 5n. Primera carrera online en LFM (2026-10-18, Laguna Seca, MX-5 Cup)
+
+Salida 22.º, llegada 9.º, 12 vueltas; grabaciones en `sesiones\lfm_lagunaseca_mx5_*.pwrec.gz` (la carrera es `_carrera_2`).
+Visto: los intervalos con rivales y los nombres de LFM funcionan; el aviso de frenos se desactiva solo en el MX-5 (el
+sensor no se mueve); el resumen final se generó. Corregido: el nombre venía como "#11 | Nombre" (el número se colaba y
+fallaba el control de datos), "cuánto dura la carrera" no se entendía, la fase salía en inglés ("stopped").
+Falta: **posición de salida** y "cuántas posiciones he remontado" en la conversación (el resumen ya la tiene),
+**carrera por tiempo**: vueltas que quedan = tiempo restante entre tu ritmo, y que diga el tiempo como minutos y
+segundos y no "660,0 s"; banderas azul y amarilla, safety car y salida falsa no se vieron en esta carrera; la zona de
+daños (4 contactos, el peor de 11 km/h) tampoco se pudo probar.
+
 ## 6. Opcional, sin prisa
 
 * **Elegir el efecto de radio sin tocar archivos**: hoy es `engineer.voice.radio_effect` (`off`, `light`, `strong`;

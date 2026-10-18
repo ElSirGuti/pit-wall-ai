@@ -433,7 +433,11 @@ _KEYS[Intent.TIME_LEFT] = (
     "cuanto falta",
     "cuanto queda de sesion",
     "cuanto queda de carrera",
+    "cuanto dura",
+    "cuanto dura la carrera",
+    "cuanto dura la sesion",
     "time left",
+    "how long is the race",
     "how much time",
     "how long is left",
     "when does it end",
@@ -946,6 +950,11 @@ def _session(sheet, lang, track, routed, th):
     keys = ["session.kind"]
     bits = [_KIND[lang].get(kind, kind)]
     phase = sheet.value("session.phase")
+    phase = (
+        {"stopped": "parado", "pits": "en boxes", "out_lap": "vuelta de salida"}.get(phase, phase)
+        if lang == "es" and phase
+        else phase
+    )
     if phase and phase not in ("flying",):
         bits.append(phase)
     out = f"Sesión: {', '.join(bits)}." if lang == "es" else f"Session: {', '.join(bits)}."
