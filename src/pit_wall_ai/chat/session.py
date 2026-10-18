@@ -26,6 +26,7 @@ from ..engineer.client import LLMClient
 from ..engineer.llm import LLMRequest, LLMUnavailable, create_provider
 from ..engineer.persona import from_config as persona_from_config
 from . import grounding as G
+from . import smalltalk
 from . import local as L
 from . import recall as R
 from .context import ChatInputs, build_facts
@@ -317,6 +318,9 @@ class ChatSession:
             self.stats.local += 1
             self._self_check(ans.text, sheet, question)
             return ChatReply(ans.text, "local", tuple(i.value for i in ans.intents))
+        if not force_model and (chat := smalltalk.reply(question, self.lang)) is not None:
+            self.stats.local += 1
+            return ChatReply(chat, "local", ("smalltalk",))
         if self.client is None:
             self.stats.unavailable += 1
             return ChatReply(self._unavailable_text(), "unavailable", note="no model")

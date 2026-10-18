@@ -108,10 +108,20 @@ def test_a_recogniser_failure_is_said_and_the_channel_is_released():
 
 
 def test_a_slow_answer_gets_an_acknowledgement_first():
-    speech, _, s = make(stt=FakeStt(delay=0.35), ack_after_s=0.1)
+    def slow(q):
+        time.sleep(0.35)
+        return Reply("respuesta lenta")
+
+    speech, _, s = make(ask=slow, ack_after_s=0.1)
     turn = s.process(utt())
     texts = [t for t, _, _ in speech.said]
     assert turn.ack_said and texts[0] == "Un momento." and texts[-1].startswith("respuesta")
+
+
+def test_a_slow_recognition_alone_does_not_trigger_the_acknowledgement():
+    speech, _, s = make(stt=FakeStt(delay=0.35), ack_after_s=0.1)
+    turn = s.process(utt())
+    assert not turn.ack_said
 
 
 def test_a_fast_answer_has_no_acknowledgement():

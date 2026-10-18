@@ -229,10 +229,9 @@ class VoiceSession:
         t0 = t_released if t_released is not None else self._clock()
         turn = VoiceTurn(audio_s=u.duration_s)
         self.radio.set_state(THINKING)
+        # the "one moment" counts the wait for the answer, not the recognition that came before it
         ack_timer = threading.Timer(self.ack_after_s, self._ack, args=(turn,))
         ack_timer.daemon = True
-        if self.ack_after_s > 0:
-            ack_timer.start()
         try:
             t = self._clock()
             try:
@@ -261,6 +260,8 @@ class VoiceSession:
             if self.engineer is not None and self.engineer.quiet and self.quiet_ends_on_speech:
                 self._set_quiet(False)  # "until I talk to you again"
                 turn.notes.append("quiet mode ended: the driver spoke")
+            if self.ack_after_s > 0:
+                ack_timer.start()
             t = self._clock()
             reply = self.ask(text)
             turn.chat_s = self._clock() - t
