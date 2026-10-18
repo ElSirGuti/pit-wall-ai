@@ -1,7 +1,7 @@
 # Pendientes del autor
 
 Lista viva de lo que **tiene que hacer una persona** (no el código). Se actualiza cuando algo se cierra.
-Última actualización: 2026-10-17 (planes aprobados).
+Última actualización: 2026-10-17 (todo lo aprobado, construido).
 
 El orden es por lo que más desbloquea. Lo que ya está hecho está al final, en "Ya cerrado".
 
@@ -83,7 +83,9 @@ Hecho y probado con pruebas y con tus grabaciones, falta verlo en el juego:
 * **Debrief** (`docs/PHASE7_PLAN.md`): `pit-wall debrief sesiones\maserati_carrera.pwrec.gz` (añade `--summary`,
   `--speak`, `--save`). En vivo se dice solo al terminar una carrera o una clasificación (unos 12 s después del mensaje del
   resultado; no si "no molestes") y a petición: "dame el resumen de la sesión". Los informes quedan en
-  `~/.pit-wall-ai/debriefs`. Para "contra la última vez" hace falta guardar sesiones del mismo coche y pista
+  `~/.pit-wall-ai/debriefs` (con una página `.html` con gráficos de las vueltas y de las curvas que cuestan tiempo; `--out`
+  también la escribe). Si hay paradas en boxes, el informe dice cuánto cuesta cada una y la mediana queda guardada por
+  circuito y coche. Para "contra la última vez" hace falta guardar sesiones del mismo coche y pista
   (`--save` o en vivo). Si no quieres que hable: `engineer.debrief.speak: false`.
 * **Voces** (`docs/VOICES_PLAN.md`): oír el efecto de radio: `pit-wall say "Bloqueo delantero izquierdo" --radio light`
   (o `strong`); para dejarlo fijo `engineer.voice.radio_effect: light` en `config/local.yaml`. Piper (CPU, neuronal):
@@ -91,7 +93,9 @@ Hecho y probado con pruebas y con tus grabaciones, falta verlo en el juego:
   `pit-wall voices --prerender` deja las frases fijas en caché. Perfiles: `voice_profiles/<id>.yaml` y
   `engineer.voice.profile: <id>`; para clonar una voz con un servidor local (XTTS, GPT-SoVITS) usa el backend `http` con
   un clip **tuyo o con permiso**; el proyecto no trae ninguna voz de una persona real.
-* **Plan de carrera** (`docs/PHASE8_PLAN.md` 8a): pregunta "¿cuánta gasolina para 10 minutos?", "¿llego al final?",
+* **Plan de carrera** (`docs/PHASE8_PLAN.md` 8a): sin juego, `pit-wall plan --laps 20 --fuel-per-lap 2.0 --tank 25 --window 8-12
+  --lap-time 80 --deg 0.05 --pit-loss 22` da el combustible, las paradas y las mejores vueltas para parar ("¿y si paro antes?").
+  En el chat: pregunta "¿cuánta gasolina para 10 minutos?", "¿llego al final?",
   "plan de carrera" (te pide la longitud y si hay parada obligatoria; dile las reglas: "hay una parada obligatoria, ventana
   de la 8 a la 12"). La checklist: `pit-wall checklist add --kind stint --compound Medium --laps 5 --fuel 20`, `show`,
   `remove --id C1`, `undo`; o por voz "quita lo de mojado de la lista" (usa el modelo y siempre pasa por operaciones
@@ -199,11 +203,12 @@ con la tabla: Zandvoort, Vallelunga; con dudas sobre el orden: Red Bull Ring, Ba
 
 ## 5m. Lo que falta del lado del código (sin ti, o con una prueba tuya al final)
 
-* **Fase 8a, lo que espera datos**: el ranking de variantes "¿y si paro una vuelta antes?", la degradación por compuesto
-  y la pérdida en boxes medida de tus paradas reales (haz una parada en una práctica larga con `pit-wall record`).
+* **Fase 8a, lo que espera datos**: la degradación por compuesto (corregida por combustible: el ranking de paradas ya existe pero
+  toma la degradación que le des) y que el chat use la pérdida en boxes medida; para tener esa pérdida haz una parada
+  en una práctica larga con `pit-wall record` (el debrief la mide solo).
 * **Fase 8c** (sugerencias de reglaje y de estilo con registro de lo que se probó) y los motores de estrategia de
   4b (ventana de parada con tráfico, lluvia): siguen siendo planes.
-* **Debrief**: el gráfico opcional (pregunta 4 del plan) y el aviso en prácticas al cerrar el juego.
+* **Debrief**: el aviso en prácticas al cerrar el juego (no se puede detectar el final de una práctica).
 * **Índice de desgaste por curva en vivo** con el porcentaje real del puente: el análisis ya existe y está
   validado (`tyre-corners`, también dentro del debrief como estimación); falta usarlo en la conversación en vivo.
 * **Estimación del desgaste cuando el simulador no lo da** (iRacing, solo al parar): el cálculo ya existe
