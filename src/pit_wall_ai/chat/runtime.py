@@ -22,6 +22,7 @@ from ..engineer.memory_store import AlertMemory
 from ..engineer.memory_store import listener as memory_listener
 from ..engineer.milestones import attach as attach_milestones
 from ..engineer.rules import build_rules
+from ..home import home_dir
 from ..session.engine import SessionEngine
 from .context import BrakeWatch, ChatInputs
 
@@ -76,6 +77,7 @@ class ChatRuntime:
             track_analysis=self.track,
             quiet=lambda: self.engineer.quiet,
             threaded=live,
+            live=live,
         )
         self.engine.add_sample_hook(self.live_debrief.on_sample)
         # the practice checklist: it ticks itself when a lap is completed
@@ -84,7 +86,7 @@ class ChatRuntime:
         self.checklist_path = (
             Path(cfg.engineer.checklist.path)
             if cfg.engineer.checklist.path
-            else Path.home() / ".pit-wall-ai" / "checklist.json"
+            else home_dir() / "checklist.json"
         )
         self.checklist = (
             Checklist.load(self.checklist_path) if cfg.engineer.checklist.enabled else None

@@ -13,10 +13,10 @@ import threading
 from datetime import datetime
 from pathlib import Path
 
+from ..home import home_dir
 from .debrief import Debrief
 
 log = logging.getLogger(__name__)
-DEFAULT_PATH = Path.home() / ".pit-wall-ai" / "sessions.jsonl"
 MAX_RECORDS = 300
 
 
@@ -44,7 +44,7 @@ def summary_of(d: Debrief, *, when: datetime | None = None) -> dict | None:
 
 class SessionStore:
     def __init__(self, path: str | Path | None = None, max_records: int = MAX_RECORDS) -> None:
-        self.path = Path(path) if path else DEFAULT_PATH
+        self.path = Path(path) if path else home_dir() / "sessions.jsonl"
         self.max_records = max_records
         self._lock = threading.Lock()
 

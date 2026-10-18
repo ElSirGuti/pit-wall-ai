@@ -19,13 +19,15 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
+from ..home import ENV_HOME as ENV_HOME_NAME
+from ..home import home_dir
+
 log = logging.getLogger(__name__)
-ENV_HOME = "PIT_WALL_AI_HOME"  # tests and portable installs point the memory somewhere else
+ENV_HOME = ENV_HOME_NAME  # tests and portable installs point the memory somewhere else
 
 
 def default_path() -> Path:
-    base = os.environ.get(ENV_HOME)
-    return (Path(base) if base else Path.home() / ".pit-wall-ai") / "memory.jsonl"
+    return home_dir() / "memory.jsonl"
 
 
 @dataclass(frozen=True)

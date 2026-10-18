@@ -551,6 +551,7 @@ def _start_engineer(
         track_analysis=TrackAnalysis(cfg.analysis),
         client=client if cfg.engineer.debrief.use_model else None,
         quiet=lambda: eng.quiet,
+        live=getattr(a, "source", "ac") == "ac",
     )
     engine.add_sample_hook(live_debrief.on_sample)
     attach_milestones(

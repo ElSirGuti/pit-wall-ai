@@ -7,6 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from ..config import AppConfig
+from ..home import home_dir
 from .checklist import Checklist
 
 
@@ -15,7 +16,7 @@ def _path(cfg: AppConfig, a: argparse.Namespace) -> Path:
         return Path(a.path)
     if cfg.engineer.checklist.path:
         return Path(cfg.engineer.checklist.path)
-    return Path.home() / ".pit-wall-ai" / "checklist.json"
+    return home_dir() / "checklist.json"
 
 
 def cmd_checklist(

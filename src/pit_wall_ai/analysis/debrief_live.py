@@ -17,13 +17,13 @@ from pathlib import Path
 
 from ..engineer.persona import from_config
 from ..events import SessionChanged
+from ..home import home_dir
 from ..telemetry.shm_structs import GameStatus
 from .debrief import Debrief, SessionStats, build_from_parts, to_markdown
 from .debrief_speech import spoken_summary
 from .sessions_log import SessionStore, attach_history
 
 log = logging.getLogger(__name__)
-DEFAULT_DIR = Path.home() / ".pit-wall-ai" / "debriefs"
 TRIGGERS = ("race_finished", "quali_final")
 
 
@@ -41,6 +41,7 @@ class LiveDebrief:
         client=None,
         quiet=lambda: False,
         threaded: bool = True,
+        live: bool = True,
         delay_s: float = 12.0,
         clock=time.monotonic,
     ) -> None:
@@ -57,6 +58,8 @@ class LiveDebrief:
         self._tracker = None
         self._static = None
         self.store = SessionStore(self.dcfg.sessions_path) if self.dcfg.history else None
+        # a replayed recording is not a session of the driver: nothing is kept on disk for it
+        self.persist = live
         self.last: Debrief | None = None
         self.last_text = ""
         self.reports: list[Path] = []
@@ -94,7 +97,7 @@ class LiveDebrief:
         geometry = info.geometry if info is not None else None
         d = build_from_parts(self.stats, list(self._laps), static, geometry, self.cfg)
         if self.store is not None:
-            attach_history(d, self.store, save=True)
+            attach_history(d, self.store, save=self.persist)
         return d
 
     def trigger(self, *, why: str, speak: bool) -> None:
@@ -117,7 +120,8 @@ class LiveDebrief:
                 return
             lang = self.cfg.engineer.language
             self.last = d
-            self._write(d, lang)
+            if self.persist:
+                self._write(d, lang)
             text, source = spoken_summary(
                 d,
                 self.cfg,
@@ -138,7 +142,7 @@ class LiveDebrief:
             log.exception("the debrief failed")
 
     def _write(self, d: Debrief, lang: str) -> None:
-        folder = Path(self.dcfg.dir) if self.dcfg.dir else DEFAULT_DIR
+        folder = Path(self.dcfg.dir) if self.dcfg.dir else home_dir() / "debriefs"
         r = d.facts.get("result", {})
         name = f"{datetime.now():%Y%m%d_%H%M%S}_{_slug(r.get('track', ''))}_{_slug(r.get('car', ''))}_{r.get('session', '')}"
         try:
@@ -169,7 +173,8 @@ class LiveDebrief:
                 "de": "Es gibt noch keine gültigen Runden für eine Zusammenfassung.",
             }.get(lang, "There are no valid laps yet for a summary.")
         self.last = d
-        self._write(d, lang)
+        if self.persist:
+            self._write(d, lang)
         text, _ = spoken_summary(
             d,
             self.cfg,

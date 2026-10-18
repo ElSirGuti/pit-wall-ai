@@ -24,11 +24,11 @@ from pathlib import Path
 
 import numpy as np
 
+from ..home import home_dir
 from .radio_effect import apply_radio
 from .tts import TtsUnavailable
 
 log = logging.getLogger(__name__)
-DEFAULT_CACHE = Path.home() / ".pit-wall-ai" / "voice-cache"
 PIPER_VOICES = "https://huggingface.co/rhasspy/piper-voices/resolve/main"
 
 
@@ -88,7 +88,7 @@ def download_piper_voice(voice_id: str, dest: str | Path, *, opener=urllib.reque
 # -- the cache -----------------------------------------------------------------------------------------------
 class PhraseCache:
     def __init__(self, folder: str | Path | None = None) -> None:
-        self.folder = Path(folder) if folder else DEFAULT_CACHE
+        self.folder = Path(folder) if folder else home_dir() / "voice-cache"
 
     def path(self, key: str) -> Path:
         return self.folder / (hashlib.sha1(key.encode("utf-8")).hexdigest()[:24] + ".wav")

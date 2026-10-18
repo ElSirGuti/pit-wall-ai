@@ -139,3 +139,27 @@ def test_against_last_time_needs_the_same_track_car_and_kind(tmp_path):
     attach_history(other, store, save=False, when=datetime(2026, 10, 18, 12, 0))
     assert other.facts["vs_last"]["same_compound"] is False
     assert summary_of(Debrief()) is None
+
+
+def test_a_replayed_recording_keeps_nothing_on_disk(tmp_path):
+    cfg = AppConfig.model_validate(
+        {
+            "engineer": {
+                "debrief": {"dir": str(tmp_path / "d"), "sessions_path": str(tmp_path / "s.jsonl")}
+            }
+        }
+    )
+    sp = Speaker()
+    ld = LiveDebrief(cfg, sp, track_analysis=None, threaded=False, delay_s=0, live=False)
+    tracker = feed(ld, [lap(2, 78000), lap(3, 77800), lap(4, 78100)])
+    ld.on_milestone(Milestone("race_finished", "held"), snap(4.0), None, tracker)
+    assert ld.last is not None and sp.said  # it still says it
+    assert not (tmp_path / "d").exists() and not (tmp_path / "s.jsonl").exists()
+
+
+def test_the_home_folder_follows_the_environment_variable(tmp_path, monkeypatch):
+    from pit_wall_ai.home import home_dir
+
+    monkeypatch.setenv("PIT_WALL_AI_HOME", str(tmp_path / "x"))
+    assert home_dir() == tmp_path / "x"
+    assert SessionStore().path == tmp_path / "x" / "sessions.jsonl"

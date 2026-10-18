@@ -215,14 +215,19 @@ def local_summary(d: Debrief, lang: str = "es") -> str:
         if vs and vs.get("same_compound"):
             d_s = abs(vs["best_delta_ms"]) / 1000.0
             faster = vs["best_delta_ms"] < 0
-            sentences[-1] = (
-                sentences[-1].rstrip(".")
-                + {
+            if d_s < 0.05:
+                tail = {
+                    "es": ", igual que la última vez.",
+                    "en": ", the same as last time.",
+                    "de": ", wie beim letzten Mal.",
+                }[lang]
+            else:
+                tail = {
                     "es": f", {_c(d_s, 1, lang)} segundos {'más rápida' if faster else 'más lenta'} que la última vez.",
                     "en": f", {_c(d_s, 1, lang)} seconds {'faster' if faster else 'slower'} than last time.",
                     "de": f", {_c(d_s, 1, lang)} Sekunden {'schneller' if faster else 'langsamer'} als beim letzten Mal.",
                 }[lang]
-            )
+            sentences[-1] = sentences[-1].rstrip(".") + tail
     tl = f.get("time_loss", {}).get("corners", [])
     if tl:
         c = tl[0]

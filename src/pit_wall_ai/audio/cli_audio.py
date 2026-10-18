@@ -6,9 +6,9 @@ import argparse
 import sys
 import time
 from collections.abc import Callable
-from pathlib import Path
 
 from ..config import AppConfig
+from ..home import home_dir
 from ..voice import tts as T
 from .capture import AudioBackend, Microphone, UtteranceRecorder, write_wav
 from .devices import DeviceNotFound, find_device, usable
@@ -150,7 +150,7 @@ def _voices_extra(cfg: AppConfig, a: argparse.Namespace, out) -> int | None:
     if getattr(a, "piper_download", None):
         from ..voice.wav_voice import download_piper_voice
 
-        dest = Path.home() / ".pit-wall-ai" / "voices"
+        dest = home_dir() / "voices"
         try:
             model = download_piper_voice(a.piper_download, dest)
         except (OSError, ValueError) as exc:
