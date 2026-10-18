@@ -27,6 +27,20 @@ come from the public CSP Lua SDK (`extension/internal/lua-sdk/ac_apps/lib.lua`) 
 | tyres_app_ext (installed 2026-10-17) | tyre app for CSP custom physics: wear, grain, blister, flat spots, carcass and core temperatures, slip and Mz, ride height, **brake temperatures** (an option in Content Manager > Settings > Apps) and a list of the cars that have them | CSP Python extension (`ac.ext_getTyreWear`, `ext_getTyreGrain`, `ext_getTyreBlister`, `ext_getTyreFlatSpot`, `ext_getTyreVirtualKM`, `ext_getBrakeTemp`, `ext_getBrakeCoreTemp`, `ext_getTyreCarcassTemp`); the same values exist in the Lua `ac.StateWheel` | the bridge sends them (0.3): the brake temperatures replace the shared-memory ones when the car has them; grain, blister, flat spot and virtual km are sent and not used yet |
 | acti | telemetry logger (`.ld`): what `pit-wall` already reads as recordings | existing loaders |
 
+## Flags and safety car: what the apps do (read 2026-10-18)
+- **CMRT, blue flag**: nothing special. The leaderboard reads `sim.raceFlagType` and maps it (`None`, `Caution` = yellow,
+  `Stop` = black, `ReturnToPits` = penalty, `FasterCar` = blue, `OneLapLeft` = white, `Finished`); it is the same field
+  the bridge sends (12 = blue). So if the server raises it, the bridge sees it; if it never fires online, the server
+  does not set the flag for the client (CMRT would not show it either).
+- **BLMLights**: only drives the track's light materials from CSP's own `RACING_FLAG` condition and reads the classic
+  `flag` of the shared memory: it adds no source of its own.
+- **Real Penalty** (compiled `.pyd`, no source): talks to its server plugin with **encrypted UDP** and **chat messages
+  prefixed `RP:`** ("RP:Real Penalty v.4.09.02 is running well", `leavePit`, `teleport`, `pitStop`...). The safety car,
+  virtual safety car and full-course yellow (with their sounds and the server's speed limits, e.g. FCY 80 km/h) are
+  **its own state**: they are not in the shared memory, nor in a CSP field, nor in its log (the logs never named an SC event).
+  Ways in, to be tried in a race that has one: (1) the Lua `ac.onChatMessage` may show the server's SC announcements;
+  (2) infer it: most cars of the bridge's list far below racing speed at once, with the yellow flag up.
+
 ## Limits to keep in mind
 - Online, the server decides which data of other drivers reaches the client; names of real people are in the
   data. They stay on the machine: nothing is stored in the memory file and nothing is sent anywhere.
