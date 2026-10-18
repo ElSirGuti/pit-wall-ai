@@ -9,7 +9,7 @@ in the engineer's language (es or en); 4) the chart is not built yet. Built: `pi
 (`~/.pit-wall-ai/sessions.jsonl`), the comparison with last time (same track, layout, car and kind of session; a
 different compound is said) and the spoken version, grounded and with a template fallback. Checked on the author's
 Maserati GT4 weekend at Magione (`sesiones/maserati_*.pwrec.gz`, laps and fuel against the engineer's own answers) and on
-the committed fixture; the live end-to-end run in the game is pending.
+the committed fixture; the live run in the game was done on 2026-10-18 in an online LFM race (Laguna Seca, MX-5 Cup, 22nd to 9th): the report was written and the summary spoken after the finish.
 
 ## 0. Goal
 

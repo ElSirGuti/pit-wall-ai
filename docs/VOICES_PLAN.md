@@ -1,7 +1,7 @@
 # Voices plan: neural voices, voice profiles and the radio effect
 
 Status: **approved on 2026-10-17; steps 1 to 4 implemented, checked by tests and by rendering with the author's SAPI voice;
-not yet listened to in the game.** Defaults taken for the questions of section 8: CPU Piper is the sensible default for
+the radio effect was listened to in the game on 2026-10-18 and `strong` chosen; Piper and the phrase cache are not listened to yet.** The WAV voices now go through the same pronunciation fix as the direct voice ("psi", decimal commas, "30 s"). Defaults taken for the questions of section 8: CPU Piper is the sensible default for
 heavy simulators and the GPU engines are optional (through `http`); the radio effect has two strengths, `light` and
 `strong` (plus `off`); the fixed phrases are rendered the first time they are spoken and can be rendered ahead with
 `pit-wall voices --prerender`. Built: `engineer.voice.radio_effect`, `pit-wall say --radio ... --out file.wav`, the

@@ -3,7 +3,7 @@
 Status: **approved on 2026-10-17; 8a implemented in part** (the fuel planner, the stop plan with the stated rules, the editable
 checkable practice checklist with undo, in `analysis/plan.py`, `analysis/checklist.py`, `analysis/checklist_edit.py`; the "what if" ranking, the
 degradation per compound and the measured pit loss still wait for data). 8b is served by the CSP bridge (the spike's questions are
-answered in `docs/AC_APPS_NOTES.md`). 8c and the strategy engines of 4b (pit window with traffic, weather) are still plans. It records decisions taken with the author on 2026-10-13 and the
+answered in `docs/AC_APPS_NOTES.md`); in the first online race (2026-10-18) the gaps, names and positions held, and the chat answers the start position, the positions gained and the laps left in a timed race. 8c and the strategy engines of 4b (pit window with traffic, weather) are still plans. It records decisions taken with the author on 2026-10-13 and the
 open questions, so the work can start without re-deriving them. Nothing in this file is "verified" until it is
 marked with the evidence that verified it.
 

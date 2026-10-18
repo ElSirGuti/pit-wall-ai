@@ -55,7 +55,7 @@ Hold the button and ask in your own words ("¿cuánta gasolina me queda?", "¿cu
 * **Whoever starts first wins** (`radio.priority: first_to_start`). If the engineer is speaking, your press
   is ignored; with `radio.priority: driver` your button cuts the engineer instead.
 * **Critical alerts always go out**, even while you talk.
-* When the answer takes more than `radio.ack_after_s` (1.5 s) the engineer says "Un momento." first.
+* When the answer takes more than `radio.ack_after_s` (1.5 s) the engineer says "Un momento." first. The time counts from the end of the recognition, not from the release of the button (with `medium` the recognition alone takes about 2 s). Greetings, thanks and radio checks ("gracias", "hola", "¿me copias?") are answered locally and at once, only when the whole phrase is that and nothing else.
 * The `acknowledge` button cuts a message that is being said.
 
 ## 5. "Do not bother me"

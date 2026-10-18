@@ -7,6 +7,8 @@ measured on the author's PC**, not assumed.
 
 *Resumen en español al final.*
 
+**Update 2026-10-18:** the voice is used live in practice, qualifying, a race and an online race. The 40 phrases were measured (`docs/FRASES_VOZ.md`): `small` 38/40 and 1.4 % word errors in silence, with the engine on 37/40 and 3.2 %; `medium` 39/40 and 0.9 % with the engine on, at about 2.5 s from release to answer, and it is the model set in the author's configuration for driving. Greetings, thanks and radio checks are answered locally (`chat/smalltalk.py`), and the "one moment" counts the wait for the answer, not the recognition.
+
 ## 0. Goal and non-goals
 
 **Goal.** Hold a button, speak a question, release, and hear the answer (the same chat of phase 5), without
