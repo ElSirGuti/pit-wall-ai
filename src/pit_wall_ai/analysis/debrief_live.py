@@ -145,6 +145,11 @@ class LiveDebrief:
             folder.mkdir(parents=True, exist_ok=True)
             md = folder / f"{name}.md"
             md.write_text(to_markdown(d, lang if lang in ("es", "en") else "en"), encoding="utf-8")
+            from .debrief_html import to_html
+
+            md.with_suffix(".html").write_text(
+                to_html(d, lang if lang in ("es", "en") else "en"), encoding="utf-8"
+            )
             md.with_suffix(".json").write_text(
                 json.dumps(d.facts, ensure_ascii=False, indent=1), encoding="utf-8"
             )

@@ -38,6 +38,7 @@ def summary_of(d: Debrief, *, when: datetime | None = None) -> dict | None:
         "consistency_ms": p.get("consistency_ms"),
         "valid_laps": p.get("valid_laps", 0),
         "compounds": sorted({s["compound"] for s in stints if s.get("compound")}),
+        "pit_loss_s": d.facts.get("pit", {}).get("median_loss_s"),
     }
 
 
@@ -84,6 +85,18 @@ class SessionStore:
                 tmp.replace(self.path)
             except OSError:
                 log.exception("could not write the sessions file")
+
+
+def pit_loss_for(store: SessionStore, track: str, car: str) -> float | None:
+    """The cost of a stop at this circuit with this car, from the author's own earlier stops (median of the sessions)."""
+    import statistics
+
+    vals = [
+        r["pit_loss_s"]
+        for r in store.records()
+        if r.get("track") == track and r.get("car") == car and r.get("pit_loss_s") is not None
+    ]
+    return round(statistics.median(vals), 1) if vals else None
 
 
 def compare(summary: dict, prev: dict) -> dict:

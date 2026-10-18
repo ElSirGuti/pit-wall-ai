@@ -37,6 +37,8 @@ FLAGS = {1: "blue", 2: "yellow", 3: "black", 4: "white", 5: "chequered", 6: "pen
 class Debrief:
     facts: dict = field(default_factory=dict)
     notes: list[str] = field(default_factory=list)  # what was left out and why (never silent)
+    # the data of the charts (not spoken, not checked): {"laps": [{"n", "ms", "valid", "compound"}]}
+    series: dict = field(default_factory=dict)
 
     def block(self, name: str) -> dict | None:
         return self.facts.get(name)
@@ -306,6 +308,19 @@ def tyres_block(snaps: list[Snapshot], geometry, names: dict[int, str]) -> dict 
     return out or None
 
 
+def pit_block(laps: list[LapRecord]) -> dict | None:
+    """The stops of the session and what each took from the race (in-lap + out-lap against a typical lap)."""
+    from .pit_loss import measure, median_loss
+
+    stops = measure(laps)
+    if not stops:
+        return None
+    return {
+        "stops": [{"in_lap": s.in_lap, "out_lap": s.out_lap, "loss_s": s.loss_s} for s in stops],
+        "median_loss_s": median_loss(stops),
+    }
+
+
 def incidents_block(laps: list[LapRecord]) -> dict | None:
     odd = [lap.number for lap in laps if lap.suspect or lap.tyres_out_max >= 3]
     return {"laps_with_incidents": odd, "laps": len(laps)} if odd else None
@@ -341,11 +356,22 @@ def build_from_parts(
         ("tyres", tyres or None),
         ("incidents", incidents_block(laps)),
         ("penalties", stats.penalties()),
+        ("pit", pit_block(laps)),
     ):
         if block:
             d.facts[name] = block
         elif name in ("pace", "time_loss", "tyres") and name not in d.notes:
             d.notes.append(name)  # nothing on incidents or penalties is not a gap
+    d.series["laps"] = [
+        {
+            "n": lap.number,
+            "ms": lap.time_ms,
+            "valid": lap.eligible_for_best,
+            "compound": lap.compound,
+        }
+        for lap in laps
+        if lap.time_ms > 0
+    ]
     return d
 
 
@@ -394,6 +420,7 @@ _T = {
         "incidents": "Incidentes",
         "penalties": "Penalizaciones, banderas y contactos",
         "vs": "Contra la última vez",
+        "pit": "Paradas en boxes",
         "notes": "No se pudo calcular",
     },
     "en": {
@@ -406,6 +433,7 @@ _T = {
         "incidents": "Incidents",
         "penalties": "Penalties, flags and contacts",
         "vs": "Against last time",
+        "pit": "Pit stops",
         "notes": "Could not be computed",
     },
 }
@@ -585,6 +613,21 @@ def to_markdown(d: Debrief, lang: str = "es") -> str:
             out.append(
                 "Ojo: el compuesto no era el mismo." if es else "Note: not the same compound."
             )
+        out.append("")
+    pit = f.get("pit")
+    if pit:
+        out += [f"## {t['pit']}"]
+        for st in pit["stops"]:
+            out.append(
+                f"* Entrada en la vuelta {st['in_lap']}, salida en la {st['out_lap']}: {st['loss_s']:.1f} s perdidos."
+                if es
+                else f"* In on lap {st['in_lap']}, out on lap {st['out_lap']}: {st['loss_s']:.1f} s lost."
+            )
+        out.append(
+            f"Pérdida mediana de una parada: {pit['median_loss_s']:.1f} s (sobre {len(pit['stops'])})."
+            if es
+            else f"Median cost of a stop: {pit['median_loss_s']:.1f} s (over {len(pit['stops'])})."
+        )
         out.append("")
     inc = f.get("incidents")
     if inc:

@@ -232,6 +232,26 @@ def _parser() -> argparse.ArgumentParser:
     db.add_argument("--no-model", action="store_true", help="the template, even if a model is on")
     db.add_argument("--ac-dir", action="append", help="AC folder (repeatable)")
 
+    pl = sub.add_parser(
+        "plan", help="the race planner: fuel, stops and the best lap to stop, from your numbers"
+    )
+    pl.add_argument("--config", help="YAML config")
+    pl.add_argument("--laps", type=int)
+    pl.add_argument("--minutes", type=float)
+    pl.add_argument(
+        "--lap-time",
+        type=float,
+        help="seconds per lap (to turn minutes into laps, and for the ranking)",
+    )
+    pl.add_argument("--fuel-per-lap", type=float, required=True, help="litres per lap")
+    pl.add_argument("--spread", type=float, default=0.0, help="litres of lap-to-lap spread")
+    pl.add_argument("--profile-laps", type=int, default=5, help="laps the consumption comes from")
+    pl.add_argument("--tank", type=float, help="litres the tank holds")
+    pl.add_argument("--stops", type=int, help="only this number of stops (default 0, 1 and 2)")
+    pl.add_argument("--window", help="pit window, e.g. 8-12")
+    pl.add_argument("--deg", type=float, help="seconds lost per lap on the tyres")
+    pl.add_argument("--pit-loss", type=float, help="seconds a stop costs")
+
     ck = sub.add_parser("checklist", help="the practice checklist: show it and edit it")
     ck.add_argument(
         "action",
@@ -877,6 +897,12 @@ def _cmd_debrief(cfg: AppConfig, a: argparse.Namespace) -> int:
     return cmd_debrief(cfg, a)
 
 
+def _cmd_plan(cfg: AppConfig, a: argparse.Namespace) -> int:
+    from .analysis.cli_plan import cmd_plan
+
+    return cmd_plan(cfg, a)
+
+
 def _cmd_checklist(cfg: AppConfig, a: argparse.Namespace) -> int:
     from .analysis.cli_checklist import cmd_checklist
 
@@ -1037,6 +1063,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "bindings": _cmd_bindings,
             "input-test": _cmd_input_test,
             "debrief": _cmd_debrief,
+            "plan": _cmd_plan,
             "checklist": _cmd_checklist,
             "phrases": _cmd_phrases,
             "bridge-install": _cmd_bridge_install,
