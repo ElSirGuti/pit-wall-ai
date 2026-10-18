@@ -7,12 +7,15 @@ antwortet, wenn du mit ihm sprichst. Die regelbasierten Warnungen sind lokal und
 
 *English: [README.md](README.md) · Español: [README.es.md](README.es.md)*
 
-> **Stand: nutzbar für das originale Assetto Corsa; offen ist vor allem der Live-Test des Push-to-Talk mit
-> Lenkrad.** Live-Telemetrie, Sitzungs- und Rundenverfolgung, Aufzeichnung und Wiedergabe, ein regelbasierter
-> Ingenieur mit lokaler Windows-Stimme, Bremsanalyse pro Kurve gegen die eigene Bestzeit, Reifenverschleiß pro
-> Kurve, ein Text- und Sprach-Chat (lokale Antworten zuerst, ein Cloud-Modell nur, wenn du es erlaubst), drei
-> Sprachen (Spanisch, Englisch, Deutsch), gesprochene Glückwünsche zu Pole und Ergebnis und ein Gedächtnis
-> dessen, was gesagt wurde. Siehe die [Roadmap](#roadmap).
+> **Stand: nutzbar für das originale Assetto Corsa und live getestet in Training, Qualifying und Rennen; offen ist vor
+> allem, die neuesten Teile im Spiel zu sehen.** Live-Telemetrie, Sitzungs- und Rundenverfolgung, Aufzeichnung und
+> Wiedergabe, ein regelbasierter Ingenieur mit lokaler Windows-Stimme, Bremsanalyse pro Kurve gegen die eigene
+> Bestzeit, Reifenverschleiß pro Kurve, ein Text- und Sprach-Chat (lokale Antworten zuerst, ein Cloud-Modell nur, wenn
+> du es erlaubst, die Namen anderer Fahrer werden nie gesendet), drei Sprachen (Spanisch, Englisch, Deutsch),
+> gesprochene Glückwünsche zu Pole und Ergebnis, ein Gedächtnis dessen, was gesagt wurde, eine Brücke zu Custom Shaders
+> Patch (echter Reifenverschleiß, Bremstemperaturen, die anderen Autos mit Abständen in Sekunden, Flaggen), die
+> Nachbesprechung nach der Sitzung, ein Sprit- und Stoppplaner mit editierbarer Trainings-Checkliste und ein
+> Teamfunk-Klang mit Piper und lokalen Zero-Shot-Stimmen. Siehe die [Roadmap](#roadmap).
 
 <!-- DEMO: add a GIF or video here (terminal dashboard now, voice demo later) -->
 <p align="center"><em>Platzhalter für die Demo: Hier kommt ein GIF des Dashboards hin.</em></p>
@@ -199,7 +202,7 @@ geprüft (mit dem HUD vergleichen); **undetermined** (unbestimmt) = noch nicht v
 | `fuel` | Liter | plausible | 45,0 geladen, Tank 110,0; Verbrauch 0,73 L/km (3,3 L pro 4,5-km-Runde) |
 | `tyre_pressure` | psi | plausible | 25,7 … 28,9 (ein Wert in bar läge bei ≈ 1,9) |
 | `tyre_core_temp, tyre_temp_inner/middle/outer` | °C | plausible | 55 … 89 °C; 80 °C an der Box |
-| `tyre_wear` | Prozent; 100 = neu | plausible | 100,0 bei neuen Reifen und ~1,7 Runden unverändert |
+| `tyre_wear` | Prozent; 100 = neu | plausible, **veraltet mit CSP** | 100,0 bei neuen Reifen und ~1,7 Runden unverändert; mit Custom Shaders Patch bleibt es bei 100, während die Reifen-Apps des Spiels den echten Verschleiß zeigen: die CSP-Brücke (`tools/csp_bridge`) ersetzt ihn (gegen die CMRT-Reifen-App geprüft: 99/98/69/62 %) |
 | `camber` | Radiant | plausible | −0,056 rad = −3,2° vorne links, rechts gespiegelt |
 | `suspension_travel` | Meter | plausible | 0,011 … 0,080 |
 | `brake_bias` | Anteil vorn | plausible | 0,74 konstant |
@@ -226,14 +229,14 @@ liegen in `tests/fixtures/`, und `tests/test_live_reports.py` prüft bei jedem L
 | 3 | Regelbasierte Warn-Engine mit lokalem TTS | fertig ([Docs](docs/ENGINEER.de.md)); Schwellen konservativ, noch zu kalibrieren |
 | 4 | Bremsanalyse pro Kurve gegen die Bestzeit (lokal erzeugte Streckengeometrie) | fertig ([Docs](docs/TRACK_GEOMETRY.md)): Geometrie, Nummerierung, Vergleich pro Kurve und gesprochener Hinweis, an echten Strecken geprüft |
 | 5 | Text-Chat mit dem Cloud-Modell (Gemini): kompakte Telemetrie-Zusammenfassung, lokale Antworten zuerst, Prüfung jeder Zahl ([Docs](docs/PHASE5_PLAN.md), [docs/LLM.md](docs/LLM.md)) | fertig: Evaluation 34/34, mehrere Schlüssel als Reserve |
-| 6 | Sprache: Push-to-Talk auf jeder Taste jedes Geräts, Auswahl von Mikrofon und Stimme, lokale Spracherkennung (CPU oder GPU), gesprochene Antworten, Halbduplex-Funkregeln, „nicht stören“ ([Anleitung](docs/VOICE.de.md), [Plan](docs/PHASE6_PLAN.md)) | fertig und live mit Mikrofon, Lenkrad-Taste und GPU-Erkennung getestet (Erkennungsfehler werden laufend korrigiert); die 40 gesprochenen Sätze lassen sich mit `pit-wall phrases record` / `test` aufnehmen und messen |
+| 6 | Sprache: Push-to-Talk auf jeder Taste jedes Geräts, Auswahl von Mikrofon und Stimme, lokale Spracherkennung (CPU oder GPU), gesprochene Antworten, Halbduplex-Funkregeln, „nicht stören“ ([Anleitung](docs/VOICE.de.md), [Plan](docs/PHASE6_PLAN.md)) | fertig und live getestet (Mikrofon, Lenkrad-Taste, GPU-Erkennung, im Training, Qualifying und Rennen); Erkennungsfehler werden laufend korrigiert |
 | 6b | Der Ingenieur als Charakter: Persona und Namen, Gedächtnis der Unterhaltung pro Kurve, Sprachen es / en / de | teilweise fertig ([Docs](docs/ENGINEER_EXPERIENCE_PLAN.md)): Persona, Gedächtnis, Sprachen, Ruhemodus; Profile pro Simulator und Spritsparen pro Kurve offen |
 | 6c | Der Ingenieur als MCP-Server, für Leute ohne API-Schlüssel ([Vorschlag](docs/MCP_PLAN.md)) | Vorschlag, zurückgestellt |
-| 6d | Lokale neuronale Stimmen (Piper und Zero-Shot-Server mit eigenem Referenzaudio des Nutzers), Stimmprofile, Funkeffekt ([Plan](docs/VOICES_PLAN.md)) | Vorschlag |
+| 6d | Lokale neuronale Stimmen (Piper und Zero-Shot-Server mit eigenem Referenzaudio des Nutzers), Stimmprofile, Funkeffekt ([Plan](docs/VOICES_PLAN.md)) | gebaut (Funkeffekt, Piper, Satz-Zwischenspeicher, Profile, lokale `http`-Engine), mit Tests und Rendering geprüft; im Spiel noch nicht angehört |
 | 7 | Nachbesprechung: schriftlicher Bericht und kurze gesprochene Zusammenfassung, mit Vergleich zum letzten Mal ([Plan](docs/PHASE7_PLAN.md)) | am 17.10.2026 freigegeben und gebaut: `pit-wall debrief DATEI` (Bericht, Zahlen, gesprochene Zusammenfassung mit geprüfter Formulierung des Modells oder Vorlage, `--save` für den Vergleich mit dem letzten Mal); live am Ende eines Rennens oder Qualifyings und auf Zuruf („dame el resumen de la sesión“) |
 | 8 | Rennvorbereitung: Strategieplan mit editierbarer Trainings-Checkliste, Gegnerübersicht, Setup- und Fahrstil-Vorschläge, **Reifenverschleiß pro Kurve** | Reifenverschleiß pro Kurve ist fertig (eine Schätzung, pro Rad gegen die Reifen-App des Spiels validiert: `pit-wall tyre-corners`, und der Chat beantwortet es); 8a ist gebaut: der Spritplaner („wie viel Sprit für 10 Minuten“, „komme ich ins Ziel?“), der Stoppplan aus den Regeln, die du nennst, und die editierbare Trainings-Checkliste, die sich selbst abhakt (`pit-wall checklist` oder per Sprache); die Gegner kommen von der CSP-Brücke; Setup- und Fahrstil-Vorschläge sind weiter geplant, siehe [docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md) |
 | 9 | Weitere Simulatoren (ACC, iRacing, rFactor 2 / Le Mans Ultimate, Automobilista 2, RaceRoom, AC Evo) mit automatischer Erkennung | geplant, siehe [docs/MULTI_SIM_PLAN.md](docs/MULTI_SIM_PLAN.md); heute wird nur das originale AC unterstützt |
-| 10 | Rennereignisse: Flaggen, Schäden, Safety Car, Überholungen und Abstände | geplant (braucht echte Aufzeichnungen und die Gegnerdaten), selber Plan |
+| 10 | Rennereignisse: Flaggen, Schäden, Safety Car, Überholungen und Abstände | teilweise fertig: Strafe, Schaden und die Ziel- und Strafflagge live gesehen und genutzt; Gegner- und Flaggenregeln von der CSP-Brücke (aus, bis bestätigt); das Safety Car gibt es nur online mit Real Penalty |
 | 11 | Einstellungsoberfläche (lokale Webseite) und Profile pro Simulator | geplant, selber Plan |
 | 12 | Entfernter, nur lesender „offener Kommandostand“ über das eigene private Netz des Nutzers ([Notizen](docs/MULTI_SIM_PLAN.md)) | Idee |
 

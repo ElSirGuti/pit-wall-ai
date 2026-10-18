@@ -7,12 +7,14 @@ only used for the conversation.
 
 *Español: [README.es.md](README.es.md) · Deutsch: [README.de.md](README.de.md)*
 
-> **Status: usable for the original Assetto Corsa; what is still pending is mainly the live test of the
-> push-to-talk with a wheel.** Live telemetry, session and lap tracking, recording and replay, a rule-based
-> engineer with a local Windows voice, per-corner braking analysis against your best lap, tyre wear by corner,
-> a text and voice chat (local answers first, a cloud model only when you allow it), three languages (Spanish,
-> English, German), spoken congratulations on the pole and the result, and a memory of what was said. See the
-> [roadmap](#roadmap).
+> **Status: usable for the original Assetto Corsa and tested live in practice, qualifying and a race; what is pending is
+> mostly seeing the newest pieces in the game.** Live telemetry, session and lap tracking, recording and replay, a
+> rule-based engineer with a local Windows voice, per-corner braking analysis against your best lap, tyre wear by corner,
+> a text and voice chat (local answers first, a cloud model only when you allow it, other drivers' names never sent),
+> three languages (Spanish, English, German), spoken congratulations on the pole and the result, a memory of what was
+> said, a Custom Shaders Patch bridge (real tyre wear, brake temperatures, the other cars with their gaps in seconds,
+> flags), the post-session debrief, a fuel and stop planner with an editable practice checklist, and a team-radio voice
+> effect with Piper and local zero-shot voices. See the [roadmap](#roadmap).
 
 <!-- DEMO: add a GIF or video here (terminal dashboard now, voice demo later) -->
 <p align="center"><em>Demo placeholder: a GIF of the dashboard will go here.</em></p>
@@ -186,7 +188,7 @@ Status: **verified** = confirmed by an independent relationship inside a real ca
 | `fuel` | litres | plausible | 45.0 loaded, tank 110.0; burn 0.73 L/km (3.3 L per 4.5 km lap) |
 | `tyre_pressure` | psi | plausible | 25.7 … 28.9 (a bar value would be ≈ 1.9) |
 | `tyre_core_temp, tyre_temp_inner/middle/outer` | °C | plausible | 55 … 89 °C; 80 °C at the pit box |
-| `tyre_wear` | percent; 100 = new | plausible | 100.0 on new tyres and unchanged for ~1.7 laps |
+| `tyre_wear` | percent; 100 = new | plausible, **stale with CSP** | 100.0 on new tyres and unchanged for ~1.7 laps; with Custom Shaders Patch it stays at 100 while the game's tyre apps show the real wear: the CSP bridge (`tools/csp_bridge`) replaces it (checked against the CMRT tyre app: 99/98/69/62 %) |
 | `camber` | radians | plausible | −0.056 rad = −3.2° front left, mirrored on the right |
 | `suspension_travel` | metres | plausible | 0.011 … 0.080 |
 | `brake_bias` | fraction front | plausible | 0.74 constant |
@@ -211,14 +213,14 @@ Capture used: Assetto Corsa 1.16.4, shared-memory 1.7, LFM practice server, Toyo
 | 3 | Rule-based alert engine with local TTS | done ([docs](docs/ENGINEER.md)); thresholds conservative, to calibrate |
 | 4 | Braking analysis per corner vs the best lap (track geometry generated locally) | done ([docs](docs/TRACK_GEOMETRY.md)): geometry, numbering, per-corner comparison and the spoken hint, checked on real circuits |
 | 5 | Text chat with the cloud model (Gemini): compact telemetry summary, local answers first, grounding check on every number ([docs](docs/PHASE5_PLAN.md), [docs/LLM.md](docs/LLM.md)) | done: evaluation 34/34, several keys as reserve |
-| 6 | Voice: push-to-talk on any button of any device, microphone and voice selection, local speech recognition (CPU or GPU), spoken answers, half-duplex radio rules, "do not bother me" ([guide](docs/VOICE.md), [plan](docs/PHASE6_PLAN.md)) | done and simulated end to end; the live test with the wheel is pending |
+| 6 | Voice: push-to-talk on any button of any device, microphone and voice selection, local speech recognition (CPU or GPU), spoken answers, half-duplex radio rules, "do not bother me" ([guide](docs/VOICE.md), [plan](docs/PHASE6_PLAN.md)) | done and tested live (microphone, wheel button, GPU recognition, in practice, qualifying and a race); the recognition mistakes are being corrected as they appear |
 | 6c | The engineer as an MCP server, for people without an API key ([proposal](docs/MCP_PLAN.md)) | proposal, deferred |
 | 6b | The engineer as a character: persona and names, conversation memory by corner, languages es / en / de | partly done ([docs](docs/ENGINEER_EXPERIENCE_PLAN.md)): persona, memory, languages, quiet mode; profiles per simulator and fuel saving per corner pending |
-| 6d | Neural local voices (Piper and zero-shot servers with the user's own reference audio), voice profiles, radio effect ([plan](docs/VOICES_PLAN.md)) | proposal |
+| 6d | Neural local voices (Piper and zero-shot servers with the user's own reference audio), voice profiles, radio effect ([plan](docs/VOICES_PLAN.md)) | built (radio effect, Piper, phrase cache, profiles, local `http` engine), checked by tests and rendering; not yet listened to in the game |
 | 7 | Post-session debrief: written report and a short spoken summary, with the comparison to last time ([plan](docs/PHASE7_PLAN.md)) | approved 2026-10-17 and built: `pit-wall debrief FILE` (report, facts, spoken summary with a checked model phrasing or a template, `--save` for the comparison with last time); live at the end of a race or qualifying and on request ("dame el resumen de la sesión") |
 | 8 | Race preparation: strategy plan with an editable practice checklist, rivals brief, setup and driving-style suggestions, **tyre wear by corner** | tyre wear by corner is done (an estimate, validated per wheel against the game's own tyre app: `pit-wall tyre-corners`, and the chat answers it); 8a is built: the fuel planner ("how much fuel for 10 minutes", "will I make it"), the stop plan from the rules you state, and the editable practice checklist that ticks itself (`pit-wall checklist`, or by voice); the rivals come from the CSP bridge; setup and style suggestions are still planned, see [docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md) |
 | 9 | More simulators (ACC, iRacing, rFactor 2 / Le Mans Ultimate, Automobilista 2, RaceRoom, AC Evo) with automatic detection | planned, see [docs/MULTI_SIM_PLAN.md](docs/MULTI_SIM_PLAN.md); only the original AC is supported today |
-| 10 | Race events: flags, damage, safety car, overtakes and gaps | planned (needs real captures and the rivals feed), same plan |
+| 10 | Race events: flags, damage, safety car, overtakes and gaps | partly done: penalty, damage and the chequered / penalty flags seen live and used; rival and flag rules from the CSP bridge (off until confirmed); the safety car only exists online with Real Penalty |
 | 11 | Settings interface (local web page) and profiles per simulator | planned, same plan |
 | 12 | Remote read-only "open pit wall" viewer over the user's own private network ([notes](docs/MULTI_SIM_PLAN.md)) | idea |
 

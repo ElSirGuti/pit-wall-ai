@@ -7,12 +7,15 @@ lenguaje (la API gratuita de Gemini, intercambiable) se usa solo para la convers
 
 *English: [README.md](README.md) · Deutsch: [README.de.md](README.de.md)*
 
-> **Estado: utilizable con el Assetto Corsa original; lo que falta es sobre todo la prueba en vivo del
-> push-to-talk con volante.** Telemetría en vivo, detección de sesión y vueltas, grabación y replay, ingeniero
-> por reglas con voz local de Windows, análisis de frenadas por curva contra tu mejor vuelta, desgaste de
-> neumáticos por curva, un chat de texto y de voz (respuestas locales primero, un modelo en la nube solo si lo
-> permites), tres idiomas (español, inglés, alemán), felicitaciones habladas por la pole y el resultado, y una
-> memoria de lo dicho. Ver la [hoja de ruta](#hoja-de-ruta).
+> **Estado: utilizable con el Assetto Corsa original y probado en vivo en práctica, clasificación y carrera; lo que
+> falta es sobre todo ver las piezas más nuevas en el juego.** Telemetría en vivo, detección de sesión y vueltas,
+> grabación y replay, ingeniero por reglas con voz local de Windows, análisis de frenadas por curva contra tu mejor
+> vuelta, desgaste de neumáticos por curva, un chat de texto y de voz (respuestas locales primero, un modelo en la
+> nube solo si lo permites, nunca se envían los nombres de otros pilotos), tres idiomas (español, inglés, alemán),
+> felicitaciones habladas por la pole y el resultado, una memoria de lo dicho, un puente con Custom Shaders Patch
+> (desgaste real, temperaturas de frenos, los demás coches con sus intervalos en segundos, banderas), el resumen
+> post-sesión, un planificador de combustible y paradas con una checklist de práctica editable, y un efecto de radio
+> de equipo con Piper y voces zero-shot locales. Ver la [hoja de ruta](#hoja-de-ruta).
 
 <!-- DEMO: añade aquí un GIF o vídeo (panel de terminal ahora, demo de voz más adelante) -->
 <p align="center"><em>Espacio para la demo: aquí irá un GIF del panel.</em></p>
@@ -187,7 +190,7 @@ Estado: **verificada** = confirmada por una relación independiente dentro de un
 | `fuel` | litros | plausible | 45,0 cargados, depósito 110,0; consumo 0,73 L/km (3,3 L por vuelta de 4,5 km) |
 | `tyre_pressure` | psi | plausible | 25,7 … 28,9 (en bar serían ≈ 1,9) |
 | `tyre_core_temp, tyre_temp_inner/middle/outer` | °C | plausible | 55 … 89 °C; 80 °C en el box |
-| `tyre_wear` | porcentaje; 100 = nuevo | plausible | 100,0 con neumáticos nuevos y sin cambio en ~1,7 vueltas |
+| `tyre_wear` | porcentaje; 100 = nuevo | plausible, **obsoleto con CSP** | 100,0 con neumáticos nuevos y sin cambio en ~1,7 vueltas; con Custom Shaders Patch se queda en 100 mientras las apps de neumáticos del juego muestran el desgaste real: lo sustituye el puente de CSP (`tools/csp_bridge`), comprobado con la app de neumáticos de CMRT: 99/98/69/62 % |
 | `camber` | radianes | plausible | −0,056 rad = −3,2° delante izquierda, simétrico a la derecha |
 | `suspension_travel` | metros | plausible | 0,011 … 0,080 |
 | `brake_bias` | fracción delantera | plausible | 0,74 constante |
@@ -212,14 +215,14 @@ Captura usada: Assetto Corsa 1.16.4, memoria compartida 1.7, servidor de prácti
 | 3 | Motor de alertas por reglas con TTS local | hecha ([docs](docs/ENGINEER.md)); umbrales conservadores, por calibrar |
 | 4 | Análisis de frenadas por curva contra la mejor vuelta (geometría de pista generada en local) | hecha ([docs](docs/TRACK_GEOMETRY.md)): geometría, numeración, comparación por curva y aviso hablado, comprobado en circuitos reales |
 | 5 | Chat de texto con el modelo en la nube (Gemini): resumen compacto de telemetría, respuestas locales primero, comprobación de cada cifra ([docs](docs/PHASE5_PLAN.md), [docs/LLM.md](docs/LLM.md)) | hecha: evaluación 34/34, varias claves de reserva |
-| 6 | Voz: push-to-talk en cualquier botón de cualquier dispositivo, elección de micrófono y de voz, reconocimiento local (CPU o GPU), respuestas habladas, reglas de radio semidúplex, "no molestes" ([guía](docs/VOICE.md), [plan](docs/PHASE6_PLAN.md)) | hecha y probada de punta a punta en simulación; falta la prueba en vivo con el volante |
+| 6 | Voz: push-to-talk en cualquier botón de cualquier dispositivo, elección de micrófono y de voz, reconocimiento local (CPU o GPU), respuestas habladas, reglas de radio semidúplex, "no molestes" ([guía](docs/VOICE.md), [plan](docs/PHASE6_PLAN.md)) | hecha y probada en vivo (micrófono, botón del volante, reconocimiento en la GPU, en práctica, clasificación y carrera); los fallos de reconocimiento se corrigen según aparecen |
 | 6c | El ingeniero como servidor MCP, para quien no tiene clave de API ([propuesta](docs/MCP_PLAN.md)) | propuesta, aplazada |
 | 6b | El ingeniero como personaje: persona y nombres, memoria de la conversación por curva, idiomas es / en / de | en parte hecha ([docs](docs/ENGINEER_EXPERIENCE_PLAN.md)): persona, memoria, idiomas, modo silencio; faltan perfiles por simulador y ahorro de combustible por curva |
-| 6d | Voces neuronales locales (Piper y servidores zero-shot con audio de referencia del propio usuario), perfiles de voz, efecto de radio ([plan](docs/VOICES_PLAN.md)) | propuesta |
+| 6d | Voces neuronales locales (Piper y servidores zero-shot con audio de referencia del propio usuario), perfiles de voz, efecto de radio ([plan](docs/VOICES_PLAN.md)) | hecha (efecto de radio, Piper, caché de frases, perfiles, motor `http` local), comprobada con pruebas y renderizado; falta oírla en el juego |
 | 7 | Debrief post-sesión: informe escrito y un resumen hablado corto, con la comparación con la última vez ([plan](docs/PHASE7_PLAN.md)) | aprobada el 2026-10-17 y hecha: `pit-wall debrief ARCHIVO` (informe, cifras, resumen hablado con redacción del modelo comprobada o plantilla, `--save` para comparar con la última vez); en vivo al terminar una carrera o una clasificación y a petición ("dame el resumen de la sesión") |
 | 8 | Preparación de carrera: plan de estrategia con checklist de práctica editable, resumen de rivales, sugerencias de reglaje y de estilo de conducción, **desgaste de neumáticos por curva** | el desgaste por curva está hecho (estimación validada por rueda contra la app de neumáticos del juego: `pit-wall tyre-corners`, y el chat lo contesta); la 8a está hecha: el planificador de combustible ("cuánta gasolina para 10 minutos", "¿llego al final?"), el plan de paradas con las reglas que le dices y la checklist de práctica editable que se marca sola (`pit-wall checklist`, o por voz); los rivales vienen del puente de CSP; las sugerencias de reglaje y de estilo siguen previstas, ver [docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md) |
 | 9 | Más simuladores (ACC, iRacing, rFactor 2 / Le Mans Ultimate, Automobilista 2, RaceRoom, AC Evo) con detección automática | prevista, ver [docs/MULTI_SIM_PLAN.md](docs/MULTI_SIM_PLAN.md); hoy solo se soporta el Assetto Corsa original |
-| 10 | Eventos de carrera: banderas, daños, safety car, adelantamientos y huecos | prevista (necesita capturas reales y los datos de rivales), mismo plan |
+| 10 | Eventos de carrera: banderas, daños, safety car, adelantamientos y huecos | en parte hecha: penalización, daño y las banderas de cuadros y de penalización vistas en vivo y usadas; reglas de rivales y banderas desde el puente de CSP (apagadas hasta confirmarlas); el safety car solo existe en línea con Real Penalty |
 | 11 | Interfaz de ajustes (página web local) y perfiles por simulador | prevista, mismo plan |
 | 12 | Visor remoto de "muro abierto" de solo lectura sobre la red privada del propio usuario ([notas](docs/MULTI_SIM_PLAN.md)) | idea |
 
