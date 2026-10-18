@@ -36,8 +36,9 @@ qualy y una carrera de 8 vueltas con el reconocimiento en la GPU (0,6 a 1,2 s), 
 dichos (el 2026-10-17 arreglé "14,0 metros" que se leía como una hora). Falta:
 
 * **Frases habladas** (`docs/FRASES_VOZ.md`): la **tanda A (silencio) está hecha** (2026-10-18: `small` 38 de 40, 1,4 %, 0,41 s;
-  `medium` y `turbo` igual de exactas y 2 a 3 veces más lentas; se queda `small`). Falta la **tanda B con el motor
-  sonando** (`--set B`), que es la que puede cambiar la decisión. Es guiado:
+  `medium` y `turbo` igual de exactas y 2 a 3 veces más lentas). La **tanda B (motor sonando) también está hecha**:
+  `small` 37 de 40 y 3,2 %, `medium` 39 de 40 y 0,9 % pero 2,47 s de media; en `config/local.yaml` queda `medium`
+  para conducir (si la latencia molesta, vuelve a `small`). Cómo se grababa y medía:
   `pit-wall phrases record --set A` (Enter para empezar, Enter para parar; `--set B` con el motor, `--only 3,6-8`) y
   `pit-wall phrases test --set A --device cuda` las mide (`--model medium` o `turbo` para comparar,
   `--dir frases/telefono` para las del móvil; también `--lang de` y `--lang en`). Con ellas se cierra el paso 5 de
@@ -223,6 +224,9 @@ con la tabla: Zandvoort, Vallelunga; con dudas sobre el orden: Red Bull Ring, Ba
 
 ## 6. Opcional, sin prisa
 
+* **Elegir el efecto de radio sin tocar archivos**: hoy es `engineer.voice.radio_effect` (`off`, `light`, `strong`;
+  el autor usa `strong`, el valor por defecto sigue en `off`). Falta un selector para el usuario con vista previa:
+  un comando `pit-wall radio` en el terminal y, cuando haya interfaz de ajustes, un desplegable ahí.
 * **Una tanda manual variando** (6 a 8 vueltas, bloqueando, con mucho volante y con gas brusco) con captura de
   la app de neumáticos al principio y al final: da un tercer punto de validación del desgaste por curva, con
   tu forma de conducir.
