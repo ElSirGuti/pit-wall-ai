@@ -234,9 +234,11 @@ def test_penalty_when_the_time_rises():
     assert len(a) == 1 and a[0].text == "Penalización de 5 segundos, cumple"
 
 
-def test_flags_and_damage_are_off_by_default_and_work_when_enabled():
+def test_flags_and_damage_work_and_a_leftover_flag_at_the_start_is_not_said():
     flagged = [S(t=0.0, flags=0), S(t=1.0, flags=2), S(t=2.0, flags=2), S(t=15.0, flags=3)]
-    assert "flags" not in {r.id for r in build_rules(cfg())}
+    assert "flags" in {r.id for r in build_rules(cfg())}
+    left_over = [S(t=0.0, flags=5), S(t=1.0, flags=0), S(t=2.0, flags=2)]
+    assert [x.text for x in run_rule("flags", left_over)] == ["Bandera amarilla, levanta"]
     a = run_rule("flags", flagged, config=cfg(rules={"flags": {"enabled": True}}))
     assert [x.text for x in a] == ["Bandera amarilla, levanta", "Bandera negra, box"]
     assert a[1].priority == Priority.CRITICAL

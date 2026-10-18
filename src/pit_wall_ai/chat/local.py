@@ -142,6 +142,15 @@ _KEYS: dict[Intent, tuple[str, ...]] = {
         "mi mejor",
     ),
     Intent.SESSION: (
+        "posicion de salida",
+        "en que posicion arranque",
+        "en que posicion sali",
+        "posiciones hemos remontado",
+        "posiciones he remontado",
+        "cuantas posiciones",
+        "starting position",
+        "where did i start",
+        "positions gained",
         "que sesion",
         "en que sesion",
         "tipo de sesion",
@@ -428,12 +437,30 @@ _KEYS[Intent.TYRE_CORNERS] = (
     "wearing the tyres the most",
     "which corners are wearing",
 )
+_START_WORDS = (
+    "posicion de salida",
+    "posicion arranque",
+    "posicion en que arranque",
+    "en que posicion arranque",
+    "en que posicion sali",
+    "arranque",
+    "remontado",
+    "remontamos",
+    "posiciones hemos",
+    "posiciones he",
+    "starting position",
+    "where did i start",
+    "positions gained",
+)
 _KEYS[Intent.TIME_LEFT] = (
     "cuanto tiempo queda",
     "cuanto falta",
     "cuanto queda de sesion",
     "cuanto queda de carrera",
     "cuanto dura",
+    "cuantas vueltas quedan",
+    "cuantas vueltas faltan",
+    "cuantas vueltas nos quedan",
     "cuanto dura la carrera",
     "cuanto dura la sesion",
     "time left",
@@ -690,6 +717,7 @@ def route(question: str, track: TrackInfo | None = None, lang: str = "es") -> Ro
             ("behind", _RIVAL_BEHIND),
             ("leader", _RIVAL_LEADER),
             ("sectors", _SECTOR_WORDS),
+            ("start", _START_WORDS),
         )
         if _has(q, words)
     )
@@ -951,7 +979,12 @@ def _session(sheet, lang, track, routed, th):
     bits = [_KIND[lang].get(kind, kind)]
     phase = sheet.value("session.phase")
     phase = (
-        {"stopped": "parado", "pits": "en boxes", "out_lap": "vuelta de salida"}.get(phase, phase)
+        {
+            "stopped": "parado",
+            "pits": "en boxes",
+            "out_lap": "vuelta de salida",
+            "paused": "en pausa",
+        }.get(phase, phase)
         if lang == "es" and phase
         else phase
     )
@@ -971,6 +1004,19 @@ def _session(sheet, lang, track, routed, th):
     if laps is not None:
         keys.append("session.laps_completed")
         out += f" Vueltas completadas: {laps}." if lang == "es" else f" Laps completed: {laps}."
+    start = sheet.value("session.start_position")
+    if start is not None and "start" in routed.flags:
+        keys.append("session.start_position")
+        gained = sheet.value("session.positions_gained")
+        out += f" Saliste {start}.º." if lang == "es" else f" You started {start}."
+        if gained:
+            keys.append("session.positions_gained")
+            n = abs(int(gained))
+            out += (
+                f" Has {'ganado' if gained > 0 else 'perdido'} {n} posicion{'es' if n != 1 else ''}."
+                if lang == "es"
+                else f" You have {'gained' if gained > 0 else 'lost'} {n} position{'s' if n != 1 else ''}."
+            )
     return out, keys
 
 
@@ -1723,9 +1769,17 @@ def _time_left(sheet, lang, track, routed, th):
     left = sheet.value("session.time_left_s")
     if left is not None and left > 0:
         mm, ss = divmod(int(left), 60)
-        return (f"Quedan {mm}:{ss:02d}." if lang == "es" else f"{mm}:{ss:02d} left."), [
-            "session.time_left_s"
-        ]
+        text = f"Quedan {mm}:{ss:02d}." if lang == "es" else f"{mm}:{ss:02d} left."
+        keys = ["session.time_left_s"]
+        laps = sheet.value("session.laps_left_at_pace")
+        if laps is not None:
+            keys.append("session.laps_left_at_pace")
+            text += (
+                f" A tu ritmo, unas {_num(laps, 1, lang)} vueltas."
+                if lang == "es"
+                else f" At your pace, about {_num(laps, 1, lang)} laps."
+            )
+        return text, keys
     timed = sheet.value("session.timed")
     if timed is False:
         return (

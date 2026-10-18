@@ -248,7 +248,9 @@ class PenaltyRule(_Model):
 
 
 class FlagsRule(_Model):
-    enabled: bool = False  # UNVERIFIED: no flag has been seen in a real capture
+    enabled: bool = (
+        True  # the game's own flag (graphics.flag): yellow seen in a real LFM race, 2026-10-18
+    )
     cooldown_s: float = Field(10.0, ge=0)
 
 
@@ -320,7 +322,18 @@ class PoliciesConfig(_Model):
     practice: PolicyConfig = PolicyConfig(min_priority="low")
     qualify: PolicyConfig = PolicyConfig(min_priority="medium")
     race: PolicyConfig = PolicyConfig(
-        min_priority="critical", allow_rules=["lap_summary", "fuel_low", "penalty", "damage"]
+        min_priority="critical",
+        allow_rules=[
+            "lap_summary",
+            "fuel_low",
+            "penalty",
+            "damage",
+            "flags",
+            "csp_flags",
+            "braking_hint",
+            "rival_close",
+            "rival_pit",
+        ],
     )
     other: PolicyConfig = PolicyConfig(min_priority="medium")
 

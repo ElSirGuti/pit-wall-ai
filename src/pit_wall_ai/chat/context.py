@@ -94,6 +94,7 @@ class ChatInputs:
     rivals: object | None = (
         None  # RivalBoard from the CSP bridge: the other cars, gaps, their times
     )
+    start_position: int = 0  # the position at the first sample of the session (0 = unknown)
 
 
 def _r(v: float, nd: int) -> float:
@@ -140,6 +141,10 @@ def build_facts(inp: ChatInputs) -> FactSheet:
     if st.position > 0:
         add(Fact("session.position", st.position))
     add(Fact("session.laps_completed", st.completed_laps))
+    if inp.start_position > 0 and st.session == "race":
+        add(Fact("session.start_position", inp.start_position))
+        if st.position > 0:
+            add(Fact("session.positions_gained", inp.start_position - st.position))
     if snap is not None:
         add(Fact("session.timed", bool(snap.static.is_timed_race)))
         if snap.number_of_laps > 0:
@@ -153,6 +158,12 @@ def build_facts(inp: ChatInputs) -> FactSheet:
 
     # -- laps ------------------------------------------------------------------------------------------
     timed = [lap for lap in inp.laps if lap.time_ms > 0]
+    left = st.session_time_left_s
+    if snap is not None and snap.static.is_timed_race and left and left > 0 and math.isfinite(left):
+        recent = [lap.time_ms for lap in timed if not (lap.out_lap or lap.in_lap)][-3:]
+        if recent:  # a timed race ends on the lap after the clock: the current one counts, plus the extra lap
+            pace_s = sum(recent) / len(recent) / 1000.0
+            add(Fact("session.laps_left_at_pace", _r(left / pace_s, 1), "laps"))
     best = inp.best
     if best is not None:
         sub = Subject("lap", str(best.number))

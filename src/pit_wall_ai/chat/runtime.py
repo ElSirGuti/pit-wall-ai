@@ -157,4 +157,5 @@ class ChatRuntime:
             debrief=self.live_debrief.request,
             checklist=self.checklist,
             rivals=self._rivals(),
+            start_position=self.live_debrief.stats.pos_first,
         )

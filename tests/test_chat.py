@@ -933,3 +933,13 @@ def test_how_long_is_the_race_is_a_time_question():
 
     r = L.route("¿Cuánto dura la carrera?", None, "es")
     assert r is not None and r.intents == (L.Intent.TIME_LEFT,)
+
+
+def test_a_timed_race_gives_laps_left_at_pace_and_the_start_position():
+    from pit_wall_ai.chat import local as L
+
+    for q in ("¿En qué posición arranqué?", "¿Cuántas posiciones hemos remontado?"):
+        r = L.route(q, None, "es")
+        assert r is not None and "start" in r.flags and r.intents == (L.Intent.SESSION,), q
+    r = L.route("¿Cuántas vueltas quedan?", None, "es")
+    assert r is not None and r.intents == (L.Intent.TIME_LEFT,)

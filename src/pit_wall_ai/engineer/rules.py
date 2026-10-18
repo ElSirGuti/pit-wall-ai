@@ -422,12 +422,13 @@ class FlagsRule(Rule):
 
     def __init__(self, cfg) -> None:
         super().__init__(cfg)
-        self._prev = 0
+        self._prev: int | None = None
 
     def evaluate(self, ctx):
         flag, prev = ctx.snap.flags, self._prev
         self._prev = flag
-        if flag == prev or flag not in self._NAMES:
+        # the first sample only says what was left over (a chequered flag of the previous session)
+        if prev is None or flag == prev or flag not in self._NAMES:
             return []
         key, prio = self._NAMES[flag]
         a = self._fire(ctx, key, M.say(ctx.lang, key), priority=prio, flag=flag)
@@ -528,6 +529,9 @@ class CspFlagsRule(Rule):
         14: ("flag_white", Priority.MEDIUM),
     }
 
+    # yellow, chequered and white are said by FlagsRule when that rule is on (the game's own flag arrives first)
+    skip: frozenset[int] = frozenset()
+
     def __init__(self, cfg) -> None:
         super().__init__(cfg)
         self._prev = 0
@@ -538,7 +542,7 @@ class CspFlagsRule(Rule):
             return []
         flag, prev = board.flag, self._prev
         self._prev = flag
-        if flag == prev or flag not in self._KEYS:
+        if flag == prev or flag not in self._KEYS or flag in self.skip:
             return []
         key, prio = self._KEYS[flag]
         text = M.say(ctx.lang, key)
@@ -760,6 +764,10 @@ def build_rules(
         (r.best_sector, BestSectorRule),
     ]
     built: list[Rule] = [cls(rc) for rc, cls in table if rc.enabled]
+    if r.flags.enabled:
+        for rule in built:
+            if isinstance(rule, CspFlagsRule):
+                rule.skip = frozenset({2, 13, 14})
     if r.braking_hint.enabled:
         built.append(BrakingHintRule(r.braking_hint, analysis, track))
     return built

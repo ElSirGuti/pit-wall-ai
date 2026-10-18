@@ -90,7 +90,7 @@ engineer:               # phase 3: rule alerts spoken by the race engineer
   policies:             # what may speak per session; priorities low < medium < high < critical
     practice: {min_priority: low, allow_rules: []}
     qualify: {min_priority: medium, allow_rules: []}
-    race: {min_priority: critical, allow_rules: [lap_summary, fuel_low, penalty, damage]}
+    race: {min_priority: critical, allow_rules: [lap_summary, fuel_low, penalty, damage, flags, csp_flags, braking_hint, rival_close, rival_pit]}
     other: {min_priority: medium, allow_rules: []}
   # Thresholds start CONSERVATIVE on purpose: a chatty engineer gets switched off.
   # Every alert is logged with its rule and the values that fired it ("alert fired"):
@@ -149,7 +149,7 @@ engineer:               # phase 3: rule alerts spoken by the race engineer
       enabled: true
       cooldown_s: 5
     flags:
-      enabled: false      # UNVERIFIED: no flag seen in a real capture
+      enabled: true       # the game's own flag; yellow seen in a real LFM race (2026-10-18)
       cooldown_s: 10
     damage:
       enabled: true       # seen in real contacts (2026-10-17): zones in km/h of the hit, 7 to 40
@@ -175,7 +175,7 @@ engineer:               # phase 3: rule alerts spoken by the race engineer
       enabled: false      # chatty: one per sector, every lap
       cooldown_s: 0
     braking_hint:         # after a lap: the corner with a braking-point difference vs your best valid lap
-      enabled: true       # needs the track in your game install; practice/qualify only (race policy drops it)
+      enabled: true       # needs the track in your game install; spoken in the race too (the race policy allows it)
       cooldown_s: 0
 
 analysis:               # phase 4: track geometry and braking analysis

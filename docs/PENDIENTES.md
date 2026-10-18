@@ -228,10 +228,15 @@ Salida 22.º, llegada 9.º, 12 vueltas; grabaciones en `sesiones\lfm_lagunaseca_
 Visto: los intervalos con rivales y los nombres de LFM funcionan; el aviso de frenos se desactiva solo en el MX-5 (el
 sensor no se mueve); el resumen final se generó. Corregido: el nombre venía como "#11 | Nombre" (el número se colaba y
 fallaba el control de datos), "cuánto dura la carrera" no se entendía, la fase salía en inglés ("stopped").
-Falta: **posición de salida** y "cuántas posiciones he remontado" en la conversación (el resumen ya la tiene),
-**carrera por tiempo**: vueltas que quedan = tiempo restante entre tu ritmo, y que diga el tiempo como minutos y
-segundos y no "660,0 s"; banderas azul y amarilla, safety car y salida falsa no se vieron en esta carrera; la zona de
-daños (4 contactos, el peor de 11 km/h) tampoco se pudo probar.
+Hecho después (2026-10-18): en carrera ahora **hablan** los avisos de bandera, la frenada por curva
+(`braking_hint`), el rival que se acerca y su parada (antes la política de carrera los descartaba: solo dejaba pasar
+lo crítico); la bandera amarilla del juego (`flags`) estaba apagada por "sin verificar" y ya está verificada con tu
+grabación (aparece desde el segundo 251: la repetición con `pit-wall run --source replay --mute` la dice 4 veces);
+la bandera a cuadros que queda del juego anterior ya no se dice al arrancar. La amarilla, la blanca y la de cuadros
+las dice la bandera del juego y el puente CSP solo añade la azul (con quién) y la negra, para no repetirlas.
+También: "¿en qué posición arranqué?", "¿cuántas posiciones he remontado?" y, en carrera por tiempo, "¿cuántas vueltas
+quedan?" (tiempo restante entre tu ritmo de las últimas vueltas).
+Falta probar en vivo: banderas azul, safety car, salida falsa y la zona de los daños (4 contactos, el peor de 11 km/h).
 
 ## 6. Opcional, sin prisa
 
