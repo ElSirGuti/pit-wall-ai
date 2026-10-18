@@ -26,9 +26,9 @@ from ..engineer.client import LLMClient
 from ..engineer.llm import LLMRequest, LLMUnavailable, create_provider
 from ..engineer.persona import from_config as persona_from_config
 from . import grounding as G
-from . import smalltalk
 from . import local as L
 from . import recall as R
+from . import smalltalk
 from .context import ChatInputs, build_facts
 from .facts import FactSheet
 
